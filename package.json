@@ -10,7 +10,8 @@
     "start": "webpack-dev-server --hot",
     "build": "webpack --progress",
     "bootstrap": "lerna bootstrap",
-    "clean": "lerna clean"
+    "clean": "lerna clean",
+    "test": "jest"
   },
   "dependencies": {
     "@types/lodash": "^4.14.78",
@@ -36,6 +37,9 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@types/jest": "^21.1.5",
+    "jest": "^21.2.1",
+    "ts-jest": "^21.1.4",
     "css-loader": "^0.28.7",
     "exports-loader": "^0.6.4",
     "expose-loader": "^0.7.3",
@@ -49,5 +53,13 @@
     "typescript": "^2.6.1",
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2"
+  },
+  "jest": {
+    "roots": ["packages"],
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

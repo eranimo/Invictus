@@ -18,6 +18,12 @@
       "@invictus/main/*": [
         "./main/src/*"
       ],
+      "@invictus/planner": [
+        "./planner/src"
+      ],
+      "@invictus/planner/*": [
+        "./planner/src/*"
+      ],
       "@invictus/renderer": [
         "./renderer/src"
       ],

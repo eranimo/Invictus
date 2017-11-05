@@ -1,6 +1,6 @@
 import render from '@invictus/renderer';
 import MapGenerator from '@invictus/generator';
-// import './style.scss';
+import './style.scss';
 
 
 const manager = new MapGenerator({
