@@ -1,28 +1,35 @@
 var path = require('path');
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var { TsConfigPathsPlugin, CheckerPlugin } = require('awesome-typescript-loader');
 
-module.exports = {
-  entry: './src/index.ts',
+const config = {
+  entry: './packages/main/src/index.ts',
   output: {
     filename: '[name].js',
     chunkFilename: '[name]-[chunkhash].js', 
   },
+  output: {
+    filename: '[name].bundle.js',
+    "path": path.resolve('dist'),
+  },
   devtool: 'inline-source-map',
   resolve: {
     modules: [
-      path.resolve(__dirname, 'src'),
+      // path.resolve(__dirname, 'src'),
       'node_modules'
     ],
-    extensions: ['.ts', '.js', '.scss'],
+    extensions: ['.ts', '.tsx', '.js', '.scss'],
+    plugins: [
+      new TsConfigPathsPlugin({ configFileName: './tsconfig.json' }),
+    ]
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        exclude: /node_modules/,
-        include: path.join(__dirname, 'src')
+        // exclude: /node_modules/,
       },
       {
         test: /\.scss$/,
@@ -38,15 +45,22 @@ module.exports = {
     ]
   },
   plugins: [
+    new CheckerPlugin(),
     new HtmlWebpackPlugin({
-      template: './src/index.ejs'
+      template: './packages/main/src/index.ejs'
     }),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
       minChunks: ({ resource }) => /node_modules/.test(resource),
     }),
+    new webpack.WatchIgnorePlugin([
+      /\.js$/,
+      /\.d\.ts$/
+    ])
   ],
   devServer: {
     port: 4000
   }
 };
+
+module.exports = config;

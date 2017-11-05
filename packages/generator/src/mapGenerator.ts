@@ -1,5 +1,5 @@
 import * as Worker from 'worker-loader!./world.worker';
-import { PromiseWorker } from 'utils/promiseWorker';
+import { PromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
 

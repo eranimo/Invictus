@@ -1,0 +1,8 @@
+{
+  "name": "main",
+  "version": "1.0.0",
+  "dependencies": {
+    "renderer": "1.0.0",
+    "generator": "1.0.0"
+  }
+}

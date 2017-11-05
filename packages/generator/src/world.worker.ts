@@ -1,5 +1,5 @@
 import { zoomableNoise } from './noiseUtils';
-import { registerPromiseWorker } from 'utils/promiseWorker';
+import { registerPromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
 import * as ops from 'ndarray-ops';

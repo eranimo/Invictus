@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import * as TILES from './tiles';
-import { ChunkData } from '../generator/mapGenerator';
-import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '../generator/terrainTypes';
+import { ChunkData } from '@invictus/generator/mapGenerator';
+import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '@invictus/generator/terrainTypes';
 
 
 const map = [

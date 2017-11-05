@@ -1,5 +1,5 @@
 import { MapStats, TileStats } from './mapGenerator';
-import { TileOptions } from '../render/tileUtils';
+import { TileOptions } from '@invictus/renderer/tileUtils';
 
 export type TerrainType = {
   id: number;
