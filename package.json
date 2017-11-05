@@ -4,12 +4,29 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server --hot",
+    "bootstrap": "lerna bootstrap",
+    "clean": "lerna clean"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.78",
+    "@types/ndarray": "^1.0.5",
     "@types/pixi.js": "^4.5.7",
+    "alea": "^0.0.9",
+    "is-promise": "^2.1.0",
+    "lerna": "^2.5.1",
+    "lodash": "^4.17.4",
+    "ndarray": "^1.0.18",
+    "ndarray-fill": "^1.0.2",
+    "ndarray-linear-interpolate": "^1.0.0",
+    "ndarray-ops": "^1.2.2",
+    "ngraph.graph": "^0.0.14",
+    "ngraph.path": "^1.0.2",
     "pixi.js": "^4.5.6",
-    "rot-js": "^0.6.4"
+    "redux": "^3.7.2",
+    "rot-js": "^0.6.4",
+    "simplex-noise": "^2.3.0",
+    "worker-loader": "^1.0.0"
   },
   "devDependencies": {
     "css-loader": "^0.28.7",
