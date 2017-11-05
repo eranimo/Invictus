@@ -4,6 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "postinstall": "node makeConfig.js",
+    "prestart": "node makeConfig.js",
+    "prebuild": "node makeConfig.js",
     "start": "webpack-dev-server --hot",
     "build": "webpack --progress",
     "bootstrap": "lerna bootstrap",

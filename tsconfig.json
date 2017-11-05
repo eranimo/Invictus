@@ -3,12 +3,37 @@
   "compilerOptions": {
     "baseUrl": "./packages",
     "paths": {
-      "@invictus/*": ["./*/src"],
-      "@invictus/*/**": ["./*/src/**"]
+      "worker-loader!*": [
+        "*"
+      ],
+      "@invictus/generator": [
+        "./generator/src"
+      ],
+      "@invictus/generator/*": [
+        "./generator/src/*"
+      ],
+      "@invictus/main": [
+        "./main/src"
+      ],
+      "@invictus/main/*": [
+        "./main/src/*"
+      ],
+      "@invictus/renderer": [
+        "./renderer/src"
+      ],
+      "@invictus/renderer/*": [
+        "./renderer/src/*"
+      ],
+      "@invictus/worker": [
+        "./worker/src"
+      ],
+      "@invictus/worker/*": [
+        "./worker/src/*"
+      ]
     }
   },
   "include": [
-    "packages/*/src"
+    "packages/*/src/**/*"
   ],
   "exclude": [
     "node_modules"

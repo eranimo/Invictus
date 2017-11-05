@@ -3,6 +3,7 @@
     "target": "es2016",
     "module": "es2015",
     "moduleResolution": "node",
+    "outDir": "./dist/",
     "lib": ["esnext", "es2017", "dom"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -11,7 +12,7 @@
     "typeRoots": [
       "node_modules/@types",
       "packages/*/node_modules/@types",
-      "./typings"
+      "typings"
     ],
     "sourceMap": true
   }

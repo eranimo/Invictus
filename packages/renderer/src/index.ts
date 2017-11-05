@@ -66,7 +66,7 @@ export default function render(chunkData: ChunkData) {
 
 
   const textureIDs = Object.values(TILES)
-    .map(factory => factory({ fxColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
+    .map(factory => factory({ fgColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
 
 
   console.log(textureIDs);

@@ -1,4 +1,4 @@
-import * as Worker from 'worker-loader!./world.worker';
+import * as Worker from './world.worker';
 import { PromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
@@ -39,7 +39,7 @@ export default class MapGenerator {
 
   constructor(settings) {
     this.settings = settings;
-    const worker = new Worker(settings);
+    const worker = new (Worker as any)(settings);
     console.log(worker);
     this.worker = new PromiseWorker(worker);
   }
