@@ -49,7 +49,7 @@ export class Plan<T> {
     const actions = new Set(agent.actions);
 
     let goalFound = true;
-    function buildGraph(node: any, actions): Node | boolean {
+    function buildGraph(node: any, actions, level: number = 0): Node | boolean {
       let foundOne = false;
       for (const action of actions) {
         const canRun = action.precondition(node.data.state) === true;
@@ -63,6 +63,7 @@ export class Plan<T> {
             cost,
             state: newState,
             reachedGoal,
+            level,
           });
           graph.addLink(node.id, newNode.id);
 
@@ -73,7 +74,7 @@ export class Plan<T> {
           } else if (goal.comparator && goal.comparator(node.data.state, newState) > 0) {
             const diff = goal.comparator(node.data.state, newState);
             if (DEBUG) console.log(`${action.constructor.name} - Repeating (${diff})`);
-            const foundChild = buildGraph(newNode, actions);
+            const foundChild = buildGraph(newNode, actions, level + 1);
             if (foundChild) {
               foundOne = true;
             }
@@ -82,7 +83,7 @@ export class Plan<T> {
             // this action doesn't achieve the goal
             // try another combination of actions
             actions.delete(action); // remove action from list
-            const foundChild = buildGraph(newNode, actions);
+            const foundChild = buildGraph(newNode, actions, level + 1);
             if (foundChild) {
               foundOne = true;
             }
@@ -105,7 +106,12 @@ export class Plan<T> {
           endNodes.push(node);
         }
       });
-      const sortedEndNodes = endNodes.sort((a, b) => a.data.cost - b.data.cost);
+      const sortedEndNodes = endNodes.sort((a, b) => {
+        if (a.data.cost === b.data.cost) {
+          return a.data.level - b.data.level;
+        }
+        return a.data.cost - b.data.cost;
+      });
       // if (DEBUG) console.log(sortedEndNodes);
       const result = sortedEndNodes[0];
       const pathFinder = graphPath.aStar(graph);

@@ -113,7 +113,7 @@ class RecycleIron implements Action<IronState> {
   precondition(state: IronState): boolean { return true }
 
   effect(state: IronState): any {
-    state.numIron += 1;
+    state.numIron += 5;
     return state;
   }
 }
@@ -187,7 +187,7 @@ describe('Goal planner', () => {
   /**
    * Goal: get 10 iron
    * mineIron(4 cost for 2 iron) = 5 times for 20 cost
-   * recycleIron(2 cost for 1 iron) = 10 times for 20 cost
+   * recycleIron(10 cost for 5 iron) = 2 times for 20 cost
    * 
    * Plan: mineIron 5 times
    */
@@ -198,9 +198,9 @@ describe('Goal planner', () => {
       const plan = miner.plan();
 
       expect(plan).not.toBe(null);
-      expect(plan.sequence).toHaveLength(5);
-      for (let i = 0; i < 5; i++) {
-        expect(plan.sequence[i]).toBeInstanceOf(MineIron);
+      expect(plan.sequence).toHaveLength(2);
+      for (let i = 0; i < 2; i++) {
+        expect(plan.sequence[i]).toBeInstanceOf(RecycleIron);
       }
       expect(plan.totalCost).toBe(20);
     });
