@@ -10,8 +10,8 @@ export interface Goal<T> {
   condition(state: T): boolean;
 
   // a comparator is a function that takes the old state and the potential new state 
-  // and decides whether or not the new state should be accepted
-  comparator?(oldState: T, newState: T): boolean;
+  // returns a boolean 
+  comparator?(oldState: T, newState: T): number;
 }
 
 
@@ -57,26 +57,35 @@ export class Plan<T> {
           const newState = action.effect(Object.assign({}, node.data.state));
           currentID++;
           const reachedGoal = goal.condition(newState);
+          const cost = node.data.cost + action.cost(newState);
           const newNode = graph.addNode(currentID, {
             action,
-            cost: node.data.cost + action.cost(newState),
+            cost,
             state: newState,
             reachedGoal,
           });
           graph.addLink(node.id, newNode.id);
 
           if (reachedGoal) {
-            if (DEBUG) console.log(`${action.constructor.name} - Reached Goal`);
+            if (DEBUG) console.log(`${action.constructor.name} - Reached Goal (cost: ${cost})`);
             // this action achieves the goal
             foundOne = true;
-          }
-          if (DEBUG) console.log(`${action.constructor.name} - Continuing`);
-          // this action doesn't achieve the goal
-          // try another combination of actions
-          actions.delete(action); // remove action from list
-          const foundChild = buildGraph(newNode, actions);
-          if (foundChild) {
-            foundOne = true;
+          } else if (goal.comparator && goal.comparator(node.data.state, newState) > 0) {
+            const diff = goal.comparator(node.data.state, newState);
+            if (DEBUG) console.log(`${action.constructor.name} - Repeating (${diff})`);
+            const foundChild = buildGraph(newNode, actions);
+            if (foundChild) {
+              foundOne = true;
+            }
+          } else {
+            if (DEBUG) console.log(`${action.constructor.name} - Continuing`);
+            // this action doesn't achieve the goal
+            // try another combination of actions
+            actions.delete(action); // remove action from list
+            const foundChild = buildGraph(newNode, actions);
+            if (foundChild) {
+              foundOne = true;
+            }
           }
         } else {
           if (DEBUG) console.log(`${action.constructor.name} - Can NOT run`);
@@ -97,7 +106,7 @@ export class Plan<T> {
         }
       });
       const sortedEndNodes = endNodes.sort((a, b) => a.data.cost - b.data.cost);
-      if (DEBUG) console.log(sortedEndNodes);
+      // if (DEBUG) console.log(sortedEndNodes);
       const result = sortedEndNodes[0];
       const pathFinder = graphPath.aStar(graph);
       const path = pathFinder.find(root.id, result.id, {
@@ -107,7 +116,7 @@ export class Plan<T> {
       }).reverse().filter(node => node.data.action);
       const sequence = path.map(node => node.data.action);
       if (DEBUG) console.log(sequence)
-      const totalCost = path[0].data.cost;
+      const totalCost = path[path.length - 1].data.cost;
       return new Plan(sequence, totalCost);
     }
     return null;
