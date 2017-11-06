@@ -67,11 +67,12 @@ export class Plan<T> {
           });
           graph.addLink(node.id, newNode.id);
 
+          // this action achieves the goal
           if (reachedGoal) {
             if (DEBUG) console.log(`${action.constructor.name} - Reached Goal (cost: ${cost})`);
-            // this action achieves the goal
             foundOne = true;
           } else if (goal.comparator && goal.comparator(node.data.state, newState) > 0) {
+            // this action doesn't reach the goal, but repeating the action again might
             const diff = goal.comparator(node.data.state, newState);
             if (DEBUG) console.log(`${action.constructor.name} - Repeating (${diff})`);
             const foundChild = buildGraph(newNode, actions, level + 1);
@@ -79,9 +80,8 @@ export class Plan<T> {
               foundOne = true;
             }
           } else {
+            // this action doesn't achieve the goal, no use trying again
             if (DEBUG) console.log(`${action.constructor.name} - Continuing`);
-            // this action doesn't achieve the goal
-            // try another combination of actions
             actions.delete(action); // remove action from list
             const foundChild = buildGraph(newNode, actions, level + 1);
             if (foundChild) {
@@ -89,6 +89,7 @@ export class Plan<T> {
             }
           }
         } else {
+          // can't run this action
           if (DEBUG) console.log(`${action.constructor.name} - Can NOT run`);
         }
       }
@@ -100,20 +101,28 @@ export class Plan<T> {
 
     // we have found at least one path to the goal
     if (result) {
+      // find all nodes that reached the goal
       let endNodes = [];
       graph.forEachNode(node => {
         if (node.data.reachedGoal) {
           endNodes.push(node);
         }
       });
+
+      // if two nodes have the same cost, sort by level
+      // otherwise sort by cost ascending
       const sortedEndNodes = endNodes.sort((a, b) => {
         if (a.data.cost === b.data.cost) {
           return a.data.level - b.data.level;
         }
         return a.data.cost - b.data.cost;
       });
+
       // if (DEBUG) console.log(sortedEndNodes);
+      // pick the best goal node we have
       const result = sortedEndNodes[0];
+      
+      // find the path of actions to that goal node
       const pathFinder = graphPath.aStar(graph);
       const path = pathFinder.find(root.id, result.id, {
         distance(fromNode, toNode, link) {
@@ -123,6 +132,8 @@ export class Plan<T> {
       const sequence = path.map(node => node.data.action);
       if (DEBUG) console.log(sequence)
       const totalCost = path[path.length - 1].data.cost;
+
+      // create a plan for that path
       return new Plan(sequence, totalCost);
     }
     return null;
