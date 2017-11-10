@@ -3,6 +3,11 @@ import { PromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
 
+
+function hash(point: PIXI.Point) {
+  return `${point.x},${point.y}`;
+}
+
 export interface MapGeneratorSettings {
   size: number;
   seed: number;
@@ -14,7 +19,6 @@ export interface HeightmapStats {
   min: number;
   max: number;
 }
-
 
 export type MapStats = HeightmapStats & MapGeneratorSettings;
 
@@ -35,13 +39,14 @@ export default class MapGenerator {
   worker: PromiseWorker;
   settings: MapGeneratorSettings
   stats: MapStats;
-  chunks: Map<PIXI.Point, ChunkData>;
+  chunks: Map<string, ChunkData>;
 
   constructor(settings) {
     this.settings = settings;
     const worker = new (Worker as any)(settings);
     console.log(worker);
     this.worker = new PromiseWorker(worker);
+    this.chunks = new Map();
   }
 
   async init() {
@@ -56,15 +61,22 @@ export default class MapGenerator {
   }
 
   async fetchChunk(chunk: PIXI.Point) {
+    if (this.chunks.has(hash(chunk))) {
+      console.log(`[MapGenerator] fetching chunk (${chunk.x}, ${chunk.y}) from cache`);
+      return this.chunks.get(hash(chunk));
+    }
+    console.log(`[MapGenerator] generating chunk (${chunk.x}, ${chunk.y})`);
     return await this.worker.postMessage(
       ACTIONS.fetchChunk(chunk)
     )
     .then((chunkData: any) => {
-      console.log(chunkData);
-      return {
+      const chunkDataConverted = {
         ...chunkData,
+        heightmap: ndarray(chunkData.heightmap, [chunkData.chunkSize, chunkData.chunkSize]),
         terrainTypesMap: ndarray(chunkData.terrainTypesMap, [chunkData.chunkSize, chunkData.chunkSize]),
       };
+      this.chunks.set(hash(chunk), chunkDataConverted);
+      return chunkDataConverted;
     });
   }
 }

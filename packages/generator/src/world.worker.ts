@@ -9,10 +9,11 @@ import * as Alea from 'alea';
 import * as interpolate from 'ndarray-linear-interpolate';
 import terrainTypeFor from './terrainTypes';
 import { MapGeneratorSettings, ChunkData, MapStats, HeightmapStats } from './mapGenerator';
+import { cubicNoiseSample, cubicNoiseConfig } from './cubic';
 
 
 const NUM_CHUNK_SPAN = 50; // 50 x 50 grid of chunks
-const CHUNK_ZOOM = 5; // interpolate 5x world map size
+const CHUNK_ZOOM = 2; // interpolate 5x world map size
 const context: Worker = self as any;
 
 interface MapState {
@@ -37,23 +38,55 @@ async function init(settings: MapGeneratorSettings) {
   console.log(`Worker`, settings);
   const { size, seed, sealevel } = settings;
 
-  console.log(`Generating world of size (${size}x${size})`);
-  const rng = new Alea(seed);
-  const simplex = new SimplexNoise(rng);
-  const noisesettings = {
-    numIterations: 12,
-    persistence: 0.6,
-    initFrequency: 2,
-    zoomLevel: 1,
-  };
-  const noiseFn = zoomableNoise(simplex.noise2D.bind(simplex))(noisesettings);
-  // const noiseFn = (x, y) => simplex.noise2D((x + 1) / 2, (y + 1) / 2);
-  let worldHeightMap = ndarray(new Uint8ClampedArray(size * size), [size, size]);
-  for (let x = 0; x < size; x++) {
-    for (let y = 0; y < size; y++) {
-      worldHeightMap.set(x, y, noiseFn((x / size) + 0.5, (y / size) + 0.5) * 255);
-    }
+  console.log(`Generating world of size (${size}x${size}) (seed: ${seed})`);
+  const initial_quality = 3;
+  const initial_period = 128;
+  const quality = 1; //1 << (5 - initial_quality); // 1 to 5
+  let period = initial_period / quality; // 1 to 256
+  const falloff = 7; // 0.25 to 16
+  const octaves = 3; // 1 to 10
+
+  let worldHeightMap: any = new Uint8ClampedArray(size * size * quality);
+  var amplitude;
+
+  if (falloff - 1 == 0) {
+    amplitude = (1 / octaves) / falloff;
+  } else {
+    amplitude = (
+      ((falloff - 1) * Math.pow(falloff, octaves)) / (Math.pow(falloff, octaves) - 1)
+    ) / falloff;
   }
+  console.table({
+    amplitude,
+    falloff,
+    octaves,
+    quality,
+    period,
+  });
+  worldHeightMap.fill(0);
+  for (var octave = 0; octave < octaves; ++octave) {
+    var config = cubicNoiseConfig(seed + octave, period / (octave + 1));
+
+    for (var y = 0; y < Math.floor(size / quality); ++y) {
+      for (var x = 0; x < Math.floor(size / quality); ++x) {
+        const index = (x + y * size) * quality;
+        const nvalue = cubicNoiseSample(config, x, y);
+        var value = (nvalue * amplitude) * 255;
+
+        for (var yrep = 0; yrep < quality; ++yrep) {
+          for (var xrep = 0; xrep < quality; ++xrep) {
+            var repIndex = (index + xrep + yrep * size);
+
+            worldHeightMap[repIndex] += value;
+          }
+        }
+      }
+    }
+
+    period /= 2;
+    amplitude /= falloff;
+  }
+  worldHeightMap = ndarray(worldHeightMap, [size, size]);
 
   const stats = Object.assign({}, settings, getHeightmapStats(worldHeightMap));
 
@@ -73,7 +106,7 @@ function getChunkSize() {
 }
 
 async function generateChunk(chunk: PIXI.Point) {
-  const { settings: { size }, worldHeightMap, chunkData } = mapState;
+  const { settings: { size }, stats, worldHeightMap, chunkData } = mapState;
   const CHUNK_SPAN = size / NUM_CHUNK_SPAN;
   const STEP = 1 / CHUNK_ZOOM;
   const chunkSize = getChunkSize();
@@ -82,15 +115,29 @@ async function generateChunk(chunk: PIXI.Point) {
     new Uint8Array(chunkSize * chunkSize),
     [chunkSize, chunkSize]
   );
-  for (let i = chunk.x * CHUNK_SPAN; i < (chunk.x + 1) * CHUNK_SPAN; i += STEP) {
-    for (let j = chunk.y * CHUNK_SPAN; j < (chunk.y + 1) * CHUNK_SPAN; j += STEP) {
+  console.table({
+    initialX: chunk.x * CHUNK_SPAN,
+    initialY: chunk.y * CHUNK_SPAN,
+    topX: (chunk.x + 1) * CHUNK_SPAN,
+    topY: (chunk.y + 1) * CHUNK_SPAN,
+    chunkSpan: CHUNK_SPAN,
+    step: STEP,
+  });
+
+  for (let i = 0; i <= CHUNK_SPAN; i += STEP) {
+    for (let j = 0; j <= CHUNK_SPAN; j += STEP) {
       const x = Math.round(i * CHUNK_ZOOM);
       const y = Math.round(j * CHUNK_ZOOM);
-      const value = interpolate(worldHeightMap, i, j);
+      const value = interpolate(
+        worldHeightMap,
+        (chunk.y * CHUNK_SPAN) + (i),
+        (chunk.x * CHUNK_SPAN) + (j),
+      );
       heightmap.set(x, y, value);
     }
   }
-  const stats: HeightmapStats = getHeightmapStats(heightmap);
+
+  // const stats: HeightmapStats = getHeightmapStats(heightmap);
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(heightmap, stats);
   chunkData[chunkID] = {
     stats,
@@ -131,6 +178,7 @@ function decideTerrainTypes(heightmap: ndarray, stats: HeightmapStats) {
 }
 
 async function fetchChunk(chunk: PIXI.Point) {
+  console.log(`[worker] Fetch chunk (${chunk.x}, ${chunk.y})`);
   const chunkID = `${chunk.x},${chunk.y}`;
   const chunkData = mapState.chunkData[chunkID];
   if (!chunkData) {
@@ -139,7 +187,6 @@ async function fetchChunk(chunk: PIXI.Point) {
   return chunkData;
 }
 
-console.log(self);
 registerPromiseWorker(context, async message => {
   console.log('worker message', message);
   switch (message.type) {

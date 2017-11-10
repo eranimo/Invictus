@@ -6,6 +6,12 @@
       "worker-loader!*": [
         "*"
       ],
+      "@invictus/engine": [
+        "./engine/src"
+      ],
+      "@invictus/engine/*": [
+        "./engine/src/*"
+      ],
       "@invictus/generator": [
         "./generator/src"
       ],
