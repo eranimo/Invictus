@@ -18,6 +18,7 @@ const mapgen = new MapGenerator({
 mapgen.init().then(() => {
   KeyboardJS.watch();
   let renderer = new Renderer();
+  renderer.renderWorldMap(mapgen.worldMapTerrain);
   console.log('Map generated', mapgen);
   let currentChunk = new PIXI.Point(0, 0);
 

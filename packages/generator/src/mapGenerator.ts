@@ -40,6 +40,7 @@ export default class MapGenerator {
   settings: MapGeneratorSettings
   stats: MapStats;
   chunks: Map<string, ChunkData>;
+  worldMapTerrain: ndarray;
 
   constructor(settings) {
     this.settings = settings;
@@ -54,9 +55,11 @@ export default class MapGenerator {
     return await this.worker.postMessage(
       ACTIONS.worldInit(this.settings)
     )
-    .then((stats: any) => {
-      console.log('stats', stats);
-      this.stats = Object.assign({}, stats, this.settings);
+    .then((data: any) => {
+      console.log('stats', data.stats);
+      this.stats = Object.assign({}, data.stats, this.settings);
+      this.worldMapTerrain = ndarray(data.worldMapTerrain, [this.settings.size, this.settings.size]);
+      console.log('world', this.worldMapTerrain);
     });
   }
 

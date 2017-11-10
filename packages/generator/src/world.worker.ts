@@ -20,6 +20,7 @@ interface MapState {
   settings?: MapGeneratorSettings;
   stats?: MapStats;
   worldHeightMap?: any;
+  world?: ChunkData;
   chunkData?: { [name: string]: ChunkData };
 }
 
@@ -87,15 +88,25 @@ async function init(settings: MapGeneratorSettings) {
     amplitude /= falloff;
   }
   worldHeightMap = ndarray(worldHeightMap, [size, size]);
-
-  const stats = Object.assign({}, settings, getHeightmapStats(worldHeightMap));
+  const worldStats = getHeightmapStats(worldHeightMap);
+  const stats = Object.assign({}, settings, worldStats);
 
   console.log('worldHeightMap', worldHeightMap);
-
   mapState = { settings, stats, worldHeightMap, chunkData: {} };
+
+  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(worldHeightMap, stats, size);
+
+  const world: ChunkData = {
+    stats: worldStats,
+    heightmap: worldHeightMap,
+    altitudePercentMap,
+    terrainTypesMap,
+    chunkSize: size,
+  };
+  mapState.world = world;
   
   console.log(mapState);
-  return stats;
+  return { stats, worldMapTerrain: world.terrainTypesMap.data };
 }
 
 function getChunkSize() {
@@ -138,7 +149,7 @@ async function generateChunk(chunk: PIXI.Point) {
   }
 
   // const stats: HeightmapStats = getHeightmapStats(heightmap);
-  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(heightmap, stats);
+  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(heightmap, stats, chunkSize);
   chunkData[chunkID] = {
     stats,
     heightmap,
@@ -156,14 +167,13 @@ async function generateChunk(chunk: PIXI.Point) {
   };
 }
 
-function decideTerrainTypes(heightmap: ndarray, stats: HeightmapStats) {
-  const chunkSize = getChunkSize();
+function decideTerrainTypes(heightmap: ndarray, stats: HeightmapStats, size: number) {
   const { settings: { sealevel } } = mapState;
   const altitudePercentMap = ndarray(
-    new Float32Array(chunkSize * chunkSize),
-    [chunkSize, chunkSize]
+    new Float32Array(size * size),
+    [size, size]
   );
-  const terrainTypesMap = ndarray([], [chunkSize, chunkSize]);
+  const terrainTypesMap = ndarray([], [size, size]);
   for (let x = 0; x < heightmap.shape[0]; x++) {
     for (let y = 0; y < heightmap.shape[1]; y++) {
       const height = heightmap.get(x, y);

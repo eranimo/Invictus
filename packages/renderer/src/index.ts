@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import * as TILES from './tiles';
 import { ChunkData } from '@invictus/generator/mapGenerator';
 import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '@invictus/generator/terrainTypes';
+import * as ndarray from 'ndarray';
 
 
 let textureIDMap = {};
@@ -13,7 +14,8 @@ function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
 
 export default class Renderer {
   app: PIXI.Application;
-  container: PIXI.Container;
+  mapContainer: PIXI.Container;
+  worldMapContainer: PIXI.Container;
   textureIDMap: Object;
 
   constructor() {
@@ -30,13 +32,41 @@ export default class Renderer {
     this.textureIDMap = makeTextureIDMap();
     document.body.appendChild(this.app.view);
 
-    this.container = new PIXI.Container();
-    this.container.scale = new PIXI.Point(0.5, 0.5);
+    this.mapContainer = new PIXI.Container();
+    this.mapContainer.y = 100;
+    this.worldMapContainer = new PIXI.Container();
+    this.mapContainer.scale = new PIXI.Point(0.5, 0.5);
+  }
+
+  renderWorldMap(worldMapTerrain: ndarray) {
+    console.log(worldMapTerrain);
+    const worldMap = new PIXI.Graphics();
+    const mapWidth = 100;
+    const mapHeight = 100;
+    const width = worldMapTerrain.shape[0];
+    const height = worldMapTerrain.shape[1];
+    const strideW = width / mapWidth;
+    const strideH = height / mapHeight;
+    for (let j = 0; j < width; j += strideW) {
+      for (let i = 0; i < height; i += strideH) {
+        const id = worldMapTerrain.get(j, i);
+        const color = TERRAIN_TYPES[id].tileOptions.fgColor;
+        worldMap.beginFill(color);
+        const x = Math.round(i / strideH);
+        const y = Math.round(j / strideW);
+        worldMap.drawRect(x, y, 1, 1);
+        worldMap.endFill();
+      }
+    }
+    const worldMapTexture = worldMap.generateCanvasTexture();
+    const worldMapSprite = new PIXI.Sprite(worldMapTexture);
+    this.worldMapContainer.addChild(worldMap);
+    this.app.stage.addChild(this.worldMapContainer);
   }
 
   renderChunk(chunkData: ChunkData) {
     const CELL_SIZE = 16;
-    this.container.removeChildren();
+    this.mapContainer.removeChildren();
 
     // const textureIDs = Object.values(TILES)
     //   .map(factory => factory({ fgColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
@@ -50,7 +80,7 @@ export default class Renderer {
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 
-          this.container.addChild(land);
+          this.mapContainer.addChild(land);
         }
       }
     }
@@ -63,7 +93,7 @@ export default class Renderer {
     basicText.x = 0;
     basicText.y = 0;
 
-    // container.addChild(basicText);
-    this.app.stage.addChild(this.container);
+    // mapContainer.addChild(basicText);
+    this.app.stage.addChild(this.mapContainer);
   }
 }
