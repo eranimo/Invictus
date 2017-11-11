@@ -24,7 +24,7 @@ mapgen.init().then(() => {
   let renderer = new Renderer();
   renderer.renderWorldMap(mapgen.worldMapTerrain);
   console.log('Map generated', mapgen);
-  let currentChunk = new PIXI.Point(0, 0);
+  let currentChunk = new PIXI.Point(25, 25);
 
   function fetchChunk() {
     console.log(`Fetching chunk (${currentChunk.x}, ${currentChunk.y})`);

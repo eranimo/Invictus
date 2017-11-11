@@ -133,14 +133,16 @@ async function generateChunk(chunk: PIXI.Point) {
 
   let current_period = period;
   let current_octaves = octaves;
+  let current_falloff = falloff;
 
   let amplitude;
-  if (falloff - 1 == 0) {
-    amplitude = (1 / current_octaves) / falloff;
+  if (current_falloff - 1 == 0) {
+    amplitude = (1 / current_octaves) / current_falloff;
   } else {
     amplitude = (
-      ((falloff - 1) * Math.pow(falloff, current_octaves)) / (Math.pow(falloff, current_octaves) - 1)
-    ) / falloff;
+      ((current_falloff - 1) * Math.pow(current_falloff, current_octaves)) /
+      (Math.pow(current_falloff, current_octaves) - 1)
+    ) / current_falloff;
   }
 
   for (var octave = 0; octave < current_octaves; ++octave) {
@@ -157,7 +159,7 @@ async function generateChunk(chunk: PIXI.Point) {
     }
 
     current_period /= 2;
-    amplitude /= falloff;
+    amplitude /= current_falloff;
   }
 
   // apply mask to lower edge of map

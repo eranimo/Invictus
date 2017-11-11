@@ -74,10 +74,12 @@ export default class MapGenerator {
       return this.chunks.get(hash(chunk));
     }
     console.log(`[MapGenerator] generating chunk (${chunk.x}, ${chunk.y})`);
+    const time = performance.now();
     return await this.worker.postMessage(
       ACTIONS.fetchChunk(chunk)
     )
     .then((chunkData: any) => {
+      console.log(`[MapGenerator] execution time: ${Math.round(performance.now() - time)}ms`);
       const chunkDataConverted = {
         ...chunkData,
         heightmap: ndarray(chunkData.heightmap, [chunkData.chunkSize, chunkData.chunkSize]),
