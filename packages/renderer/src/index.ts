@@ -59,9 +59,9 @@ export default class Renderer {
     const strideH = height / WORLD_MAP_HEIGHT;
 
     // world map background
-    for (let j = 0; j < width; j += strideW) {
-      for (let i = 0; i < height; i += strideH) {
-        const id = worldMapTerrain.get(j, i);
+    for (let i = 0; i < width; i += strideW) {
+      for (let j = 0; j < height; j += strideH) {
+        const id = worldMapTerrain.get(i, j);
         const color = TERRAIN_TYPES[id].tileOptions.fgColor;
         worldMap.beginFill(color);
         const x = Math.round(i / strideH);
@@ -98,9 +98,9 @@ export default class Renderer {
     // const textureIDs = Object.values(TILES)
     //   .map(factory => factory({ fgColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
 
-    for (let y = 0; y < chunkData.terrainTypesMap.shape[0]; y++) {
-      for (let x = 0; x < chunkData.terrainTypesMap.shape[1]; x++) {
-        const id = chunkData.terrainTypesMap.get(y, x);
+    for (let x = 0; x < chunkData.terrainTypesMap.shape[0]; x++) {
+      for (let y = 0; y < chunkData.terrainTypesMap.shape[1]; y++) {
+        const id = chunkData.terrainTypesMap.get(x, y);
         const texture = this.textureIDMap[id];
         if (texture) {
           const land = new PIXI.Sprite(texture);
