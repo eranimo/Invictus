@@ -135,8 +135,8 @@ async function generateChunk(chunk: PIXI.Point) {
     step: STEP,
   });
 
-  for (let i = 0; i <= CHUNK_SPAN; i += STEP) {
-    for (let j = 0; j <= CHUNK_SPAN; j += STEP) {
+  for (let i = 0; i < CHUNK_SPAN; i += STEP) {
+    for (let j = 0; j < CHUNK_SPAN; j += STEP) {
       const x = Math.round(i * CHUNK_ZOOM);
       const y = Math.round(j * CHUNK_ZOOM);
       const value = interpolate(

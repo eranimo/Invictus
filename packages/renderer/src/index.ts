@@ -12,11 +12,15 @@ function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
   return TERRAIN_TYPES.map(terrainType => TILES.tile_shade2(terrainType.tileOptions, 16));
 }
 
+const WORLD_MAP_WIDTH = 100;
+const WORLD_MAP_HEIGHT = 100;
+
 export default class Renderer {
   app: PIXI.Application;
   mapContainer: PIXI.Container;
   worldMapContainer: PIXI.Container;
   textureIDMap: Object;
+  worldMapCursor: PIXI.Sprite;
 
   constructor() {
     this.init();
@@ -28,25 +32,30 @@ export default class Renderer {
       width: window.innerWidth / window.devicePixelRatio,
       height: window.innerHeight / window.devicePixelRatio,
       resolution: window.devicePixelRatio,
+      antialias: false,
+      roundPixels: true,
     });
     this.textureIDMap = makeTextureIDMap();
     document.body.appendChild(this.app.view);
 
     this.mapContainer = new PIXI.Container();
     this.mapContainer.y = 100;
-    this.worldMapContainer = new PIXI.Container();
     this.mapContainer.scale = new PIXI.Point(0.5, 0.5);
+    
+    this.worldMapContainer = new PIXI.Container();
+    this.app.stage.addChild(this.worldMapContainer);
+    this.app.stage.addChild(this.mapContainer);
   }
 
   renderWorldMap(worldMapTerrain: ndarray) {
     console.log(worldMapTerrain);
     const worldMap = new PIXI.Graphics();
-    const mapWidth = 100;
-    const mapHeight = 100;
     const width = worldMapTerrain.shape[0];
     const height = worldMapTerrain.shape[1];
-    const strideW = width / mapWidth;
-    const strideH = height / mapHeight;
+    const strideW = width / WORLD_MAP_WIDTH;
+    const strideH = height / WORLD_MAP_HEIGHT;
+
+    // world map background
     for (let j = 0; j < width; j += strideW) {
       for (let i = 0; i < height; i += strideH) {
         const id = worldMapTerrain.get(j, i);
@@ -60,8 +69,23 @@ export default class Renderer {
     }
     const worldMapTexture = worldMap.generateCanvasTexture();
     const worldMapSprite = new PIXI.Sprite(worldMapTexture);
+
+    // world map cursor
+    const worldMapCursorGraphics = new PIXI.Graphics();
+    const cursorWidth = 10; //WORLD_MAP_WIDTH / 50;
+    const cursorHeight = 10; //WORLD_MAP_HEIGHT / 50;
+    worldMapCursorGraphics.lineStyle(1, 0xFFFFFF);
+    worldMapCursorGraphics.drawRect(0.5, 0.5, 1.5, 1.5);
+    const worldMapCursorTexture = worldMapCursorGraphics.generateCanvasTexture();
+    this.worldMapCursor = new PIXI.Sprite(worldMapCursorTexture);
+
     this.worldMapContainer.addChild(worldMap);
-    this.app.stage.addChild(this.worldMapContainer);
+    this.worldMapContainer.addChild(this.worldMapCursor);
+  }
+
+  changeWorldMapCursor(chunk: PIXI.Point) {
+    this.worldMapCursor.x = chunk.x * (2);
+    this.worldMapCursor.y = chunk.y * (2);
   }
 
   renderChunk(chunkData: ChunkData) {
@@ -84,16 +108,5 @@ export default class Renderer {
         }
       }
     }
-
-    var basicText = new PIXI.Text('@', {
-      fontFamily: 'monospace',
-      fontSize: 14,
-      fill: '#C0C0C0',
-    });
-    basicText.x = 0;
-    basicText.y = 0;
-
-    // mapContainer.addChild(basicText);
-    this.app.stage.addChild(this.mapContainer);
   }
 }

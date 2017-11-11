@@ -27,6 +27,7 @@ mapgen.init().then(() => {
     mapgen.fetchChunk(currentChunk).then(chunk => {
       console.log('Chunk generated', chunk);
       renderer.renderChunk(chunk);
+      renderer.changeWorldMapCursor(currentChunk);
     });
   }
 
