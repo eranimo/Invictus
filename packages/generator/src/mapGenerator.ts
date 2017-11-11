@@ -12,6 +12,11 @@ export interface MapGeneratorSettings {
   size: number;
   seed: number;
   sealevel: number;
+  period: number;
+  falloff: number;
+  octaves: number;
+  chunkSpan: number;
+  chunkZoom: number;
 }
 
 export interface HeightmapStats {

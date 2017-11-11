@@ -9,8 +9,12 @@ console.log(KeyboardJS);
 const mapgen = new MapGenerator({
   size: 1000,
   seed: 12312354786756, // Math.random(),
+  chunkSpan: 50,
+  chunkZoom: 2,
   sealevel: 130,
-  // TODO: add chunk span
+  period: 240,
+  falloff: 3,
+  octaves: 7,
 });
 
 // render();

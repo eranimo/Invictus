@@ -12,8 +12,6 @@ import { MapGeneratorSettings, ChunkData, MapStats, HeightmapStats } from './map
 import { cubicNoiseSample, cubicNoiseConfig } from './cubic';
 
 
-const NUM_CHUNK_SPAN = 50; // 50 x 50 grid of chunks
-const CHUNK_ZOOM = 2; // interpolate 5x world map size
 const context: Worker = self as any;
 
 interface MapState {
@@ -37,18 +35,15 @@ function getHeightmapStats(array: ndarray): HeightmapStats {
 async function init(settings: MapGeneratorSettings) {
   mapState = {};
   console.log(`Worker`, settings);
-  const { size, seed, sealevel } = settings;
+  const { size, seed, sealevel, period, falloff, octaves } = settings;
 
   console.log(`Generating world of size (${size}x${size}) (seed: ${seed})`);
-  const initial_quality = 3;
-  const initial_period = 240;
-  const quality = 1; //1 << (5 - initial_quality); // 1 to 5
-  let period = initial_period / quality; // 1 to 256
-  const falloff = 3; // 0.25 to 16
-  const octaves = 7; // 1 to 10
+  let current_period = period; // 1 to 256
 
-  let worldHeightMap: any = new Uint8ClampedArray(size * size * quality);
-  var amplitude;
+  let worldHeightMap: any = new Uint8ClampedArray(size * size);
+  worldHeightMap.fill(0);
+  
+  let amplitude;
 
   if (falloff - 1 == 0) {
     amplitude = (1 / octaves) / falloff;
@@ -57,59 +52,42 @@ async function init(settings: MapGeneratorSettings) {
       ((falloff - 1) * Math.pow(falloff, octaves)) / (Math.pow(falloff, octaves) - 1)
     ) / falloff;
   }
-  console.table({
-    amplitude,
-    falloff,
-    octaves,
-    quality,
-    period,
-  });
-  worldHeightMap.fill(0);
 
+  // multiple-octave cubic noise
   for (var octave = 0; octave < octaves; ++octave) {
-    var config = cubicNoiseConfig(seed + octave, period / (octave + 1));
+    let config = cubicNoiseConfig(seed + octave, current_period / (octave + 1));
 
-    for (var y = 0; y < Math.floor(size / quality); ++y) {
-      for (var x = 0; x < Math.floor(size / quality); ++x) {
-        const index = (x + y * size) * quality;
+    for (let y = 0; y < size; ++y) {
+      for (let x = 0; x < size; ++x) {
+        const index = x + y * size;
         const nvalue = cubicNoiseSample(config, x, y);
-        var value = (nvalue * amplitude) * 255;
+        const value = (nvalue * amplitude) * 255;
 
-        for (var yrep = 0; yrep < quality; ++yrep) {
-          for (var xrep = 0; xrep < quality; ++xrep) {
-            var repIndex = (index + xrep + yrep * size);
-
-            worldHeightMap[repIndex] += value;
-          }
-        }
+        worldHeightMap[index] += value;
       }
     }
 
-    period /= 2;
+    current_period /= 2;
     amplitude /= falloff;
   }
 
-  for (var y = 0; y < Math.floor(size / quality); ++y) {
-    for (var x = 0; x < Math.floor(size / quality); ++x) {
-      const index = (x + y * size) * quality;
+  // apply mask to lower edge of map
+  for (var y = 0; y < size; ++y) {
+    for (var x = 0; x < size; ++x) {
+      const index = x + y * size;
+      let value = worldHeightMap[index] / 255;
+      const distanceX = Math.abs(x - size * 0.5);
+      const distanceY = Math.abs(y - size * 0.5);
+      const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
+      const maxWidth = size * 0.75;
+      const delta = (distance / maxWidth);
+      const gradient = Math.pow(delta, 2);
+      value *= Math.max(0, 1 - (gradient / 1));
 
-      for (var yrep = 0; yrep < quality; ++yrep) {
-        for (var xrep = 0; xrep < quality; ++xrep) {
-          var repIndex = (index + xrep + yrep * size);
-          let value = worldHeightMap[repIndex] / 255;
-          const distanceX = Math.abs(x - size * 0.5);
-          const distanceY = Math.abs(y - size * 0.5);
-          const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
-          const maxWidth = size * 0.75;
-          const delta = (distance / maxWidth);
-          const gradient = Math.pow(delta, 2);
-          value *= Math.max(0, 1 - (gradient / 1));
-
-          worldHeightMap[repIndex] = value * 255;
-        }
-      }
+      worldHeightMap[index] = value * 255;
     }
   }
+
   worldHeightMap = ndarray(worldHeightMap, [size, size]);
   const worldStats = getHeightmapStats(worldHeightMap);
   const stats = Object.assign({}, settings, worldStats);
@@ -133,16 +111,19 @@ async function init(settings: MapGeneratorSettings) {
 }
 
 function getChunkSize() {
-  const { settings: { size } } = mapState;
-  const CHUNK_SPAN = size / NUM_CHUNK_SPAN;
-  const STEP = 1 / CHUNK_ZOOM;
-  return CHUNK_SPAN * CHUNK_ZOOM;
+  const { settings: { size, chunkSpan, chunkZoom } } = mapState;
+  const CHUNK_SPAN = size / chunkSpan;
+  const STEP = 1 / chunkZoom;
+  return CHUNK_SPAN * chunkZoom;
 }
 
 async function generateChunk(chunk: PIXI.Point) {
-  const { settings: { size }, stats, worldHeightMap, chunkData } = mapState;
-  const CHUNK_SPAN = size / NUM_CHUNK_SPAN;
-  const STEP = 1 / CHUNK_ZOOM;
+  const {
+    settings: { size, chunkSpan, chunkZoom },
+    stats, worldHeightMap, chunkData
+  } = mapState;
+  const CHUNK_SPAN = size / chunkSpan;
+  const STEP = 1 / chunkZoom;
   const chunkSize = getChunkSize();
   const chunkID = `${chunk.x},${chunk.y}`;
   const heightmap = ndarray(
@@ -160,8 +141,8 @@ async function generateChunk(chunk: PIXI.Point) {
 
   for (let i = 0; i < CHUNK_SPAN; i += STEP) {
     for (let j = 0; j < CHUNK_SPAN; j += STEP) {
-      const x = Math.round(i * CHUNK_ZOOM);
-      const y = Math.round(j * CHUNK_ZOOM);
+      const x = Math.round(i * chunkZoom);
+      const y = Math.round(j * chunkZoom);
       const value = interpolate(
         worldHeightMap,
         (chunk.y * CHUNK_SPAN) + (i),
