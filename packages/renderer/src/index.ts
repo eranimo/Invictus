@@ -39,10 +39,13 @@ export default class Renderer {
     document.body.appendChild(this.app.view);
 
     this.mapContainer = new PIXI.Container();
-    this.mapContainer.y = 100;
+    this.mapContainer.x = 10;
+    this.mapContainer.y = 120;
     this.mapContainer.scale = new PIXI.Point(0.5, 0.5);
     
     this.worldMapContainer = new PIXI.Container();
+    this.worldMapContainer.x = 10;
+    this.worldMapContainer.y = 10;
     this.app.stage.addChild(this.worldMapContainer);
     this.app.stage.addChild(this.mapContainer);
   }
