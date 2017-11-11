@@ -47,10 +47,10 @@ export default class MapGenerator {
     const worker = new (Worker as any)(settings);
     console.log(worker);
     this.worker = new PromiseWorker(worker);
-    this.chunks = new Map();
   }
 
   async init() {
+    this.chunks = new Map();
     console.log(this.worker);
     return await this.worker.postMessage(
       ACTIONS.worldInit(this.settings)

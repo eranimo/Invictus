@@ -4,13 +4,17 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var { TsConfigPathsPlugin, CheckerPlugin } = require('awesome-typescript-loader');
 
 const config = {
-  entry: './packages/main/src/index.ts',
+  entry: {
+    main: './packages/main/src/index.ts',
+    generator: './packages/generator/src/index.ts',
+    renderer: './packages/renderer/src/index.ts',
+  },
   output: {
-    filename: '[name].js',
+    filename: '[name].[hash].js',
     chunkFilename: '[name]-[chunkhash].js', 
   },
   output: {
-    filename: '[name].bundle.js',
+    filename: '[name].[hash].bundle.js',
     "path": path.resolve('dist'),
   },
   devtool: 'inline-source-map',
@@ -64,10 +68,11 @@ const config = {
     new webpack.WatchIgnorePlugin([
       /\.js$/,
       /\.d\.ts$/
-    ])
+    ]),
+    new webpack.HotModuleReplacementPlugin({ multiStep: false })
   ],
   devServer: {
-    port: 4000
+    port: 4000,
   }
 };
 

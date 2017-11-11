@@ -65,6 +65,7 @@ async function init(settings: MapGeneratorSettings) {
     period,
   });
   worldHeightMap.fill(0);
+
   for (var octave = 0; octave < octaves; ++octave) {
     var config = cubicNoiseConfig(seed + octave, period / (octave + 1));
 
@@ -86,6 +87,28 @@ async function init(settings: MapGeneratorSettings) {
 
     period /= 2;
     amplitude /= falloff;
+  }
+
+  for (var y = 0; y < Math.floor(size / quality); ++y) {
+    for (var x = 0; x < Math.floor(size / quality); ++x) {
+      const index = (x + y * size) * quality;
+
+      for (var yrep = 0; yrep < quality; ++yrep) {
+        for (var xrep = 0; xrep < quality; ++xrep) {
+          var repIndex = (index + xrep + yrep * size);
+          let value = worldHeightMap[repIndex] / 255;
+          const distanceX = Math.abs(x - size * 0.5);
+          const distanceY = Math.abs(y - size * 0.5);
+          const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
+          const maxWidth = size * 0.75;
+          const delta = (distance / maxWidth);
+          const gradient = Math.pow(delta, 2);
+          value *= Math.max(0, 1 - (gradient / 1));
+
+          worldHeightMap[repIndex] = value * 255;
+        }
+      }
+    }
   }
   worldHeightMap = ndarray(worldHeightMap, [size, size]);
   const worldStats = getHeightmapStats(worldHeightMap);

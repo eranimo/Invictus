@@ -14,6 +14,8 @@ const LOWLAND_COLOR = 0x998151;
 const HIGHLAND_COLOR = 0x594929;
 const BG_COLOR = 0x111;
 
+const HIGHLAND_CUTOFF = 0.65;
+
 export const ocean: TerrainType = {
   id: 0,
   name: 'Ocean',
@@ -32,7 +34,7 @@ export const lowland: TerrainType = {
   id: 2,
   name: 'Lowland',
   tileOptions: { fgColor: LOWLAND_COLOR, bgColor: BG_COLOR },
-  test: (altitudePercent: number) => altitudePercent <= 0.75 && altitudePercent >= 0,
+  test: (altitudePercent: number) => altitudePercent <= HIGHLAND_CUTOFF && altitudePercent >= 0,
 }
 
 
@@ -40,7 +42,7 @@ export const highland: TerrainType = {
   id: 3,
   name: 'Highland',
   tileOptions: { fgColor: HIGHLAND_COLOR, bgColor: BG_COLOR },
-  test: (altitudePercent: number) => altitudePercent > 0.75,
+  test: (altitudePercent: number) => altitudePercent > HIGHLAND_CUTOFF,
 }
 
 export const TERRAIN_TYPES_ID_MAP = {};

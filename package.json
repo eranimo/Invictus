@@ -7,7 +7,7 @@
     "postinstall": "node makeConfig.js",
     "prestart": "node makeConfig.js",
     "prebuild": "node makeConfig.js",
-    "start": "webpack-dev-server --hot",
+    "start": "webpack-dev-server",
     "build": "webpack --progress",
     "bootstrap": "lerna bootstrap",
     "clean": "lerna clean",
