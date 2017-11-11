@@ -9,7 +9,7 @@ let textureIDMap = {};
 
 function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
   // make a texture based on each terrain type
-  return TERRAIN_TYPES.map(terrainType => TILES.tile_shade2(terrainType.tileOptions, 16));
+  return TERRAIN_TYPES.map(terrainType => TILES.tile_shade1(terrainType.tileOptions, 16));
 }
 
 const WORLD_MAP_WIDTH = 100;
