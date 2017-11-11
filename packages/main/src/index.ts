@@ -8,7 +8,7 @@ console.log(KeyboardJS);
 
 const mapgen = new MapGenerator({
   size: 1000,
-  seed: 1000,
+  seed: Math.random(),
   sealevel: 130,
   // TODO: add chunk span
 });

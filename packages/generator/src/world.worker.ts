@@ -41,11 +41,11 @@ async function init(settings: MapGeneratorSettings) {
 
   console.log(`Generating world of size (${size}x${size}) (seed: ${seed})`);
   const initial_quality = 3;
-  const initial_period = 128;
+  const initial_period = 240;
   const quality = 1; //1 << (5 - initial_quality); // 1 to 5
   let period = initial_period / quality; // 1 to 256
-  const falloff = 7; // 0.25 to 16
-  const octaves = 3; // 1 to 10
+  const falloff = 3; // 0.25 to 16
+  const octaves = 7; // 1 to 10
 
   let worldHeightMap: any = new Uint8ClampedArray(size * size * quality);
   var amplitude;
