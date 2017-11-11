@@ -71,21 +71,21 @@ async function init(settings: MapGeneratorSettings) {
   }
 
   // apply mask to lower edge of map
-  // for (var y = 0; y < size; ++y) {
-  //   for (var x = 0; x < size; ++x) {
-  //     const index = x + y * size;
-  //     let value = worldHeightMap[index] / 255;
-  //     const distanceX = Math.abs(x - size * 0.5);
-  //     const distanceY = Math.abs(y - size * 0.5);
-  //     const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
-  //     const maxWidth = size * 0.75;
-  //     const delta = (distance / maxWidth);
-  //     const gradient = Math.pow(delta, 2);
-  //     value *= Math.max(0, 1 - (gradient / 1));
+  for (var y = 0; y < size; ++y) {
+    for (var x = 0; x < size; ++x) {
+      const index = x + y * size;
+      let value = worldHeightMap[index] / 255;
+      const distanceX = Math.abs(x - size * 0.5);
+      const distanceY = Math.abs(y - size * 0.5);
+      const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
+      const maxWidth = size * 0.75;
+      const delta = (distance / maxWidth);
+      const gradient = Math.pow(delta, 2);
+      value *= Math.max(0, 1 - (gradient / 1));
 
-  //     worldHeightMap[index] = value * 255;
-  //   }
-  // }
+      worldHeightMap[index] = value * 255;
+    }
+  }
 
   worldHeightMap = ndarray(worldHeightMap, [size, size]);
   const worldStats = getHeightmapStats(worldHeightMap);
@@ -121,7 +121,7 @@ async function generateChunk(chunk: PIXI.Point) {
     settings: { seed, size, chunkSpan, chunkZoom, period, falloff, octaves },
     stats, worldHeightMap, chunkData
   } = mapState;
-  const CHUNK_SIZE = size / chunkSpan;
+  const CHUNK_SIZE = (size / chunkSpan) * chunkZoom;
   const STEP = 1 / chunkZoom;
   const chunkSize = getChunkSize();
   const chunkID = `${chunk.x},${chunk.y}`;
@@ -146,10 +146,10 @@ async function generateChunk(chunk: PIXI.Point) {
   for (var octave = 0; octave < current_octaves; ++octave) {
     let config = cubicNoiseConfig(seed + octave, current_period / (octave + 1));
   
-    for (let i = 0; i < CHUNK_SIZE * chunkZoom; i += 1) {
-      for (let j = 0; j < CHUNK_SIZE * chunkZoom; j += 1) {
-        const localX = (i + (chunk.x * CHUNK_SIZE * chunkZoom)) / chunkZoom;
-        const localY = (j + (chunk.y * CHUNK_SIZE * chunkZoom)) / chunkZoom;
+    for (let i = 0; i < CHUNK_SIZE; i++) {
+      for (let j = 0; j < CHUNK_SIZE; j++) {
+        const localX = (i + (chunk.x * CHUNK_SIZE)) / chunkZoom;
+        const localY = (j + (chunk.y * CHUNK_SIZE)) / chunkZoom;
         const nvalue = cubicNoiseSample(config, localY, localX);
         const value = chunkHeightmap.get(i, j) + (nvalue * amplitude) * 255;
         chunkHeightmap.set(i, j, value);
@@ -161,24 +161,22 @@ async function generateChunk(chunk: PIXI.Point) {
   }
 
   // apply mask to lower edge of map
-  // for (let i = 0; i < CHUNK_SPAN; i += STEP) {
-  //   for (let j = 0; j < CHUNK_SPAN; j += STEP) {
-  //     const chunkX = Math.round(i * chunkZoom);
-  //     const chunkY = Math.round(j * chunkZoom);
-  //     let value = worldHeightMap.get(chunkX, chunkY) / 255;
-  //     const localX = (chunk.y * CHUNK_SPAN) + (i);
-  //     const localY = (chunk.x * CHUNK_SPAN) + (j);
-  //     const distanceX = Math.abs(localX - size * 0.5);
-  //     const distanceY = Math.abs(localY - size * 0.5);
-  //     const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
-  //     const maxWidth = size * 0.75;
-  //     const delta = (distance / maxWidth);
-  //     const gradient = Math.pow(delta, 2);
-  //     value *= Math.max(0, 1 - (gradient / 1));
+  for (let i = 0; i < CHUNK_SIZE; i++) {
+    for (let j = 0; j < CHUNK_SIZE; j++) {
+      let value = chunkHeightmap.get(i, j) / 255;
+      const localX = (i + (chunk.x * CHUNK_SIZE)) / chunkZoom;
+      const localY = (j + (chunk.y * CHUNK_SIZE)) / chunkZoom;
+      const distanceX = Math.abs(localX - size * 0.5);
+      const distanceY = Math.abs(localY - size * 0.5);
+      const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
+      const maxWidth = size * 0.75;
+      const delta = (distance / maxWidth);
+      const gradient = Math.pow(delta, 2);
+      value *= Math.max(0, 1 - (gradient / 1));
 
-  //     worldHeightMap.set(chunkX, chunkY, value * 255);
-  //   }
-  // }
+      chunkHeightmap.set(i, j, value * 255);
+    }
+  }
 
   // const stats: HeightmapStats = getHeightmapStats(heightmap);
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(chunkHeightmap, stats, chunkSize);
