@@ -22,7 +22,7 @@ const mapgen = new MapGenerator({
 mapgen.init().then(() => {
   KeyboardJS.watch();
   let renderer = new Renderer();
-  renderer.renderWorldMap(mapgen.worldMapTerrain);
+  renderer.renderWorldMap(mapgen.worldMapTerrain, mapgen.coastalCells);
   console.log('Map generated', mapgen);
   let currentChunk = new PIXI.Point(25, 25);
 

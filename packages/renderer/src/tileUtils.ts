@@ -9,7 +9,7 @@ interface Tile {
 }
 
 export interface TileOptions {
-  bgColor: number;
+  bgColor?: number;
   fgColor: number
 };
 export type TileFactory = (options: TileOptions, cellSize: number) => PIXI.Texture;
@@ -25,9 +25,11 @@ export function createTileTexture(
     const graphics = new PIXI.Graphics();
 
     // draw background
-    graphics.beginFill(options.bgColor, 1);
-    graphics.drawRect(0, 0, cellSize, cellSize);
-    graphics.endFill();
+    if (options.bgColor) {
+      graphics.beginFill(options.bgColor, 1);
+      graphics.drawRect(0, 0, cellSize, cellSize);
+      graphics.endFill();
+    }
 
     // draw foreground
     graphics.beginFill(options.fgColor, 1);

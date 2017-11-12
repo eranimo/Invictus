@@ -3880,6 +3880,10 @@ mini-signals@^1.1.1:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/mini-signals/-/mini-signals-1.2.0.tgz#45b08013c5fae51a24aa1a935cd317c9ed721d74"
 
+minimal-bit-array@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/minimal-bit-array/-/minimal-bit-array-1.0.0.tgz#3297a8bfe5d9b177b5b3999c38aeabc7a85fe4cf"
+
 minimalistic-assert@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/minimalistic-assert/-/minimalistic-assert-1.0.0.tgz#702be2dda6b37f4836bcb3f5db56641b64a1d3d3"
@@ -3983,6 +3987,13 @@ ncname@1.0.x:
   dependencies:
     xml-char-classes "^1.0.0"
 
+ndarray-bit@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ndarray-bit/-/ndarray-bit-1.0.0.tgz#e867d6654aff471da05f0eea0a1caf5f085fd507"
+  dependencies:
+    minimal-bit-array "^1.0.0"
+    ndarray "^1.0.15"
+
 ndarray-fill@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/ndarray-fill/-/ndarray-fill-1.0.2.tgz#a30a60f7188e0c9582fcdd58896acdcb522a1ed6"
@@ -3999,7 +4010,7 @@ ndarray-ops@^1.2.2:
   dependencies:
     cwise-compiler "^1.0.0"
 
-ndarray@^1.0.18:
+ndarray@^1.0.15, ndarray@^1.0.18:
   version "1.0.18"
   resolved "https://registry.yarnpkg.com/ndarray/-/ndarray-1.0.18.tgz#b60d3a73224ec555d0faa79711e502448fd3f793"
   dependencies:

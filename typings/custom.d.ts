@@ -16,6 +16,11 @@ declare module "ndarray-fill" {
   export = content;
 }
 
+declare module "ndarray-bits" {
+  const content: any;
+  export = content;
+}
+
 declare module "ndarray-ops" {
   const content: any;
   export = content;

@@ -32,6 +32,8 @@ export interface ChunkData {
   heightmap: ndarray;
   altitudePercentMap: ndarray;
   terrainTypesMap: ndarray;
+  riverMap?: ndarray;
+  coastalCells?: ndarray;
   chunkSize: number;
 };
 
@@ -46,6 +48,7 @@ export default class MapGenerator {
   stats: MapStats;
   chunks: Map<string, ChunkData>;
   worldMapTerrain: ndarray;
+  coastalCells: ndarray;
 
   constructor(settings) {
     this.settings = settings;
@@ -61,10 +64,10 @@ export default class MapGenerator {
       ACTIONS.worldInit(this.settings)
     )
     .then((data: any) => {
-      console.log('stats', data.stats);
+      console.log('world map generator data', data);
       this.stats = Object.assign({}, data.stats, this.settings);
       this.worldMapTerrain = ndarray(data.worldMapTerrain, [this.settings.size, this.settings.size]);
-      console.log('world', this.worldMapTerrain);
+      this.coastalCells = ndarray(data.coastalCells, [this.settings.size, this.settings.size]);
     });
   }
 
@@ -84,6 +87,8 @@ export default class MapGenerator {
         ...chunkData,
         heightmap: ndarray(chunkData.heightmap, [chunkData.chunkSize, chunkData.chunkSize]),
         terrainTypesMap: ndarray(chunkData.terrainTypesMap, [chunkData.chunkSize, chunkData.chunkSize]),
+        riverMap: ndarray(chunkData.riverMap, [chunkData.chunkSize, chunkData.chunkSize]),
+        coastalCells: ndarray(chunkData.coastalCells, [chunkData.chunkSize, chunkData.chunkSize]),
       };
       this.chunks.set(hash(chunk), chunkDataConverted);
       return chunkDataConverted;

@@ -5,7 +5,28 @@ import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '@invictus/generator/terrain
 import * as ndarray from 'ndarray';
 
 
+function anyWithinRange(
+  array: ndarray,
+  value: any,
+  x: number,
+  y: number,
+  endW: number,
+  endH: number
+): boolean {
+  for (let i = x; i < x + endW; i++) {
+    for (let j = y; j < y + endH; j++) {
+      if (array.get(i, j) === value) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 let textureIDMap = {};
+
+const riverTexture = TILES.tile_shade2({ fgColor: 0x0000FF }, 16)
+const redTexture = TILES.tile_shade2({ fgColor: 0xFF0000 }, 16)
 
 function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
   // make a texture based on each terrain type
@@ -50,7 +71,7 @@ export default class Renderer {
     this.app.stage.addChild(this.mapContainer);
   }
 
-  renderWorldMap(worldMapTerrain: ndarray) {
+  renderWorldMap(worldMapTerrain: ndarray, coastalCells: ndarray) {
     console.log(worldMapTerrain);
     const worldMap = new PIXI.Graphics();
     const width = worldMapTerrain.shape[0];
@@ -68,6 +89,15 @@ export default class Renderer {
         const y = Math.round(j / strideW);
         worldMap.drawRect(x, y, 1, 1);
         worldMap.endFill();
+
+        if (anyWithinRange(coastalCells, 1, i, j, strideW, strideH)) {
+        // if (coastalCells.get(i, j) === 1) {
+          worldMap.beginFill(0xFF0000);
+          const x = Math.round(i / strideH);
+          const y = Math.round(j / strideW);
+          worldMap.drawRect(x, y, 1, 1);
+          worldMap.endFill();
+        }
       }
     }
     const worldMapTexture = worldMap.generateCanvasTexture();
@@ -101,9 +131,25 @@ export default class Renderer {
     for (let x = 0; x < chunkData.terrainTypesMap.shape[0]; x++) {
       for (let y = 0; y < chunkData.terrainTypesMap.shape[1]; y++) {
         const id = chunkData.terrainTypesMap.get(x, y);
+        const isRiver = chunkData.riverMap.get(x, y);
+        const isCoastal = chunkData.coastalCells.get(x, y);
         const texture = this.textureIDMap[id];
         if (texture) {
           const land = new PIXI.Sprite(texture);
+          land.x = x * CELL_SIZE;
+          land.y = y * CELL_SIZE;
+
+          this.mapContainer.addChild(land);
+        }
+        if (isRiver) {
+          const land = new PIXI.Sprite(riverTexture);
+          land.x = x * CELL_SIZE;
+          land.y = y * CELL_SIZE;
+
+          this.mapContainer.addChild(land);
+        }
+        if (isCoastal) {
+          const land = new PIXI.Sprite(redTexture);
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 
