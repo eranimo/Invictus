@@ -8,7 +8,7 @@ export type TerrainType = {
   test(altitudePercent: number): boolean
 }
 
-const OCEAN_COLOR = 0x2a4dd6;
+const OCEAN_COLOR = 0x3056ad;
 const SHELF_COLOR = 0x315ec6;
 const LITTORAL_COLOR = 0x4e77d8;
 const LOWLAND_COLOR = 0x6d5d3e;
