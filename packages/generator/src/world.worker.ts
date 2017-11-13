@@ -10,7 +10,6 @@ import * as Alea from 'alea';
 import * as interpolate from 'ndarray-linear-interpolate';
 import terrainTypeFor from './terrainTypes';
 import { MapGeneratorSettings, ChunkData, MapStats, HeightmapStats } from './mapGenerator';
-import { cubicNoiseSample, cubicNoiseConfig } from './cubic';
 import * as _ from 'lodash';
 
 
@@ -59,6 +58,27 @@ function getHeightmapStats(array: ndarray): HeightmapStats {
   };
 }
 
+const NOISE_OPTIONS = {
+  numIterations: 10,
+  persistence: 0.6,
+  initFrequency: 2,
+};
+
+function makeHeightmap({ seed, size, zoomLevel, position }) {
+  const heightmap = ndarray(new Float32Array(size * size), [size, size]);
+
+  const rng = new Alea(seed);
+  const simplex = new SimplexNoise(rng);
+  const noise = (nx, ny) => simplex.noise2D(nx, ny);
+
+  fill(heightmap, (x, y) => {
+    const nx = (x + position.x) / zoomLevel;
+    const ny = (y + position.y) / zoomLevel;
+    return zoomableNoise(noise)(NOISE_OPTIONS)(nx / size + 0.5, ny / size + 0.5) * 255;
+  });
+  return heightmap;
+}
+
 async function init(settings: MapGeneratorSettings) {
   mapState = {};
   console.log(`Worker`, settings);
@@ -67,41 +87,16 @@ async function init(settings: MapGeneratorSettings) {
   console.log(`Generating world of size (${size}x${size}) (seed: ${seed})`);
   let current_period = period; // 1 to 256
 
-  let worldHeightMap: any = new Uint8ClampedArray(size * size);
-  worldHeightMap.fill(0);
-  
-  let amplitude;
-  if (falloff - 1 == 0) {
-    amplitude = (1 / octaves) / falloff;
-  } else {
-    amplitude = (
-      ((falloff - 1) * Math.pow(falloff, octaves)) / (Math.pow(falloff, octaves) - 1)
-    ) / falloff;
-  }
-
-  // multiple-octave cubic noise
-  for (var octave = 0; octave < octaves; ++octave) {
-    let config = cubicNoiseConfig(seed + octave, current_period / (octave + 1));
-
-    for (let x = 0; x < size; ++x) {
-      for (let y = 0; y < size; ++y) {
-        const index = x + y * size;
-        const nvalue = cubicNoiseSample(config, x, y);
-        const value = (nvalue * amplitude) * 255;
-
-        worldHeightMap[index] += value;
-      }
-    }
-
-    current_period /= 2;
-    amplitude /= falloff;
-  }
+  let worldHeightMap: any = makeHeightmap({
+    seed, size,
+    position: { x: 0, y: 0 },
+    zoomLevel: 1,
+  });
 
   // apply mask to lower edge of map
   for (var y = 0; y < size; ++y) {
     for (var x = 0; x < size; ++x) {
-      const index = x + y * size;
-      let value = worldHeightMap[index] / 255;
+      let value = worldHeightMap.get(x, y) / 255;
       const distanceX = Math.abs(x - size * 0.5);
       const distanceY = Math.abs(y - size * 0.5);
       const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2)) * .6;
@@ -110,11 +105,10 @@ async function init(settings: MapGeneratorSettings) {
       const gradient = Math.pow(delta, 2);
       value *= Math.max(0, 1 - (gradient / 1));
 
-      worldHeightMap[index] = value * 255;
+      worldHeightMap.set(x, y, value * 255);
     }
   }
 
-  worldHeightMap = ndarray(worldHeightMap, [size, size]);
   const worldStats = getHeightmapStats(worldHeightMap);
   const stats = Object.assign({}, settings, worldStats);
 
@@ -139,6 +133,36 @@ async function init(settings: MapGeneratorSettings) {
   }
   const totalCoastalCells = ops.sum(coastalCells);
   console.log(`There are ${totalCoastalCells} coastal cells in the world map`);
+
+
+  /* River algorithm
+
+  
+  River systems are tree data structures.
+  Each node is a river source, end, or fork.
+  
+  GENERATING
+  - pick river sources from coastal cells
+  - create first river edge (trunk)
+  - river edge step:
+    - decide edge direction:
+      - if ocean is above river source with land below, direction is down
+      - if ocean is below river source with land above, direction is up
+      - if ocean is left of river source with land to the right, direction is right
+      - if ocean is right of river source with land to the left, direction is left
+    - walk along e number of cells in edge direction
+      where e is large for trunk and small for branches
+      - if any cells encountered while walking are ocean:
+        - river edge is not valid
+      - if any cells encountered while walking are other rivers:
+        - stop river edge at 2 cells before other river cell
+
+    - if edge is valid, perform A* from current node to new node
+      - store path in river edge data structure
+
+  - create new river edges randomly along first river edge (branches)
+  */
+
 
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(worldHeightMap, stats, size);
 
@@ -185,47 +209,21 @@ async function generateChunk(chunk: PIXI.Point) {
   const STEP = 1 / chunkZoom;
   const chunkSize = getChunkSize();
   const chunkID = `${chunk.x},${chunk.y}`;
-  const chunkHeightmap = ndarray(
-    new Uint8Array(chunkSize * chunkSize),
-    [chunkSize, chunkSize]
-  );
-  fill(chunkHeightmap, () => 0);
 
-  let current_period = period;
-  let current_octaves = octaves;
-  let current_falloff = falloff;
-
-  let amplitude;
-  if (current_falloff - 1 == 0) {
-    amplitude = (1 / current_octaves) / current_falloff;
-  } else {
-    amplitude = (
-      ((current_falloff - 1) * Math.pow(current_falloff, current_octaves)) /
-      (Math.pow(current_falloff, current_octaves) - 1)
-    ) / current_falloff;
-  }
-
-  for (var octave = 0; octave < current_octaves; ++octave) {
-    let config = cubicNoiseConfig(seed + octave, current_period / (octave + 1));
-  
-    for (let i = 0; i < CHUNK_SIZE; i++) {
-      for (let j = 0; j < CHUNK_SIZE; j++) {
-        const localX = (chunk.x * (size / chunkSpan)) + (i / chunkZoom);
-        const localY = (chunk.y * (size / chunkSpan)) + (j / chunkZoom);
-        const nvalue = cubicNoiseSample(config, localY, localX);
-        const value = chunkHeightmap.get(i, j) + (nvalue * amplitude) * 255;
-        chunkHeightmap.set(i, j, value);
-      }
-    }
-
-    current_period /= 2;
-    amplitude /= current_falloff;
-  }
+  let chunkHeightMap: any = makeHeightmap({
+    seed,
+    size: chunkSize,
+    zoomLevel: chunkSpan,
+    position: {
+      x: chunk.x * CHUNK_SIZE,
+      y: chunk.y * CHUNK_SIZE,
+    },
+  });
 
   // apply mask to lower edge of map
   for (let i = 0; i < CHUNK_SIZE; i++) {
     for (let j = 0; j < CHUNK_SIZE; j++) {
-      let value = chunkHeightmap.get(i, j) / 255;
+      let value = chunkHeightMap.get(i, j) / 255;
       const localX = (i + (chunk.x * CHUNK_SIZE)) / chunkZoom;
       const localY = (j + (chunk.y * CHUNK_SIZE)) / chunkZoom;
       const distanceX = Math.abs(localX - size * 0.5);
@@ -236,7 +234,7 @@ async function generateChunk(chunk: PIXI.Point) {
       const gradient = Math.pow(delta, 2);
       value *= Math.max(0, 1 - (gradient / 1));
 
-      chunkHeightmap.set(i, j, value * 255);
+      chunkHeightMap.set(i, j, value * 255);
     }
   }
 
@@ -247,7 +245,7 @@ async function generateChunk(chunk: PIXI.Point) {
   //     const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
   //     let height = worldHeightMap.get(localX, localY);
 
-  //     chunkHeightmap.set(i, j, height);
+  //     chunkHeightMap.set(i, j, height);
   //   }
   // }
 
@@ -256,11 +254,16 @@ async function generateChunk(chunk: PIXI.Point) {
 
   for (let i = 0; i < CHUNK_SIZE; i++) {
     for (let j = 0; j < CHUNK_SIZE; j++) {
-      let chunkHeight = chunkHeightmap.get(i, j) / 255;
+      let value = chunkHeightMap.get(i, j);
+      let chunkHeight = chunkHeightMap.get(i, j) / 255;
       const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
       const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
       let isCoastalCellWorld = mapState.world.coastalCells.get(localX, localY);
-      if (isCoastalCellWorld) {
+      if (
+        isCoastalCellWorld &&
+        value >= sealevel &&
+        findNeighbor(chunkHeightMap, i, j, cell => cell < sealevel)
+      ) {
         coastalCells.set(i, j, 1);
       }
     }
@@ -292,11 +295,11 @@ async function generateChunk(chunk: PIXI.Point) {
   //   }
   // }
 
-  const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightmap);
-  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(chunkHeightmap, stats, chunkSize);
+  const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightMap);
+  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(chunkHeightMap, stats, chunkSize);
   chunkData[chunkID] = {
     stats: chunkStats,
-    heightmap: chunkHeightmap,
+    heightmap: chunkHeightMap,
     altitudePercentMap,
     terrainTypesMap,
     coastalCells,
@@ -306,7 +309,7 @@ async function generateChunk(chunk: PIXI.Point) {
 
   return {
     stats: chunkStats,
-    heightmap: chunkHeightmap.data,
+    heightmap: chunkHeightMap.data,
     altitudePercentMap: altitudePercentMap.data,
     terrainTypesMap: terrainTypesMap.data,
     coastalCells: coastalCells.data,

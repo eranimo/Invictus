@@ -26,7 +26,7 @@ function anyWithinRange(
 let textureIDMap = {};
 
 const riverTexture = TILES.tile_shade2({ fgColor: 0x0000FF }, 16)
-const redTexture = TILES.tile_shade2({ fgColor: 0xFF0000 }, 16)
+const coastalTexture = TILES.tile_shade2({ fgColor: 0xEDC9AF }, 16)
 
 function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
   // make a texture based on each terrain type
@@ -91,8 +91,7 @@ export default class Renderer {
         worldMap.endFill();
 
         if (anyWithinRange(coastalCells, 1, i, j, strideW, strideH)) {
-        // if (coastalCells.get(i, j) === 1) {
-          worldMap.beginFill(0xFF0000);
+          worldMap.beginFill(0xEDC9AF);
           const x = Math.round(i / strideH);
           const y = Math.round(j / strideW);
           worldMap.drawRect(x, y, 1, 1);
@@ -149,7 +148,7 @@ export default class Renderer {
           this.mapContainer.addChild(land);
         }
         if (isCoastal) {
-          const land = new PIXI.Sprite(redTexture);
+          const land = new PIXI.Sprite(coastalTexture);
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 
