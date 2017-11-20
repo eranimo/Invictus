@@ -250,11 +250,17 @@ export default class Grid<Fields> {
 
   /** Get a field's value on the grid */
   getField(x: number, y: number, fieldName: string) {
+    if (!(fieldName in this.fields)) {
+      throw new Error(`Field ${fieldName} does not exist in Grid`);
+    }
     return this.fields[fieldName].get(x, y);
   }
   
   /** Set a field on the grid to a value */
   setField(x: number, y: number, fieldName: string, value: any) {
+    if (!(fieldName in this.fields)) {
+      throw new Error(`Field ${fieldName} does not exist in Grid`);
+    }
     this.fields[fieldName].set(x, y, value);
   }
 

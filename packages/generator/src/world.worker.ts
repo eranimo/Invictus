@@ -312,15 +312,15 @@ async function generateChunk(chunk: PIXI.Point) {
   }
 
   // DEBUG: chunk height = world height
-  for (let i = 0; i < CHUNK_SIZE; i++) {
-    for (let j = 0; j < CHUNK_SIZE; j++) {
-      const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
-      const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
-      let height = state.world.grid.getField(localX, localY, 'height');
+  // for (let i = 0; i < CHUNK_SIZE; i++) {
+  //   for (let j = 0; j < CHUNK_SIZE; j++) {
+  //     const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
+  //     const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
+  //     let height = state.world.grid.getField(localX, localY, 'height');
 
-      chunkHeightMap.set(i, j, height);
-    }
-  }
+  //     chunkHeightMap.set(i, j, height);
+  //   }
+  // }
 
   const coastalCells = ndarray([], [CHUNK_SIZE, CHUNK_SIZE]);
   fill(coastalCells, () => 0);
@@ -352,28 +352,6 @@ async function generateChunk(chunk: PIXI.Point) {
   );
   fill(riverMap, () => 0);
 
-  for (let i = 0; i < CHUNK_SIZE; i++) {
-    for (let j = 0; j < CHUNK_SIZE; j++) {
-      const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
-      const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
-      const isRiver = state.world.grid.getField(localX, localY, 'isRiver') === 1;
-      const isCoastal = coastalCells.get(i, j) === 1;
-      if (isRiver) {
-        riverMap.set(i, j, 1);
-      }
-      // if (isRiver && isCoastal) {
-      //   const result = testOppositeSides(
-      //     (a, b) => chunkHeightMap.get(a, b) < sealevel,
-      //     (a, b) => chunkHeightMap.get(a, b) >= sealevel && coastalCells.get(a, b) === 0,
-      //     i, j
-      //   );
-      //   if (result) {
-      //     riverMap.set(result[0], result[1], 1);
-      //   }
-      // }
-    }
-  }
-
   const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightMap);
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(state.settings, chunkHeightMap, stats, chunkSize);
   const grid = new Grid<ChunkGridData>(chunkSize, chunkSize, {
@@ -381,7 +359,6 @@ async function generateChunk(chunk: PIXI.Point) {
     altitudePercent: altitudePercentMap,
     terrainType: terrainTypesMap,
     isRiver: riverMap,
-    isCoastalCell: coastalCells,
   });
 
   state.chunks.set(chunkID, {

@@ -67,6 +67,11 @@
       "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    },
     "moduleFileExtensions": [
       "ts",
       "tsx",

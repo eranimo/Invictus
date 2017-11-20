@@ -18,13 +18,17 @@ const mapgen = new MapGenerator({
 });
 
 // render();
+const initialChunk = {
+  x: localStorage.INITIAL_CHUNK_X || 25,
+  y: localStorage.INITIAL_CHUNK_Y || 25,
+};
 
 mapgen.init().then(() => {
   KeyboardJS.watch();
   let renderer = new Renderer();
   renderer.renderWorldMap(mapgen.world);
   console.log('Map generated', mapgen);
-  let currentChunk = new PIXI.Point(25, 25);
+  let currentChunk = new PIXI.Point(initialChunk.x, initialChunk.y);
 
   function fetchChunk() {
     console.log(`Fetching chunk (${currentChunk.x}, ${currentChunk.y})`);
@@ -33,6 +37,8 @@ mapgen.init().then(() => {
       renderer.renderChunk(chunk);
       renderer.changeWorldMapCursor(currentChunk);
     });
+    localStorage.INITIAL_CHUNK_X = currentChunk.x;
+    localStorage.INITIAL_CHUNK_Y = currentChunk.y;
   }
 
   fetchChunk();

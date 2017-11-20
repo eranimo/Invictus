@@ -33,7 +33,6 @@ export interface ChunkGridData {
   altitudePercent: ndarray;
   terrainType: ndarray;
   isRiver: ndarray;
-  isCoastalCell: ndarray;
 }
 
 export interface ChunkData {
