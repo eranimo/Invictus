@@ -35,3 +35,23 @@ declare module "alea" {
   const content: any;
   export = content;
 }
+
+declare module "ngraph.graph" {
+  export interface Node {
+    id: any;
+    data: any;
+  }
+  export interface Graph {
+    addNode(id?: any): Node;
+    getLink(left: any, right: any): Node;
+    getNode(id?: any): Node;
+  }
+  type createGraph = () => Graph;
+  export default createGraph;
+}
+
+
+declare module "ngraph.generators" {
+  import { Graph } from 'ngraph.graph';
+  export type grid = (width: number, height: number) => Graph;
+}

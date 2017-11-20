@@ -2,6 +2,7 @@ import * as Worker from './world.worker';
 import { PromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
+import Grid from './grid';
 
 
 function hash(point: PIXI.Point) {
@@ -27,28 +28,38 @@ export interface HeightmapStats {
 
 export type MapStats = HeightmapStats & MapGeneratorSettings;
 
+export interface ChunkGridData {
+  height: ndarray;
+  altitudePercent: ndarray;
+  terrainType: ndarray;
+  isRiver: ndarray;
+  isCoastalCell: ndarray;
+}
+
 export interface ChunkData {
   stats: HeightmapStats;
-  heightmap: ndarray;
-  altitudePercentMap: ndarray;
-  terrainTypesMap: ndarray;
-  riverMap?: ndarray;
-  coastalCells?: ndarray;
+  grid: Grid<ChunkGridData>,
   chunkSize: number;
 };
 
-export type TileStats = {
-  height: number,
-  altitudePercent: number;
+export interface WorldGridData {
+  height: ndarray;
+  altitudePercent: ndarray,
+  terrainType: ndarray;
+  isRiver: ndarray;
+  isCoastalCell: ndarray;
+}
+
+export interface WorldData {
+  stats: HeightmapStats;
+  grid: Grid<WorldGridData>,
 }
 
 export default class MapGenerator {
   worker: PromiseWorker;
   settings: MapGeneratorSettings
-  stats: MapStats;
+  world: WorldData;
   chunks: Map<string, ChunkData>;
-  worldMapTerrain: ndarray;
-  coastalCells: ndarray;
 
   constructor(settings) {
     this.settings = settings;
@@ -65,9 +76,10 @@ export default class MapGenerator {
     )
     .then((data: any) => {
       console.log('world map generator data', data);
-      this.stats = Object.assign({}, data.stats, this.settings);
-      this.worldMapTerrain = ndarray(data.worldMapTerrain, [this.settings.size, this.settings.size]);
-      this.coastalCells = ndarray(data.coastalCells, [this.settings.size, this.settings.size]);
+      this.world = {
+        stats: Object.assign({}, data.stats, this.settings),
+        grid: Grid.import(this.settings.size, this.settings.size, data.grid),
+      };
     });
   }
 
@@ -83,12 +95,11 @@ export default class MapGenerator {
     )
     .then((chunkData: any) => {
       console.log(`[MapGenerator] execution time: ${Math.round(performance.now() - time)}ms`);
+      const { chunkSize, grid, stats } = chunkData;
       const chunkDataConverted = {
-        ...chunkData,
-        heightmap: ndarray(chunkData.heightmap, [chunkData.chunkSize, chunkData.chunkSize]),
-        terrainTypesMap: ndarray(chunkData.terrainTypesMap, [chunkData.chunkSize, chunkData.chunkSize]),
-        riverMap: ndarray(chunkData.riverMap, [chunkData.chunkSize, chunkData.chunkSize]),
-        coastalCells: ndarray(chunkData.coastalCells, [chunkData.chunkSize, chunkData.chunkSize]),
+        stats,
+        chunkSize,
+        grid: Grid.import(chunkSize, chunkSize, grid),
       };
       this.chunks.set(hash(chunk), chunkDataConverted);
       return chunkDataConverted;

@@ -9,19 +9,62 @@ import * as fill from 'ndarray-fill';
 import * as Alea from 'alea';
 import * as interpolate from 'ndarray-linear-interpolate';
 import terrainTypeFor from './terrainTypes';
-import { MapGeneratorSettings, ChunkData, MapStats, HeightmapStats } from './mapGenerator';
+import {
+  MapGeneratorSettings,
+  WorldData,
+  ChunkData,
+  MapStats,
+  HeightmapStats,
+  ChunkGridData,
+  WorldGridData
+} from './mapGenerator';
 import * as _ from 'lodash';
+import Grid from './grid';
 
+
+class RiverSegment {
+  start: PIXI.Point;
+  end: PIXI.Point;
+  path: PIXI.Point[];
+
+  constructor(start: PIXI.Point, end: PIXI.Point) {
+    this.start = start;
+    this.end = end;
+  }
+}
+
+const gridDirections = {
+  up: (x, y) => [x, y - 1],
+  down: (x, y) => [x, y + 1],
+  left: (x, y) => [x - 1, y],
+  right: (x, y) => [x + 1, y],
+};
+
+const gridDirectionsOpposite = {
+  up: gridDirections.down,
+  down: gridDirections.up,
+  left: gridDirections.right,
+  right: gridDirections.left,
+};
+
+// tests two sides (primary and secondary) of a cell in 4-neighbor space
+// returns the coordinates of the secondary side for the first pair that matches
+function testOppositeSides(
+  testPrimary: (x: number, y: number) => boolean,
+  testSecondary: (x: number, y: number) => boolean,
+  x: number,
+  y: number
+): [number, number] {
+  for (let [key, value] of Object.entries(gridDirections)) {
+    const [i1, j1] = value(x, y);
+    const [i2, j2] = gridDirectionsOpposite[key](x, y)
+    if (testPrimary(i1, j2) && testSecondary(i2, j2)) {
+      return [i2, j2];
+    }
+  }
+}
 
 const context: Worker = self as any;
-
-interface MapState {
-  settings?: MapGeneratorSettings;
-  stats?: MapStats;
-  worldHeightMap?: any;
-  world?: ChunkData;
-  chunkData?: { [name: string]: ChunkData };
-}
 
 // find 8-neighbors in an ndarray
 const neighbor4 = (x, y) => [
@@ -48,7 +91,13 @@ function findNeighbor(array: ndarray, x: number, y: number, func: (cell: any) =>
     .find(func) // perform test function
 }
 
-let mapState: MapState = {};
+interface WorkerState {
+  settings: MapGeneratorSettings;
+  world: WorldData;
+  chunks: Map<string, ChunkData>;
+}
+
+let state: WorkerState;
 
 function getHeightmapStats(array: ndarray): HeightmapStats {
   return {
@@ -80,7 +129,6 @@ function makeHeightmap({ seed, size, zoomLevel, position }) {
 }
 
 async function init(settings: MapGeneratorSettings) {
-  mapState = {};
   console.log(`Worker`, settings);
   const { size, seed, sealevel, period, falloff, octaves } = settings;
 
@@ -113,7 +161,6 @@ async function init(settings: MapGeneratorSettings) {
   const stats = Object.assign({}, settings, worldStats);
 
   console.log('worldHeightMap', worldHeightMap);
-  mapState = { settings, stats, worldHeightMap, chunkData: {} };
 
   // find coastal cells
   const coastalCells = ndarray([], [size, size]);
@@ -125,7 +172,8 @@ async function init(settings: MapGeneratorSettings) {
       const value = worldHeightMap.get(i, j);
       if (
         value >= sealevel &&
-        findNeighbor(worldHeightMap, i, j, cell => cell < sealevel)
+        findNeighbor(worldHeightMap, i, j, cell => cell < sealevel) &&
+        findNeighbor(worldHeightMap, i, j, cell => cell >= sealevel)
       ) {
         coastalCells.set(i, j, 1);
       }
@@ -133,6 +181,7 @@ async function init(settings: MapGeneratorSettings) {
   }
   const totalCoastalCells = ops.sum(coastalCells);
   console.log(`There are ${totalCoastalCells} coastal cells in the world map`);
+
 
 
   /* River algorithm
@@ -162,30 +211,54 @@ async function init(settings: MapGeneratorSettings) {
 
   - create new river edges randomly along first river edge (branches)
   */
+  const riverMap = ndarray(new Uint8ClampedArray(size * size), [size, size]);
+  fill(riverMap, () => 0);
+  const COASTAL_RIVER_CHANCE = 0.1;
+  let riverSources = [];
+  for (let x = 0; x < size; x++) {
+    for (let y = 0; y < size; y++) {
+      const isCoastal = coastalCells.get(x, y);
+
+      if (isCoastal * Math.random() < COASTAL_RIVER_CHANCE) {
+        const result = testOppositeSides(
+          (i, j) => worldHeightMap.get(i, j) >= sealevel && coastalCells.get(i, j) === 0,
+          (i, j) => worldHeightMap.get(i, j) < sealevel,
+          x, y
+        );
+        if (result) {
+          riverMap.set(x, y, 1);
+          riverMap.set(result[0], result[1], 1);
+        }
+      }
+    }
+  }
 
 
-  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(worldHeightMap, stats, size);
-
-  const world: ChunkData = {
-    stats: worldStats,
-    heightmap: worldHeightMap,
-    altitudePercentMap,
-    terrainTypesMap,
-    coastalCells: coastalCells,
-    chunkSize: size,
-  };
-  mapState.world = world;
-  
-  console.log(mapState);
-  return {
+  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(settings, worldHeightMap, stats, size);
+  const grid = new Grid<WorldGridData>(size, size, {
+    height: worldHeightMap,
+    altitudePercent: altitudePercentMap,
+    terrainType: terrainTypesMap,
+    isRiver: riverMap,
+    isCoastalCell: coastalCells,
+  });
+  const world = {
     stats,
-    worldMapTerrain: world.terrainTypesMap.data,
-    coastalCells: world.coastalCells.data,
+    grid,
   };
+  state = {
+    settings,
+    world,
+    chunks: new Map(),
+  };
+  
+  console.log('[worker] state', state);
+
+  return { stats, grid: grid.export()[0] };
 }
 
 function getChunkSize() {
-  const { settings: { size, chunkSpan, chunkZoom } } = mapState;
+  const { settings: { size, chunkSpan, chunkZoom } } = state;
   const CHUNK_SIZE = size / chunkSpan;
   const STEP = 1 / chunkZoom;
   return CHUNK_SIZE * chunkZoom;
@@ -203,8 +276,8 @@ async function generateChunk(chunk: PIXI.Point) {
       octaves,
       sealevel
     },
-    stats, worldHeightMap, chunkData
-  } = mapState;
+    world: { stats },
+  } = state;
   const CHUNK_SIZE = (size / chunkSpan) * chunkZoom;
   const STEP = 1 / chunkZoom;
   const chunkSize = getChunkSize();
@@ -239,15 +312,15 @@ async function generateChunk(chunk: PIXI.Point) {
   }
 
   // DEBUG: chunk height = world height
-  // for (let i = 0; i < CHUNK_SIZE; i++) {
-  //   for (let j = 0; j < CHUNK_SIZE; j++) {
-  //     const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
-  //     const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
-  //     let height = worldHeightMap.get(localX, localY);
+  for (let i = 0; i < CHUNK_SIZE; i++) {
+    for (let j = 0; j < CHUNK_SIZE; j++) {
+      const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
+      const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
+      let height = state.world.grid.getField(localX, localY, 'height');
 
-  //     chunkHeightMap.set(i, j, height);
-  //   }
-  // }
+      chunkHeightMap.set(i, j, height);
+    }
+  }
 
   const coastalCells = ndarray([], [CHUNK_SIZE, CHUNK_SIZE]);
   fill(coastalCells, () => 0);
@@ -258,11 +331,12 @@ async function generateChunk(chunk: PIXI.Point) {
       let chunkHeight = chunkHeightMap.get(i, j) / 255;
       const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
       const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
-      let isCoastalCellWorld = mapState.world.coastalCells.get(localX, localY);
+      let isCoastalCellWorld = state.world.grid.getField(localX, localY, 'isCoastalCell');
       if (
         isCoastalCellWorld &&
         value >= sealevel &&
-        findNeighbor(chunkHeightMap, i, j, cell => cell < sealevel)
+        findNeighbor(chunkHeightMap, i, j, cell => cell < sealevel) &&
+        findNeighbor(chunkHeightMap, i, j, cell => cell >= sealevel)
       ) {
         coastalCells.set(i, j, 1);
       }
@@ -278,48 +352,49 @@ async function generateChunk(chunk: PIXI.Point) {
   );
   fill(riverMap, () => 0);
 
-  // for (let i = 0; i < CHUNK_SIZE; i++) {
-  //   for (let j = 0; j < CHUNK_SIZE; j++) {
-  //     const valueChunk = chunkHeightmap.get(i, j);
-  //     const localX = (i + (chunk.x * CHUNK_SIZE)) / chunkZoom;
-  //     const localY = (j + (chunk.y * CHUNK_SIZE)) / chunkZoom;
-  //     const valueWorld = worldHeightMap.get(localX, localY);
-  //     const worldIsCoast = coastalCells.get(localX, localY);
-  //     if (worldIsCoast) {
-
-  //     }
-
-  //     if (valueChunk === sealevel && valueWorld === sealevel) {
-  //       riverMap.set(i, j, 1);
-  //     }
-  //   }
-  // }
+  for (let i = 0; i < CHUNK_SIZE; i++) {
+    for (let j = 0; j < CHUNK_SIZE; j++) {
+      const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
+      const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
+      const isRiver = state.world.grid.getField(localX, localY, 'isRiver') === 1;
+      const isCoastal = coastalCells.get(i, j) === 1;
+      if (isRiver) {
+        riverMap.set(i, j, 1);
+      }
+      // if (isRiver && isCoastal) {
+      //   const result = testOppositeSides(
+      //     (a, b) => chunkHeightMap.get(a, b) < sealevel,
+      //     (a, b) => chunkHeightMap.get(a, b) >= sealevel && coastalCells.get(a, b) === 0,
+      //     i, j
+      //   );
+      //   if (result) {
+      //     riverMap.set(result[0], result[1], 1);
+      //   }
+      // }
+    }
+  }
 
   const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightMap);
-  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(chunkHeightMap, stats, chunkSize);
-  chunkData[chunkID] = {
-    stats: chunkStats,
-    heightmap: chunkHeightMap,
-    altitudePercentMap,
-    terrainTypesMap,
-    coastalCells,
-    riverMap,
-    chunkSize,
-  };
+  const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(state.settings, chunkHeightMap, stats, chunkSize);
+  const grid = new Grid<ChunkGridData>(chunkSize, chunkSize, {
+    height: chunkHeightMap,
+    altitudePercent: altitudePercentMap,
+    terrainType: terrainTypesMap,
+    isRiver: riverMap,
+    isCoastalCell: coastalCells,
+  });
 
-  return {
+  state.chunks.set(chunkID, {
     stats: chunkStats,
-    heightmap: chunkHeightMap.data,
-    altitudePercentMap: altitudePercentMap.data,
-    terrainTypesMap: terrainTypesMap.data,
-    coastalCells: coastalCells.data,
-    riverMap: riverMap.data,
+    grid,
     chunkSize,
-  };
+  });
+
+  return { stats: chunkStats, chunkSize, grid: grid.export()[0] };
 }
 
-function decideTerrainTypes(heightmap: ndarray, stats: HeightmapStats, size: number) {
-  const { settings: { sealevel } } = mapState;
+function decideTerrainTypes(settings, heightmap: ndarray, stats: HeightmapStats, size: number) {
+  const { sealevel } = settings;
   const altitudePercentMap = ndarray(
     new Float32Array(size * size),
     [size, size]
@@ -341,7 +416,7 @@ function decideTerrainTypes(heightmap: ndarray, stats: HeightmapStats, size: num
 async function fetchChunk(chunk: PIXI.Point) {
   console.log(`[worker] Fetch chunk (${chunk.x}, ${chunk.y})`);
   const chunkID = `${chunk.x},${chunk.y}`;
-  const chunkData = mapState.chunkData[chunkID];
+  const chunkData = state.chunks.get(chunkID);
   if (!chunkData) {
     return await generateChunk(chunk);
   }

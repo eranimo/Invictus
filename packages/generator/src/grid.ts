@@ -1,4 +1,4 @@
-import ndarray from 'ndarray';
+import * as ndarray from 'ndarray';
 import { Graph } from 'ngraph.graph';
 import { memoize } from 'lodash';
 

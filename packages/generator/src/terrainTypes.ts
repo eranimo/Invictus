@@ -1,4 +1,4 @@
-import { MapStats, TileStats } from './mapGenerator';
+import { MapStats } from './mapGenerator';
 import { TileOptions } from '@invictus/renderer/tileUtils';
 
 export type TerrainType = {

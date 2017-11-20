@@ -1,13 +1,12 @@
 import * as PIXI from 'pixi.js';
 import * as TILES from './tiles';
-import { ChunkData } from '@invictus/generator/mapGenerator';
+import { ChunkData, WorldData } from '@invictus/generator/mapGenerator';
 import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '@invictus/generator/terrainTypes';
 import * as ndarray from 'ndarray';
 
 
 function anyWithinRange(
-  array: ndarray,
-  value: any,
+  getter: (i: number, j: number) => boolean,
   x: number,
   y: number,
   endW: number,
@@ -15,7 +14,7 @@ function anyWithinRange(
 ): boolean {
   for (let i = x; i < x + endW; i++) {
     for (let j = y; j < y + endH; j++) {
-      if (array.get(i, j) === value) {
+      if (getter(i, j)) {
         return true;
       }
     }
@@ -71,32 +70,23 @@ export default class Renderer {
     this.app.stage.addChild(this.mapContainer);
   }
 
-  renderWorldMap(worldMapTerrain: ndarray, coastalCells: ndarray) {
-    console.log(worldMapTerrain);
+  renderWorldMap(world: WorldData) {
     const worldMap = new PIXI.Graphics();
-    const width = worldMapTerrain.shape[0];
-    const height = worldMapTerrain.shape[1];
+    const width = world.grid.width;
+    const height = world.grid.height;
     const strideW = width / WORLD_MAP_WIDTH;
     const strideH = height / WORLD_MAP_HEIGHT;
 
     // world map background
     for (let i = 0; i < width; i += strideW) {
       for (let j = 0; j < height; j += strideH) {
-        const id = worldMapTerrain.get(i, j);
+        const id = world.grid.getField(i, j, 'terrainType');
         const color = TERRAIN_TYPES[id].tileOptions.fgColor;
         worldMap.beginFill(color);
         const x = Math.round(i / strideH);
         const y = Math.round(j / strideW);
         worldMap.drawRect(x, y, 1, 1);
         worldMap.endFill();
-
-        if (anyWithinRange(coastalCells, 1, i, j, strideW, strideH)) {
-          worldMap.beginFill(0xEDC9AF);
-          const x = Math.round(i / strideH);
-          const y = Math.round(j / strideW);
-          worldMap.drawRect(x, y, 1, 1);
-          worldMap.endFill();
-        }
       }
     }
     const worldMapTexture = worldMap.generateCanvasTexture();
@@ -127,11 +117,11 @@ export default class Renderer {
     // const textureIDs = Object.values(TILES)
     //   .map(factory => factory({ fgColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
 
-    for (let x = 0; x < chunkData.terrainTypesMap.shape[0]; x++) {
-      for (let y = 0; y < chunkData.terrainTypesMap.shape[1]; y++) {
-        const id = chunkData.terrainTypesMap.get(x, y);
-        const isRiver = chunkData.riverMap.get(x, y);
-        const isCoastal = chunkData.coastalCells.get(x, y);
+    for (let x = 0; x < chunkData.grid.width; x++) {
+      for (let y = 0; y < chunkData.grid.height; y++) {
+        const id = chunkData.grid.getField(x, y, 'terrainType');
+        const isRiver = chunkData.grid.getField(x, y, 'isRiver');
+        const isCoastal = chunkData.grid.getField(x, y, 'isCoastalCell');
         const texture = this.textureIDMap[id];
         if (texture) {
           const land = new PIXI.Sprite(texture);
@@ -140,15 +130,15 @@ export default class Renderer {
 
           this.mapContainer.addChild(land);
         }
-        if (isRiver) {
-          const land = new PIXI.Sprite(riverTexture);
+        if (isCoastal) {
+          const land = new PIXI.Sprite(coastalTexture);
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 
           this.mapContainer.addChild(land);
         }
-        if (isCoastal) {
-          const land = new PIXI.Sprite(coastalTexture);
+        if (isRiver) {
+          const land = new PIXI.Sprite(riverTexture);
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 

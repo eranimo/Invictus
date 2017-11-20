@@ -4025,6 +4025,19 @@ ngraph.events@0.0.3:
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/ngraph.events/-/ngraph.events-0.0.3.tgz#38f55316f3d207ad631ff94f6622ca8f2c0e87d0"
 
+ngraph.generators@^0.0.17:
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/ngraph.generators/-/ngraph.generators-0.0.17.tgz#2d7c36db5bb1c192abae5a2fac885fb1a217a57f"
+  dependencies:
+    ngraph.graph "0.0.12"
+    ngraph.random "0.0.1"
+
+ngraph.graph@0.0.12:
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/ngraph.graph/-/ngraph.graph-0.0.12.tgz#95ac777da567d09653d4af3badea5bf918f5bb2c"
+  dependencies:
+    ngraph.events "0.0.3"
+
 ngraph.graph@^0.0.14:
   version "0.0.14"
   resolved "https://registry.yarnpkg.com/ngraph.graph/-/ngraph.graph-0.0.14.tgz#d47ac94967c920aaf76952d8a4e73346e1df2db7"
@@ -4034,6 +4047,10 @@ ngraph.graph@^0.0.14:
 ngraph.path@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/ngraph.path/-/ngraph.path-1.0.2.tgz#546bfa082900ad6eb6da95171cbc603e524de937"
+
+ngraph.random@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/ngraph.random/-/ngraph.random-0.0.1.tgz#c008e2ebbfdffaf17ed10e4bbc913e567166bcf8"
 
 no-case@^2.2.0:
   version "2.3.2"

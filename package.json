@@ -29,6 +29,7 @@
     "ndarray-fill": "^1.0.2",
     "ndarray-linear-interpolate": "^1.0.0",
     "ndarray-ops": "^1.2.2",
+    "ngraph.generators": "^0.0.17",
     "ngraph.graph": "^0.0.14",
     "ngraph.path": "^1.0.2",
     "pixi.js": "^4.5.6",
