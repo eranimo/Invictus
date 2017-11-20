@@ -181,6 +181,16 @@ export class Cell<Fields> {
     return this.grid.getCell(this.x + 1, this.y);
   }
 
+  get fourNeighbors(): Array<Cell<Fields>> {
+    const result = this.getVonNeumannNeighborhood(1);
+    return result.filter(cell => cell != this);
+  }
+
+  get eightNeighbors(): Array<Cell<Fields>> {
+    const result = this.getMooreNeighborhood(1);
+    return result.filter(cell => cell != this);
+  }
+
   distanceTo(cell: Cell<Fields>): number {
     return Math.sqrt(Math.pow(cell.x - this.x, 2) + Math.pow(cell.y - this.y, 2));
   }
@@ -246,6 +256,31 @@ export default class Grid<Fields> {
   /** Set a field on the grid to a value */
   setField(x: number, y: number, fieldName: string, value: any) {
     this.fields[fieldName].set(x, y, value);
+  }
+
+  /**
+   * Exports the Grid object into an object of the ArrayBuffer fields and a transferable list
+   */
+  export(): [{ [fieldName: string]: ArrayBuffer }, Array<ArrayBuffer>] {
+    let result = {};
+    for (const [key, value] of Object.entries(this.fields)) {
+      result[key] = value.data;
+    }
+    return [result, Object.values(result)];
+  }
+
+  /**
+   * Imports a grid from an object of ArrayBuffer instances
+   * @param width width of the grid
+   * @param height height of the grid
+   * @param fields Object of fieldName to ArrayBuffer instances
+   */
+  static import(width: number, height: number, fields: { [fieldname: string]: any }) {
+    const result = {};
+    for (const [key, value] of Object.entries(fields)) {
+      result[key] = ndarray(value, [width, height]);
+    }
+    return new Grid(width, height, result);
   }
 
   [Symbol.toStringTag]() {

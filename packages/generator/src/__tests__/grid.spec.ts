@@ -15,6 +15,18 @@ describe('Grid', () => {
     });
   });
 
+  it('import and export', () => {
+    const g = Grid.import(GRID_SIZE, GRID_SIZE, {
+      height: new Float32Array(GRID_SIZE * GRID_SIZE)
+    });
+    g.setField(0, 0, 'height', 10);
+    expect(g.getField(0, 0, 'height')).toBe(10);
+
+    expect(g.export()[0]).toBeInstanceOf(Object);
+    expect(g.export()[0].height).toBeInstanceOf(Float32Array);
+    expect(g.export()[1][0]).toBeInstanceOf(Float32Array);
+  });
+
   describe('basic operations', () => {
     it('should allow field getting and setting', () => {
       grid.setField(0, 0, 'height', 1);
@@ -71,6 +83,20 @@ describe('Grid', () => {
     expect(cell1.distanceTo(cell2)).toBe(0);
     expect(cell1.distanceTo(cell3)).toBe(5);
     expect(cell1.distanceTo(cell4)).toBe(10 * Math.sqrt(2));
+  });
+
+  it('fourNeighbors', () => {
+    const cell = grid.getCell(25, 25);
+    const result = cell.fourNeighbors;
+    expect(result).toHaveLength(4);
+    expect(result).not.toContain(cell);
+  });
+
+  it('eightNeighbors', () => {
+    const cell = grid.getCell(25, 25);
+    const result = cell.eightNeighbors;
+    expect(result).toHaveLength(8);
+    expect(result).not.toContain(cell);
   });
 
   describe('cell neighborhoods', () => {
