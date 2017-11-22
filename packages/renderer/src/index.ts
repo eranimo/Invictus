@@ -129,6 +129,7 @@ export default class Renderer {
       for (let y = 0; y < chunkData.grid.height; y++) {
         const id = chunkData.grid.getField(x, y, 'terrainType');
         const isRiver = chunkData.grid.getField(x, y, 'isRiver');
+        const height = chunkData.grid.getField(x, y, 'height');;
         const texture = this.textureIDMap[id];
         if (texture) {
           const land = new PIXI.Sprite(texture);

@@ -147,6 +147,7 @@ function makeHeightmap({ seed, size, zoomLevel, position }) {
 async function init(settings: MapGeneratorSettings) {
   console.log(`Worker`, settings);
   const { size, seed, sealevel, period, falloff, octaves } = settings;
+  const rng = new Alea(seed);
 
   console.log(`Generating world of size (${size}x${size}) (seed: ${seed})`);
   let current_period = period; // 1 to 256
@@ -237,7 +238,7 @@ async function init(settings: MapGeneratorSettings) {
 
       if (
         altitudePercent >= RIVER_SOURCE_ALTITUDE &&
-        Math.random() < RIVER_SOURCE_CHANCE
+        rng() < RIVER_SOURCE_CHANCE
       ) {
         riverSources.push({ x, y });
       }
@@ -252,6 +253,7 @@ async function init(settings: MapGeneratorSettings) {
 
   // create a graph of all nodes with edges to the neighboring cells that are lower than each cell
   const riverGraph = createGraph();
+  let links = 0;
 
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
@@ -269,56 +271,128 @@ async function init(settings: MapGeneratorSettings) {
       const leftHeight = worldHeightMap.get(left[0], left[0]);
       const rightHeight = worldHeightMap.get(right[0], right[0]);
       
+      // let lowestHeight;
+      // let lowestIndex;
+      // if (
+      //   upHeight <= height &&
+      //   upHeight < downHeight &&
+      //   upHeight < leftHeight &&
+      //   upHeight < rightHeight
+      // ) {
+      //   lowestHeight = upHeight;
+      //   lowestIndex = up[1] + (up[0] * size);
+      // }
+      // if (
+      //   downHeight <= height &&
+      //   downHeight < upHeight &&
+      //   downHeight < leftHeight &&
+      //   downHeight < rightHeight
+      // ) {
+      //   lowestHeight = downHeight;
+      //   lowestIndex = down[1] + (down[0] * size);
+      // }
+      // if (
+      //   leftHeight <= height &&
+      //   leftHeight < upHeight &&
+      //   leftHeight < downHeight &&
+      //   leftHeight < rightHeight
+      // ) {
+      //   lowestHeight = leftHeight;
+      //   lowestIndex = left[1] + (left[0] * size);
+      // }
+      // if (
+      //   rightHeight <= height &&
+      //   rightHeight < upHeight &&
+      //   rightHeight < downHeight &&
+      //   rightHeight < leftHeight
+      // ) {
+      //   lowestHeight = rightHeight;
+      //   lowestIndex = right[1] + (right[0] * size);
+      // }
+
+      // if (lowestHeight && lowestIndex) {
+      //   riverGraph.addLink(index, lowestIndex, {
+      //     weight: lowestHeight - height,
+      //   });
+      //   links++;
+      // }
+      
+      const lowestHeight = Math.min(upHeight, downHeight, leftHeight, rightHeight);
       if (upHeight && upHeight < height) {
         riverGraph.addLink(index, up[1] + (up[0] * size), {
-          weight: height - upHeight,
+          weight: (upHeight - lowestHeight) * 1e100,
         });
       }
       if (downHeight && downHeight < height) {
         riverGraph.addLink(index, down[1] + (down[0] * size), {
-          weight: height - downHeight,
+          weight: (downHeight - lowestHeight) * 1e100,
         });
       }
       if (leftHeight && leftHeight < height) {
         riverGraph.addLink(index, left[1] + (left[0] * size), {
-          weight: height - leftHeight,
+          weight: (leftHeight - lowestHeight) * 1e100,
         });
       }
       if (downHeight && downHeight < height) {
         riverGraph.addLink(index, down[1] + (down[0] * size), {
-          weight: height - downHeight,
+          weight: (downHeight - lowestHeight) * 1e100,
         });
       }
     }
   }
+  console.log(`There are ${links} possible river paths`);
   
   console.log('riverGraph with links', riverGraph);
 
   const riverFinder = graphPath.nba(riverGraph, {
     distance(fromNode, toNode, link) {
       return link.data.weight;
-    },
+    }
   });
 
   // draw a path from each river source to a destination
   console.groupCollapsed('River generation main loop');
   for (const sourceCoord of riverSources) {
+    console.groupCollapsed(`Source ${sourceCoord.x},${sourceCoord.y}`);
     // console.time(`making river from ${sourceCoord.x},${sourceCoord.y}`);
-    const [destCoord, distance] = riverDestinationsTree.nearest(sourceCoord, 1)[0];
     const sourceCell = grid.getCell(sourceCoord.x, sourceCoord.y);
-    const destCell = grid.getCell(destCoord.x, destCoord.y);
+    let path;
+    let destCoord;
+    let destCell;
+    let tryIndex = 0;
+    let nearestNumber = 20;
+    const nearestDestinations = riverDestinationsTree.nearest(sourceCoord, nearestNumber);
+
+    while (!path && tryIndex < nearestNumber) {
+      const [result] = nearestDestinations[tryIndex];
+      destCoord = result;
+      destCell = grid.getCell(destCoord.x, destCoord.y);
+      try {
+        path = riverFinder.find(sourceCell.index, destCell.index);
+      } catch (e) {
+        path = null;
+      }
+      if (!path) {
+        console.log(`—— no path from ${sourceCoord.x},${sourceCoord.y} to ${destCoord.x},${destCoord.y} (try ${tryIndex} of ${nearestNumber})`);
+        tryIndex++;
+      }
+    }
+    if (!path) { // path found an error
+      console.log(`Could not make river from ${sourceCoord.x},${sourceCoord.y} (errored out)`);
+      console.groupEnd();
+      continue;
+    } else {
+      console.log(`Found path from ${sourceCoord.x},${sourceCoord.y} to ${destCoord.x},${destCoord.y}`, path);
+    }
+
     sourceCell.data.isRiver = 1;
     destCell.data.isRiver = 1;
     const segment = new RiverSegment(sourceCell, destCell);
-    let path;
-    try {
-      path = riverFinder.find(sourceCell.index, destCell.index);
-    } catch (e) {
-      continue;
-    }
 
     // no path to the destination, source cell is not valid
     if (path.length === 0) {
+      console.log(`Could not make river from ${sourceCoord.x},${sourceCoord.y} (gave up)`);
+      console.groupEnd();
       continue;
     }
     
@@ -329,12 +403,24 @@ async function init(settings: MapGeneratorSettings) {
       const x = Math.floor(node.id / size);
       const y = node.id % size;
       const cell = grid.getCell(x, y);
-      cell.data.isRiver = 1;
       cellPath.push(cell);
+
+      // cell is already a river, end it here
+      if (cell.data.isRiver === 1) {
+        segment.end = cell;
+        break;
+      }
+
+      // insert this river node as a possible river destination
+      riverDestinationsTree.insert({ x, y });
+
+      // mark as river on the map
+      cell.data.isRiver = 1;
     }
     segment.path = cellPath;
     riverSegments.push(segment);
     // console.timeEnd(`making river from ${sourceCoord.x},${sourceCoord.y}`);
+    console.groupEnd();
   }
   console.groupEnd();
 
