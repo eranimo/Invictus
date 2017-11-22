@@ -34,6 +34,7 @@ function makeTextureIDMap(): { [id: number]: PIXI.Texture } {
 
 const WORLD_MAP_WIDTH = 100;
 const WORLD_MAP_HEIGHT = 100;
+const RIVER_COLOR = 0x0000FF;
 
 export default class Renderer {
   app: PIXI.Application;
@@ -81,12 +82,19 @@ export default class Renderer {
     for (let i = 0; i < width; i += strideW) {
       for (let j = 0; j < height; j += strideH) {
         const id = world.grid.getField(i, j, 'terrainType');
+        const isRiver = world.grid.getField(i, j, 'isRiver');
         const color = TERRAIN_TYPES[id].tileOptions.fgColor;
         worldMap.beginFill(color);
         const x = Math.round(i / strideH);
         const y = Math.round(j / strideW);
         worldMap.drawRect(x, y, 1, 1);
         worldMap.endFill();
+
+        if (isRiver) {
+          worldMap.beginFill(RIVER_COLOR);
+          worldMap.drawRect(x, y, 1, 1);
+          worldMap.endFill();
+        }
       }
     }
     const worldMapTexture = worldMap.generateCanvasTexture();

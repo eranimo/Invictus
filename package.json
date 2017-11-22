@@ -20,6 +20,7 @@
     "@types/pixi.js": "^4.5.7",
     "alea": "^0.0.9",
     "awesome-typescript-loader": "^3.3.0",
+    "kd-tree-javascript": "^1.0.3",
     "keyboardjs": "^2.4.0",
     "lerna": "^2.5.1",
     "lodash": "^4.17.4",

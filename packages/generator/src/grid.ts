@@ -182,8 +182,16 @@ export class Cell<Fields> {
   }
 
   get fourNeighbors(): Array<Cell<Fields>> {
-    const result = this.getVonNeumannNeighborhood(1);
-    return result.filter(cell => cell != this);
+    const results = [];
+    const up = this.grid.getCell(this.x, this.y - 1);
+    const down = this.grid.getCell(this.x, this.y + 1);
+    const left = this.grid.getCell(this.x - 1, this.y);
+    const right = this.grid.getCell(this.x + 1, this.y);
+    if (up) results.push(up);
+    if (down) results.push(down);
+    if (left) results.push(left);
+    if (right) results.push(right);
+    return results;
   }
 
   get eightNeighbors(): Array<Cell<Fields>> {
@@ -208,6 +216,10 @@ export class Cell<Fields> {
 
   toString() {
     return `Cell(x: ${this.x}, y: ${this.y})`;
+  }
+
+  get index() {
+    return this.y + (this.x * this.grid.width);
   }
 
   [Symbol.toStringTag]() {
@@ -237,6 +249,12 @@ export default class Grid<Fields> {
     const cell = new Cell(x, y, this);
     this._cells[hashKey] = cell;
     return cell;
+  }
+
+  getCellFromIndex(index: number): Cell<Fields> {
+    const x = Math.floor(index / this.width);
+    const y = index % this.width;
+    return this.getCell(x, y);
   }
 
   /** Allow iteration over the cells in the grid */

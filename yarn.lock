@@ -3481,6 +3481,10 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+kd-tree-javascript@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/kd-tree-javascript/-/kd-tree-javascript-1.0.3.tgz#ab5239ed44e347e10065590fd479e947bedff96c"
+
 keyboardjs@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/keyboardjs/-/keyboardjs-2.4.0.tgz#872147e287c2475fb27402fc21368a9b31700412"
