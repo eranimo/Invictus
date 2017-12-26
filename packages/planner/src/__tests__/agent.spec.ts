@@ -1,4 +1,4 @@
-import { Agent, Plan, Action, Goal } from '../index';
+import { Agent, Plan, Action, Goal } from '../plan';
 
 type WoodState = {
   hasAxe: boolean,

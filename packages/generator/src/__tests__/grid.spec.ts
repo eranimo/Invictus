@@ -1,7 +1,7 @@
-import * as ndarray from 'ndarray';
+import ndarray = require('ndarray');
 import Grid from '../grid';
 
-console.log(ndarray);
+
 const GRID_SIZE = 50;
 describe('Grid', () => {
   interface ChunkGrid {
