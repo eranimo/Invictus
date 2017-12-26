@@ -36,13 +36,21 @@
     - mark cells as flood plains if the change in elevation within 4 cells is less than 2
     - mark cells as sand if they border a river cell that has a change in elevation less than 2
 
-
-```
-000000000*0000000
-00000*****000000
-00000*$$000000000
-00000***$00000000
-000000$**$0000000
-0000000$*00000000
-00000000*00000000
-```
+# River generation with cellular flow
+- water depth array = 3D array of water levels at each level
+  - cells with no water have 0 depth
+  - maximum depth value of 7
+  - cells with depth values over the maximum are "pressurized"
+- cells have neighbors in 6 3D directions
+  - up, down, north, south, west, east
+- River flow:
+  loop over each cell in the 3D water map that has water (depth over 0):
+  1. flow downwards:
+    if the cell below this cell is clear and has less water than this cell:
+      then transfer amount = [my water amount] - [downwards cell water amount]
+  2. flow sideways:
+    if depth is above 1:
+      
+  3. flow upwards:
+    if cell is pressurized and cell above is clear,
+      deposit water over the maximum to the cell above
