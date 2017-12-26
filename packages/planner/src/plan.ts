@@ -1,5 +1,5 @@
-import createGraph = require('ngraph.graph');
-import graphPath = require('ngraph.path');
+import * as createGraph from 'ngraph.graph';
+import * as graphPath from 'ngraph.path';
 
 
 const DEBUG = false;

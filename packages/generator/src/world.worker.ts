@@ -220,217 +220,11 @@ async function init(settings: MapGeneratorSettings) {
     isCoastalCell: ndarray([], [size, size]), // TODO: remove
   });
 
-  // coastal cells that are chosen to be river destinations
-  let riverDestinations = coastalCells;
-
-  // highland cells chosen to be river sources
-  let riverSources = [];
-
-  let riverSegments: RiverSegment[] = [];
-  
-  const COASTAL_RIVER_CHANCE = 0.1;
-  const RIVER_SOURCE_ALTITUDE = 0.5;
-  const RIVER_SOURCE_CHANCE = 0.005;
-
-  for (let x = 0; x < size; x++) {
-    for (let y = 0; y < size; y++) {
-      const altitudePercent = altitudePercentMap.get(x, y);
-
-      if (
-        altitudePercent >= RIVER_SOURCE_ALTITUDE &&
-        rng() < RIVER_SOURCE_CHANCE
-      ) {
-        riverSources.push({ x, y });
-      }
-    }
-  }
-
-  console.log(`Making ${riverSources.length} river sources`);
-
-  // create a KD-tree of the river destinations so we can quickly find
-  // the nearest destination for each river source
-  const riverDestinationsTree = new kdTree(riverDestinations, distanceTo, ['x', 'y']);
-
-  // create a graph of all nodes with edges to the neighboring cells that are lower than each cell
-  const riverGraph = createGraph();
-  let links = 0;
-
-  for (let x = 0; x < size; x++) {
-    for (let y = 0; y < size; y++) {
-      const index = y + (x * size);
-      const height = worldHeightMap.get(x, y);
-      // if (height < sealevel) {
-      //   continue;
-      // }
-      const up = [x, y - 1];
-      const down = [x, y + 1];
-      const left = [x - 1, y];
-      const right = [x + 1, y];
-      const upHeight = worldHeightMap.get(up[0], up[0]);
-      const downHeight = worldHeightMap.get(down[0], down[0]);
-      const leftHeight = worldHeightMap.get(left[0], left[0]);
-      const rightHeight = worldHeightMap.get(right[0], right[0]);
-      
-      // let lowestHeight;
-      // let lowestIndex;
-      // if (
-      //   upHeight <= height &&
-      //   upHeight < downHeight &&
-      //   upHeight < leftHeight &&
-      //   upHeight < rightHeight
-      // ) {
-      //   lowestHeight = upHeight;
-      //   lowestIndex = up[1] + (up[0] * size);
-      // }
-      // if (
-      //   downHeight <= height &&
-      //   downHeight < upHeight &&
-      //   downHeight < leftHeight &&
-      //   downHeight < rightHeight
-      // ) {
-      //   lowestHeight = downHeight;
-      //   lowestIndex = down[1] + (down[0] * size);
-      // }
-      // if (
-      //   leftHeight <= height &&
-      //   leftHeight < upHeight &&
-      //   leftHeight < downHeight &&
-      //   leftHeight < rightHeight
-      // ) {
-      //   lowestHeight = leftHeight;
-      //   lowestIndex = left[1] + (left[0] * size);
-      // }
-      // if (
-      //   rightHeight <= height &&
-      //   rightHeight < upHeight &&
-      //   rightHeight < downHeight &&
-      //   rightHeight < leftHeight
-      // ) {
-      //   lowestHeight = rightHeight;
-      //   lowestIndex = right[1] + (right[0] * size);
-      // }
-
-      // if (lowestHeight && lowestIndex) {
-      //   riverGraph.addLink(index, lowestIndex, {
-      //     weight: lowestHeight - height,
-      //   });
-      //   links++;
-      // }
-      
-      const lowestHeight = Math.min(upHeight, downHeight, leftHeight, rightHeight);
-      if (upHeight && upHeight < height) {
-        riverGraph.addLink(index, up[1] + (up[0] * size), {
-          weight: (upHeight - lowestHeight) * 1e100,
-        });
-      }
-      if (downHeight && downHeight < height) {
-        riverGraph.addLink(index, down[1] + (down[0] * size), {
-          weight: (downHeight - lowestHeight) * 1e100,
-        });
-      }
-      if (leftHeight && leftHeight < height) {
-        riverGraph.addLink(index, left[1] + (left[0] * size), {
-          weight: (leftHeight - lowestHeight) * 1e100,
-        });
-      }
-      if (downHeight && downHeight < height) {
-        riverGraph.addLink(index, down[1] + (down[0] * size), {
-          weight: (downHeight - lowestHeight) * 1e100,
-        });
-      }
-    }
-  }
-  console.log(`There are ${links} possible river paths`);
-  
-  console.log('riverGraph with links', riverGraph);
-
-  const riverFinder = graphPath.nba(riverGraph, {
-    distance(fromNode, toNode, link) {
-      return link.data.weight;
-    }
-  });
-
-  // draw a path from each river source to a destination
-  console.groupCollapsed('River generation main loop');
-  for (const sourceCoord of riverSources) {
-    console.groupCollapsed(`Source ${sourceCoord.x},${sourceCoord.y}`);
-    // console.time(`making river from ${sourceCoord.x},${sourceCoord.y}`);
-    const sourceCell = grid.getCell(sourceCoord.x, sourceCoord.y);
-    let path;
-    let destCoord;
-    let destCell;
-    let tryIndex = 0;
-    let nearestNumber = 20;
-    const nearestDestinations = riverDestinationsTree.nearest(sourceCoord, nearestNumber);
-
-    while (!path && tryIndex < nearestNumber) {
-      const [result] = nearestDestinations[tryIndex];
-      destCoord = result;
-      destCell = grid.getCell(destCoord.x, destCoord.y);
-      try {
-        path = riverFinder.find(sourceCell.index, destCell.index);
-      } catch (e) {
-        path = null;
-      }
-      if (!path) {
-        console.log(`—— no path from ${sourceCoord.x},${sourceCoord.y} to ${destCoord.x},${destCoord.y} (try ${tryIndex} of ${nearestNumber})`);
-        tryIndex++;
-      }
-    }
-    if (!path) { // path found an error
-      console.log(`Could not make river from ${sourceCoord.x},${sourceCoord.y} (errored out)`);
-      console.groupEnd();
-      continue;
-    } else {
-      console.log(`Found path from ${sourceCoord.x},${sourceCoord.y} to ${destCoord.x},${destCoord.y}`, path);
-    }
-
-    sourceCell.data.isRiver = 1;
-    destCell.data.isRiver = 1;
-    const segment = new RiverSegment(sourceCell, destCell);
-
-    // no path to the destination, source cell is not valid
-    if (path.length === 0) {
-      console.log(`Could not make river from ${sourceCoord.x},${sourceCoord.y} (gave up)`);
-      console.groupEnd();
-      continue;
-    }
-    
-    path = path.reverse().slice(1, path.length - 1);
-
-    const cellPath = [];
-    for (const node of path) {
-      const x = Math.floor(node.id / size);
-      const y = node.id % size;
-      const cell = grid.getCell(x, y);
-      cellPath.push(cell);
-
-      // cell is already a river, end it here
-      if (cell.data.isRiver === 1) {
-        segment.end = cell;
-        break;
-      }
-
-      // insert this river node as a possible river destination
-      riverDestinationsTree.insert({ x, y });
-
-      // mark as river on the map
-      cell.data.isRiver = 1;
-    }
-    segment.path = cellPath;
-    riverSegments.push(segment);
-    // console.timeEnd(`making river from ${sourceCoord.x},${sourceCoord.y}`);
-    console.groupEnd();
-  }
-  console.groupEnd();
-
-  console.log('riverSegments', riverSegments);
-
-
   const world = {
     stats,
     grid,
   };
+
   state = {
     settings,
     world,
@@ -477,6 +271,7 @@ async function generateChunk(chunk: PIXI.Point) {
       y: chunk.y * CHUNK_SIZE,
     },
   });
+  console.log(chunkHeightMap.get(39, 0));
 
   // apply mask to lower edge of map
   for (let i = 0; i < CHUNK_SIZE; i++) {
@@ -499,8 +294,8 @@ async function generateChunk(chunk: PIXI.Point) {
   // DEBUG: chunk height = world height
   for (let i = 0; i < CHUNK_SIZE; i++) {
     for (let j = 0; j < CHUNK_SIZE; j++) {
-      const localX = (chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
-      const localY = (chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
+      const localX = Math.round(chunk.x * (size / chunkSpan)) + Math.round(i / chunkZoom);
+      const localY = Math.round(chunk.y * (size / chunkSpan)) + Math.round(j / chunkZoom);
       let height = state.world.grid.getField(localX, localY, 'height');
 
       chunkHeightMap.set(i, j, height);
@@ -550,6 +345,7 @@ async function generateChunk(chunk: PIXI.Point) {
 
 
   const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightMap);
+  console.log(chunkHeightMap.get(39, 0));
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(state.settings, chunkHeightMap, stats, chunkSize);
   const grid = new Grid<ChunkGridData>(chunkSize, chunkSize, {
     height: chunkHeightMap,
@@ -581,7 +377,11 @@ function decideTerrainTypes(settings, heightmap: ndarray, stats: HeightmapStats,
         ? -(sealevel - height) / (sealevel - stats.min)
         : (sealevel - height) / (sealevel - stats.max);
       altitudePercentMap.set(x, y, altitudePercent);
-      terrainTypesMap.set(x, y, terrainTypeFor(altitudePercent));
+      try {
+        terrainTypesMap.set(x, y, terrainTypeFor(altitudePercent));
+      } catch (e) {
+        throw new Error(`Invalid altitude percent (${altitudePercent}) at (${x}, ${y}) (height: ${height}`);
+      }
     }
   }
   return { altitudePercentMap, terrainTypesMap };

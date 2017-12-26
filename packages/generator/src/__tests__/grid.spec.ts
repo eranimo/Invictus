@@ -1,4 +1,4 @@
-import ndarray = require('ndarray');
+import * as ndarray from 'ndarray';
 import Grid from '../grid';
 
 
