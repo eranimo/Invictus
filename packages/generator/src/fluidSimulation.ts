@@ -70,6 +70,8 @@ export default class FluidSimulation {
    */
   flowDirections: ndarray;
 
+  ticks: number;
+
   constructor(size: Size3D, heightmap: ndarray) {
     this.size = size;
     this.heightmap = heightmap;
@@ -85,6 +87,7 @@ export default class FluidSimulation {
     this.waterDiffs = this.createArray(Float32Array);
     this.settledCells = this.createArray(Array);
     this.settleCounts = this.createArray(Uint8ClampedArray);
+    this.ticks = 0;
     
     const { width, height, depth } = this.size;
     this.flowDirections = ndarray(
@@ -113,7 +116,7 @@ export default class FluidSimulation {
    * @param waterAmount amount of water in this cell
    * @param otherWaterAmount åmount of water in another cell
    */
-  private calculateVerticalFlowValue(waterAmount, otherWaterAmount) {
+  private calculateVerticalFlowValue(waterAmount: number, otherWaterAmount: number): number {
     const sum = waterAmount + otherWaterAmount;
     if (sum <= MAX_WATER) {
       return MAX_WATER;
@@ -136,25 +139,39 @@ export default class FluidSimulation {
     this.settleCounts.set(x, y, z, this.settleCounts.get(x, y, z) + amount);
   }
 
+  private freeWaterSpace(x: number, y: number, z: number) {
+    return Math.max(0, MAX_WATER - this.waterAmounts.get(x, y, z));
+  }
+
   /**
-   * Drops an amount of water on the lowest clear z-level
+   * Drops an amount of water on the lowest clear z-level at the given x-y coordinates
+   * flowing upwards capping at MAX_WATER until the water is gone
    * @param x x-coordinate
    * @param y y-coordinate
    * @param amount amount of water to add (between MIN_WATER and MAX_WATER)
    */
   public dropWater(x: number, y: number, amount: number) {
-    if (amount < MIN_WATER || amount > MAX_WATER) {
-      throw new Error(`Water must be between ${MIN_WATER} and ${MAX_WATER}, was ${amount}`);
-    }
     let z = 0;
     while (z < this.size.depth) {
       const isClear = this.validCells.get(x, y, z) === 1;
       if (isClear) {
-        this.depositWater(x, y, z, amount);
+        let currentZ = z;
+        let waterRemaining = amount;
+        while (waterRemaining > MIN_WATER) {
+          const freeSpace = this.freeWaterSpace(x, y, currentZ);
+          const depositAmount = Math.min(waterRemaining, freeSpace);
+          this.depositWater(x, y, currentZ, depositAmount);
+          waterRemaining -= depositAmount;
+          currentZ++;
+        }
         return;
       }
       z++;
     }
+  }
+
+  public waterSpout(x: number, y: number, z: number, amount: number = 1) {
+    this.depositWater(x, y, z, amount);
   }
 
   private constrainFlow(flow, remainingWater) {
@@ -188,10 +205,16 @@ export default class FluidSimulation {
     this.flowDirections.set(x, y, z, dir, 1);
   }
 
+  public reset() {
+    this.ticks = 0;
+    this.init();
+  }
+
   /**
    * simulate water flowing
    */
   public simulate() {
+    this.ticks++;
     const { width, height, depth } = this.size;
 
     // reset diffs array
@@ -245,13 +268,14 @@ export default class FluidSimulation {
 
             // constrain flow
             downFlow = this.constrainFlow(downFlow, waterRemaining);
-
+            
             // update diffs
             if (downFlow !== 0) {
+              // console.log(`#${this.ticks}: DOWN @ (${x}, ${y}, ${z}) - water: ${waterRemaining} flow: ${downFlow}`);
               waterRemaining -= downFlow;
               this.addWaterDiff(x, y, z, -downFlow);
               this.addWaterDiff(down[0], down[1], down[2], downFlow);
-              this.setFlowDirection(down[0], down[1], down[2], FLOW_DIRECTION.DOWN);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.DOWN);
               this.settledCells.set(down[0], down[1], down[2], 0);
             }
           }
@@ -274,13 +298,14 @@ export default class FluidSimulation {
 
             // constrain flow
             northFlow = this.constrainFlow(northFlow, waterRemaining);
-
+            
             // update diffs
             if (northFlow !== 0) {
+              // console.log(`#${this.ticks}: NORTH @ (${x}, ${y}, ${z}) - water: ${waterRemaining} flow: ${northFlow}`);
               waterRemaining -= northFlow;
               this.addWaterDiff(x, y, z, -northFlow);
               this.addWaterDiff(north[0], north[1], north[2], northFlow);
-              this.setFlowDirection(north[0], north[1], north[2], FLOW_DIRECTION.NORTH);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.NORTH);
               this.settledCells.set(north[0], north[1], north[2], 0);
             }
           }
@@ -303,13 +328,14 @@ export default class FluidSimulation {
 
             // constrain flow
             southFlow = this.constrainFlow(southFlow, waterRemaining);
-
+            
             // update diffs
             if (southFlow !== 0) {
+              // console.log(`#${this.ticks}: SOUTH @ (${x}, ${y}, ${z}) - water: ${waterRemaining} flow: ${southFlow}`);
               waterRemaining -= southFlow;
               this.addWaterDiff(x, y, z, -southFlow);
               this.addWaterDiff(south[0], south[1], south[2], southFlow);
-              this.setFlowDirection(south[0], south[1], south[2], FLOW_DIRECTION.SOUTH);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.SOUTH);
               this.settledCells.set(south[0], south[1], south[2], 0);
             }
           }
@@ -332,13 +358,14 @@ export default class FluidSimulation {
 
             // constrain flow
             eastFlow = this.constrainFlow(eastFlow, waterRemaining);
-
+            
             // update diffs
             if (eastFlow !== 0) {
+              // console.log(`#${this.ticks}: EAST @ (${x}, ${y}, ${z}) - water: ${waterRemaining} flow: ${eastFlow}`);
               waterRemaining -= eastFlow;
               this.addWaterDiff(x, y, z, -eastFlow);
               this.addWaterDiff(east[0], east[1], east[2], eastFlow);
-              this.setFlowDirection(east[0], east[1], east[2], FLOW_DIRECTION.EAST);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.EAST);
               this.settledCells.set(east[0], east[1], east[2], 0);
             }
           }
@@ -361,13 +388,14 @@ export default class FluidSimulation {
 
             // constrain flow
             westFlow = this.constrainFlow(westFlow, waterRemaining);
-
+            
             // update diffs
             if (westFlow !== 0) {
+              // console.log(`#${this.ticks}: WEST @ (${x}, ${y}, ${z}) - water: ${waterRemaining} flow: ${westFlow}`);
               waterRemaining -= westFlow;
               this.addWaterDiff(x, y, z, -westFlow);
               this.addWaterDiff(west[0], west[1], west[2], westFlow);
-              this.setFlowDirection(west[0], west[1], west[2], FLOW_DIRECTION.WEST);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.WEST);
               this.settledCells.set(west[0], west[1], west[2], 0);
             }
           }
@@ -388,16 +416,17 @@ export default class FluidSimulation {
             if (upWater > 0 && upFlow > MIN_FLOW) {
               upFlow *= FLOW_SPEED;
             }
-
+            
             // constrain flow
             upFlow = this.constrainFlow(upFlow, waterRemaining);
-
+            // console.log(`#${this.ticks}: UP @ (${x}, ${y}, ${z}) - water: ${waterRemaining} theirs: ${upWater} flow: ${upFlow}`);
+            
             // update diffs
             if (upFlow !== 0) {
               waterRemaining -= upFlow;
               this.addWaterDiff(x, y, z, -upFlow);
               this.addWaterDiff(up[0], up[1], up[2], upFlow);
-              this.setFlowDirection(up[0], up[1], up[2], FLOW_DIRECTION.UP);
+              this.setFlowDirection(x, y, z, FLOW_DIRECTION.UP);
               this.settledCells.set(up[0], up[1], up[2], 0);
             }
           }
@@ -454,5 +483,18 @@ export default class FluidSimulation {
         }
       }
     }
-  }  
+  }
+
+  public simulateUntil(
+    checker: (sim: FluidSimulation) => boolean
+  ): number {
+    const initialTickNumber = this.ticks;
+    while (checker(this) !== true) {
+      this.simulate();
+      if (this.ticks - initialTickNumber > 1000) {
+        throw new Error('similateUntil() took over 1000 ticks to end');
+      }
+    }
+    return this.ticks - initialTickNumber;
+  }
 }
