@@ -1,6 +1,5 @@
 import ndarray = require('ndarray');
-import graph = require('ngraph.graph');
-const Graph = graph;
+import { Graph } from 'ngraph.graph';
 import { memoize } from 'lodash';
 
 
