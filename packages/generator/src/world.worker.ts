@@ -23,6 +23,7 @@ import Grid from './grid';
 import { kdTree } from 'kd-tree-javascript';
 import * as createGraph from 'ngraph.graph';
 import * as graphPath from 'ngraph.path';
+import { GameMap, CellExport, CellType } from './map';
 
 
 const distanceTo = (a: Point, b: Point) => {
@@ -130,7 +131,7 @@ const NOISE_OPTIONS = {
 };
 
 function makeHeightmap({ seed, size, zoomLevel, position }) {
-  const heightmap = ndarray(new Float32Array(size * size), [size, size]);
+  const heightmap = ndarray(new Uint8ClampedArray(size * size), [size, size]);
 
   const rng = new Alea(seed);
   const simplex = new SimplexNoise(rng);
@@ -271,7 +272,6 @@ async function generateChunk(chunk: PIXI.Point) {
       y: chunk.y * CHUNK_SIZE,
     },
   });
-  console.log(chunkHeightMap.get(39, 0));
 
   // apply mask to lower edge of map
   for (let i = 0; i < CHUNK_SIZE; i++) {
@@ -345,7 +345,7 @@ async function generateChunk(chunk: PIXI.Point) {
 
 
   const chunkStats: HeightmapStats = getHeightmapStats(chunkHeightMap);
-  console.log(chunkHeightMap.get(39, 0));
+
   const { altitudePercentMap, terrainTypesMap } = decideTerrainTypes(state.settings, chunkHeightMap, stats, chunkSize);
   const grid = new Grid<ChunkGridData>(chunkSize, chunkSize, {
     height: chunkHeightMap,
@@ -354,13 +354,41 @@ async function generateChunk(chunk: PIXI.Point) {
     isRiver: riverMap,
   });
 
+  let cells: CellExport[] = [];
+  for (let x = 0; x < CHUNK_SIZE; x++) {
+    for (let y = 0; y < CHUNK_SIZE; y++) {
+      const height = chunkHeightMap.get(x, y);
+      for (let z = 0; z < height; z++) {
+        cells.push({
+          x,
+          y,
+          z,
+          cellType: height < sealevel ? CellType.WATER : CellType.LAND,
+        });
+      }
+    }
+  }
+
+  const gamemap = GameMap.import({
+    width: chunkSize,
+    height: chunkSize,
+    depth: 255,
+    cells,
+  });
+
   state.chunks.set(chunkID, {
     stats: chunkStats,
     grid,
+    map: gamemap,
     chunkSize,
   });
 
-  return { stats: chunkStats, chunkSize, grid: grid.export()[0] };
+  return {
+    stats: chunkStats,
+    chunkSize,
+    grid: grid.export()[0],
+    map: gamemap.export(),
+  };
 }
 
 function decideTerrainTypes(settings, heightmap: ndarray, stats: HeightmapStats, size: number) {
@@ -376,6 +404,7 @@ function decideTerrainTypes(settings, heightmap: ndarray, stats: HeightmapStats,
       let altitudePercent = height < sealevel
         ? -(sealevel - height) / (sealevel - stats.min)
         : (sealevel - height) / (sealevel - stats.max);
+
       altitudePercentMap.set(x, y, altitudePercent);
       try {
         terrainTypesMap.set(x, y, terrainTypeFor(altitudePercent));

@@ -3,6 +3,7 @@ import { PromiseWorker } from '@invictus/worker';
 import * as ACTIONS from './actions';
 import * as ndarray from 'ndarray';
 import Grid from './grid';
+import { GameMap } from './map';
 
 
 function hash(point: PIXI.Point) {
@@ -30,14 +31,13 @@ export type MapStats = HeightmapStats & MapGeneratorSettings;
 
 export interface ChunkGridData {
   height: ndarray;
-  altitudePercent: ndarray;
-  terrainType: ndarray;
-  isRiver: ndarray;
+  cellType: ndarray;
 }
 
 export interface ChunkData {
   stats: HeightmapStats;
   grid: Grid<ChunkGridData>,
+  map: GameMap,
   chunkSize: number;
 };
 
@@ -94,11 +94,12 @@ export default class MapGenerator {
     )
     .then((chunkData: any) => {
       console.log(`[MapGenerator] execution time: ${Math.round(performance.now() - time)}ms`);
-      const { chunkSize, grid, stats } = chunkData;
+      const { chunkSize, grid, map, stats } = chunkData;
       const chunkDataConverted = {
         stats,
         chunkSize,
         grid: Grid.import(chunkSize, chunkSize, grid),
+        map: GameMap.import(map),
       };
       this.chunks.set(hash(chunk), chunkDataConverted);
       return chunkDataConverted;

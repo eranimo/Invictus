@@ -118,28 +118,17 @@ export class Renderer {
     this.worldMapCursor.y = chunk.y * (2);
   }
 
-  renderChunk(chunkData: ChunkData) {
+  renderChunk(chunkData: ChunkData, zLevel: number) {
     const CELL_SIZE = 16;
     this.mapContainer.removeChildren();
-
-    // const textureIDs = Object.values(TILES)
-    //   .map(factory => factory({ fgColor: 0x000000, bgColor: 0xC0C0C0 }, CELL_SIZE));
 
     for (let x = 0; x < chunkData.grid.width; x++) {
       for (let y = 0; y < chunkData.grid.height; y++) {
         const id = chunkData.grid.getField(x, y, 'terrainType');
-        const isRiver = chunkData.grid.getField(x, y, 'isRiver');
-        const height = chunkData.grid.getField(x, y, 'height');;
+        const height = chunkData.grid.getField(x, y, 'height');
         const texture = this.textureIDMap[id];
         if (texture) {
           const land = new PIXI.Sprite(texture);
-          land.x = x * CELL_SIZE;
-          land.y = y * CELL_SIZE;
-
-          this.mapContainer.addChild(land);
-        }
-        if (isRiver) {
-          const land = new PIXI.Sprite(riverTexture);
           land.x = x * CELL_SIZE;
           land.y = y * CELL_SIZE;
 

@@ -29,12 +29,15 @@ mapgen.init().then(() => {
   renderer.renderWorldMap(mapgen.world);
   console.log('Map generated', mapgen);
   let currentChunk = new PIXI.Point(initialChunk.x, initialChunk.y);
+  let currentZLevel = mapgen.settings.sealevel;
+  let chunkData;
 
   function fetchChunk() {
     console.log(`Fetching chunk (${currentChunk.x}, ${currentChunk.y})`);
     mapgen.fetchChunk(currentChunk).then(chunk => {
       console.log('Chunk generated', chunk);
-      renderer.renderChunk(chunk);
+      chunkData = chunk;
+      renderer.renderChunk(chunkData, currentZLevel);
       renderer.changeWorldMapCursor(currentChunk);
     });
     localStorage.INITIAL_CHUNK_X = currentChunk.x;
@@ -43,31 +46,41 @@ mapgen.init().then(() => {
 
   fetchChunk();
 
-  KeyboardJS.bind('right', null, event => {
+  KeyboardJS.bind('d', null, event => {
     currentChunk.x += 1;
     currentChunk.x = clamp(currentChunk.x, 0, 50);
     currentChunk.y = clamp(currentChunk.y, 0, 50);
     fetchChunk();
   });
 
-  KeyboardJS.bind('left', null, event => {
+  KeyboardJS.bind('a', null, event => {
     currentChunk.x -= 1;
     currentChunk.x = clamp(currentChunk.x, 0, 50);
     currentChunk.y = clamp(currentChunk.y, 0, 50);
     fetchChunk();
   });
 
-  KeyboardJS.bind('up', null, event => {
+  KeyboardJS.bind('w', null, event => {
     currentChunk.y -= 1;
     currentChunk.x = clamp(currentChunk.x, 0, 50);
     currentChunk.y = clamp(currentChunk.y, 0, 50);
     fetchChunk();
   });
 
-  KeyboardJS.bind('down', null, event => {
+  KeyboardJS.bind('s', null, event => {
     currentChunk.y += 1;
     currentChunk.x = clamp(currentChunk.x, 0, 50);
     currentChunk.y = clamp(currentChunk.y, 0, 50);
     fetchChunk();
+  });
+
+  KeyboardJS.bind('up', null, event => {
+    currentZLevel += 1;
+    renderer.renderChunk(chunkData, currentZLevel);
+  });
+
+  KeyboardJS.bind('down', null, event => {
+    currentZLevel += 1;
+    renderer.renderChunk(chunkData, currentZLevel);
   });
 });

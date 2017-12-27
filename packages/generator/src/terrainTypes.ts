@@ -35,7 +35,7 @@ export const continental_shelf: TerrainType = {
 
 export const littoral_zone: TerrainType = {
   id: 2,
-  name: 'Littoral Shelf',
+  name: 'Littoral',
   tileOptions: { fgColor: LITTORAL_COLOR, bgColor: BG_COLOR },
   test: (altitudePercent: number) => altitudePercent >= LITTORAL_CUTOFF && altitudePercent < 0,
 }
