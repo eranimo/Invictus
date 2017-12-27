@@ -7,15 +7,6 @@ export enum CellType {
   LAND,
 }
 
-export const cellTypeProps = {
-  [CellType.WATER]: {
-    color: 0x3056ad
-  },
-  [CellType.LAND]: {
-    color: 0x6d5d3e
-  },
-};
-
 export interface CellExport {
   x: number;
   y: number;
@@ -43,6 +34,10 @@ export class Cell {
     this.z = z;
     this.map = map;
     this.cellType = null;
+  }
+
+  get isClear() {
+    return this.cellType === null;
   }
 
   get up(): Cell | null {
@@ -110,6 +105,7 @@ export class GameMap {
 
     if (!cell) {
       cell = new Cell(x, y, z, this);
+      this.grid.set(x, y, z, (cell as any));
     }
     return cell;
   }
@@ -120,14 +116,31 @@ export class GameMap {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
         for (let z = 0; z < this.depth; z++) {
-          cell = this.grid.get(x, y, z);
-          if (cell) {
+          cell = this.getCell(x, y, z);
+          if (cell && !cell.isClear) {
             count++;
           }
         }
       }
     }
     return count;
+  }
+
+  /**
+   * Gets the cell visible from the given z-level looking down
+   * returns null if all cells below z-level are clear
+   */
+  public getCellVisibleFromLevel(x: number, y: number, level: number): Cell | null {
+    let currentLevel: number = level;
+    let currentCell: Cell;
+    while (currentLevel >= 0) {
+      currentCell = this.getCell(x, y, currentLevel);
+      if (!currentCell.isClear) {
+        return currentCell;
+      }
+      currentLevel--;
+    }
+    return null;
   }
 
   /** Exports a map */
@@ -150,10 +163,6 @@ export class GameMap {
       cells,
     };
   }
-
-  // public traceTopCell(x: number, y: number): Cell {
-  //   let z = this.depth - 1;
-  // }
 
   /** Imports a map */
   static import(data: MapExport): GameMap {

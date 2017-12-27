@@ -76,11 +76,13 @@ mapgen.init().then(() => {
 
   KeyboardJS.bind('up', null, event => {
     currentZLevel += 1;
+    console.log(`New Z-level: ${currentZLevel}`);
     renderer.renderChunk(chunkData, currentZLevel);
   });
 
   KeyboardJS.bind('down', null, event => {
-    currentZLevel += 1;
+    currentZLevel -= 1;
+    console.log(`New Z-level: ${currentZLevel}`);
     renderer.renderChunk(chunkData, currentZLevel);
   });
 });

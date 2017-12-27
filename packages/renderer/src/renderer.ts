@@ -3,6 +3,7 @@ import * as TILES from './tiles';
 import { ChunkData, WorldData } from '@invictus/generator/mapGenerator';
 import { TERRAIN_TYPES_ID_MAP, TERRAIN_TYPES } from '@invictus/generator/terrainTypes';
 import * as ndarray from 'ndarray';
+import { CellType } from '@invictus/generator/map';
 
 
 function anyWithinRange(
@@ -21,6 +22,26 @@ function anyWithinRange(
   }
   return false;
 }
+
+const background = TILES.tile_solid({
+  bgColor: 0x333333,
+  fgColor: 0x222222,
+}, 16);
+const shade = TILES.tile_solid({
+  bgColor: 0x56899e,
+  fgColor: 0x56899e,
+}, 16);
+
+const textures = {
+  [CellType.WATER]: TILES.tile_solid({
+    bgColor: 0x3056ad,
+    fgColor: 0x3056ad,
+  }, 16),
+  [CellType.LAND]: TILES.tile_solid({
+    bgColor: 0x6d5d3e,
+    fgColor: 0x6d5d3e,
+  }, 16),
+};
 
 let textureIDMap = {};
 
@@ -124,15 +145,39 @@ export class Renderer {
 
     for (let x = 0; x < chunkData.grid.width; x++) {
       for (let y = 0; y < chunkData.grid.height; y++) {
-        const id = chunkData.grid.getField(x, y, 'terrainType');
-        const height = chunkData.grid.getField(x, y, 'height');
-        const texture = this.textureIDMap[id];
-        if (texture) {
-          const land = new PIXI.Sprite(texture);
-          land.x = x * CELL_SIZE;
-          land.y = y * CELL_SIZE;
+        const cell = chunkData.map.getCellVisibleFromLevel(x, y, zLevel);
+        const topCell = chunkData.map.getCellVisibleFromLevel(x, y, chunkData.map.depth - 1);
+        if (cell === null) {
+          // no cells at any z-level
+          const fade = new PIXI.Sprite(shade);
+          fade.x = x * CELL_SIZE;
+          fade.y = y * CELL_SIZE;
+          this.mapContainer.addChild(fade);
+        } else {
+          if (cell != topCell) {
+            // cells above this z-level
+            const bg = new PIXI.Sprite(background);
+            bg.x = x * CELL_SIZE;
+            bg.y = y * CELL_SIZE;
+            this.mapContainer.addChild(bg);
+          } else {
+            // visible cells
+            const alpha = Math.min((zLevel - cell.z) * 0.05, 0.8);
+            const texture = textures[cell.cellType];
+            const land = new PIXI.Sprite(texture);
+            land.x = x * CELL_SIZE;
+            land.y = y * CELL_SIZE;
 
-          this.mapContainer.addChild(land);
+            this.mapContainer.addChild(land);
+            
+            if (alpha > 0) {
+              const fade = new PIXI.Sprite(shade);
+              fade.x = x * CELL_SIZE;
+              fade.y = y * CELL_SIZE;
+              fade.alpha = 0.2 + alpha;
+              this.mapContainer.addChild(fade);
+            }
+          }
         }
       }
     }
