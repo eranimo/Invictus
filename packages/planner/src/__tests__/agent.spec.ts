@@ -1,70 +1,70 @@
 import { Agent, Plan, Action, Goal } from '../plan';
 
-type WoodState = {
+type WoodcutterState = {
   hasAxe: boolean,
   hasLog: boolean,
   canGetAxe: boolean,
 };
 
-type IronState = {
+type MinerState = {
   numIron: number,
 };
 
 
 // actions
-class ChopLog implements Action<WoodState> {
+class ChopLog implements Action<WoodcutterState> {
   cost(): number {
     return 4;
   }
 
-  precondition(state: WoodState): boolean {
+  precondition(state: WoodcutterState): boolean {
     return !state.hasLog && state.hasAxe;
   }
 
-  effect(state: WoodState): WoodState {
+  effect(state: WoodcutterState): WoodcutterState {
     state.hasLog = true;
     return state;
   }
 }
 
-class GetAxe implements Action<WoodState> {
+class GetAxe implements Action<WoodcutterState> {
   cost(): number {
     return 2;
   }
 
-  precondition(state: WoodState): boolean {
+  precondition(state: WoodcutterState): boolean {
     return !state.hasAxe && state.canGetAxe;
   }
 
-  effect(state: WoodState): WoodState {
+  effect(state: WoodcutterState): WoodcutterState {
     state.hasAxe = true;
     return state;
   }
 }
 
-class CollectBranches implements Action<WoodState> {
+class CollectBranches implements Action<WoodcutterState> {
   cost(): number {
     return 8;
   }
 
-  precondition(state: WoodState): boolean {
+  precondition(state: WoodcutterState): boolean {
     return !state.hasLog;
   }
 
-  effect(state: WoodState): any {
+  effect(state: WoodcutterState): any {
     state.hasLog = true;
     return state;
   }
 }
 
-class MakeFirewoodGoal implements Goal<WoodState> {
-  condition(state: WoodState) {
+class MakeFirewoodGoal implements Goal<WoodcutterState> {
+  condition(state: WoodcutterState) {
     return state.hasLog == true;
   }
 }
 
-class Woodcutter extends Agent<WoodState> {
-  constructor(state: WoodState) {
+class Woodcutter extends Agent<WoodcutterState> {
+  constructor(state: WoodcutterState) {
     super();
     this.state = state;
 
@@ -73,53 +73,53 @@ class Woodcutter extends Agent<WoodState> {
     this.addAction(new CollectBranches());
   }
 
-  plan(): Plan<WoodState> | null {
-    return Plan.formulate<WoodState>(this, new MakeFirewoodGoal());
+  plan(): Plan<WoodcutterState> | null {
+    return Plan.formulate<WoodcutterState>(this, new MakeFirewoodGoal());
   }
 }
 
-class GetIronGoal implements Goal<IronState> {
-  condition(state: IronState) {
+class GetIronGoal implements Goal<MinerState> {
+  condition(state: MinerState) {
     return state.numIron >= 10;
   }
 
-  comparator(oldState: IronState, newState: IronState) {
+  comparator(oldState: MinerState, newState: MinerState) {
     return newState.numIron - oldState.numIron;
   }
 }
 
-class BadIronGoal implements Goal<IronState> {
-  condition(state: IronState) {
+class BadIronGoal implements Goal<MinerState> {
+  condition(state: MinerState) {
     return state.numIron === -10;
   }
 }
 
-class MineIron implements Action<IronState> {
+class MineIron implements Action<MinerState> {
   cost(): number { return 4 };
 
   // can always do
-  precondition(state: IronState): boolean { return true }
+  precondition(state: MinerState): boolean { return true }
 
-  effect(state: IronState): any {
+  effect(state: MinerState): any {
     state.numIron += 2;
     return state;
   }
 }
 
-class RecycleIron implements Action<IronState> {
+class RecycleIron implements Action<MinerState> {
   cost(): number { return 10 };
 
   // can always do
-  precondition(state: IronState): boolean { return true }
+  precondition(state: MinerState): boolean { return true }
 
-  effect(state: IronState): any {
+  effect(state: MinerState): any {
     state.numIron += 5;
     return state;
   }
 }
 
-class Miner extends Agent<IronState> {
-  constructor(state: IronState) {
+class Miner extends Agent<MinerState> {
+  constructor(state: MinerState) {
     super();
     this.state = state;
 
@@ -127,12 +127,12 @@ class Miner extends Agent<IronState> {
     this.addAction(new RecycleIron());
   }
 
-  plan(): Plan<IronState> | null {
-    return Plan.formulate<IronState>(this, new GetIronGoal());
+  plan(): Plan<MinerState> | null {
+    return Plan.formulate<MinerState>(this, new GetIronGoal());
   }
 
-  badPlan(): Plan<IronState> | null {
-    return Plan.formulate<IronState>(this, new BadIronGoal());
+  badPlan(): Plan<MinerState> | null {
+    return Plan.formulate<MinerState>(this, new BadIronGoal());
   }
 }
 
