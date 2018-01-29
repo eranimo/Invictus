@@ -10,11 +10,8 @@ const config = {
     renderer: './packages/renderer/src/index.ts',
   },
   output: {
-    filename: '[name].[hash].js',
-    chunkFilename: '[name]-[chunkhash].js', 
-  },
-  output: {
     filename: '[name].[hash].bundle.js',
+    chunkFilename: '[name]-[chunkhash].js', 
     "path": path.resolve('dist'),
   },
   devtool: 'inline-source-map',
@@ -54,6 +51,15 @@ const config = {
           loader: "sass-loader" // compiles Sass to CSS
         }]
       },
+      {
+        test: /\.(png|jpg|gif)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {}
+          }
+        ]
+      }
     ]
   },
   plugins: [

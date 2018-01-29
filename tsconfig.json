@@ -45,6 +45,7 @@
     }
   },
   "include": [
+    "typings",
     "packages/*/src/**/*"
   ],
   "exclude": [

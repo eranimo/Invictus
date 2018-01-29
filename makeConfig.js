@@ -22,6 +22,7 @@ const config = {
     "paths": paths
   },
   "include": [
+    "typings",
     "packages/*/src/**/*"
   ],
   "exclude": [
