@@ -1,5 +1,4 @@
 import { EntityComponentSystem, EntityPool } from 'entity-component-system';
-import * as components from './components';
 import * as systems from './systems';
 import Scene from './scene';
 
@@ -25,12 +24,20 @@ const defaultOptions = {
   debug: false,
 };
 
+/**
+ * Game
+ * 
+ * - access point for entire system
+ * - controls Scenes
+ * - access to Pixi Application
+ */
 export default class Game {
   lastTime: number
   prefabs: Prefabs;
   running: boolean;
   scenes: { [sceneName: string]: Scene };
   options: GameOptions;
+  activeScene: Scene;
 
   constructor(options: GameOptions = defaultOptions) {
     this.lastTime = -1;
@@ -47,11 +54,16 @@ export default class Game {
       throw new Error(`Scene ${sceneName} not registered`);
     }
     this.scenes[sceneName].start(options);
+    if (this.activeScene) {
+      this.activeScene.onExit();
+    }
+    this.activeScene = this.scenes[sceneName];
   }
 
-  registerScene(sceneName: string, scene: Scene) {
+  async registerScene(sceneName: string, scene: Scene) {
     if (this.options.debug) console.log(`Game: register scene ${sceneName} (${scene.constructor.name})`);
     this.scenes[sceneName] = scene;
+    await scene.onInit();
   }
   
   start() {

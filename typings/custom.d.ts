@@ -66,6 +66,14 @@ declare module "entity-component-system" {
       component: string
     ): any;
 
+    /** Gets a new component on an entity */
+    getComponent(
+      /** the id of the entity to add the component to */
+      entityID: number,
+      /** the name of the component to add */
+      component: string
+    ): any;
+
     /** Sets a primitive value for a component.
      * To change a component that holds an object, use getComponent instead. */
     setComponent(

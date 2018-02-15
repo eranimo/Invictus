@@ -8,7 +8,7 @@ import SceneRenderer from '@invictus/renderer/scene';
 import { Game, Scene } from '@invictus/engine';
 
 
-const scene = new SceneRenderer();
+// const scene = new SceneRenderer();
 
 let game;
 async function setup() {
@@ -20,9 +20,7 @@ async function setup() {
     debug: true,
   });
 
-  console.log(MainScene.foobar);
-
-  game.registerScene('main', new MainScene(game));
+  await game.registerScene('main', new MainScene(game));
   game.runScene('main', {
     x: 10,
     y: 13,
@@ -32,11 +30,7 @@ async function setup() {
 setup();
 
 
-if (module.hot) {
-  module.hot.accept('./scenes', () => {
-    setup();
-  });
-}
+if (module.hot) module.hot.accept('./scenes', setup);
 
 
 // const mapgen = new MapGenerator({

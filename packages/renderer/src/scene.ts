@@ -6,7 +6,7 @@ const CELL_HEIGHT = 50;
 const CELL_SIZE = 10;
 
 
-function createTileTexture(
+export function createTileTexture(
   resource: PIXI.loaders.Resource,
   tileSize: number,
   tileID: number

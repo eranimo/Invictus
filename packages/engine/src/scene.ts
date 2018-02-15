@@ -1,5 +1,6 @@
 import { EntityComponentSystem as ECS, EntityPool } from 'entity-component-system';
 import Game, { System } from './game';
+import * as components from './components';
 
 
 export enum SceneState {
@@ -8,6 +9,11 @@ export enum SceneState {
   STOPPED,
 }
 
+/**
+ * Scene
+ * 
+ * 
+ */
 export default class Scene {
   simulation: ECS;
   renderer: ECS;
@@ -23,18 +29,27 @@ export default class Scene {
   constructor(game: Game) {
     this.game = game;
     this.initialized = false;
+
+    this.entities = new EntityPool();
+
+    for (const [key, value] of Object.entries(components)) {
+      this.entities.registerComponent(key, value.factory, value.reset);
+    }
+
+    this.simulation = new ECS();
+    this.renderer = new ECS();
+    this.state = SceneState.STOPPED;
   }
 
   // override in child classes
   get renderSystems(): System[] { return []; }
   get simulationSystems(): System[] { return []; }
+  onInit() {}
   onEnter() {}
   onExit() {}
+  onStop() {}
 
   private initialize() {
-    this.entities = new EntityPool();
-    this.simulation = new ECS();
-    this.renderer = new ECS();
     this.state = SceneState.STOPPED;
     this.initialized = true;
     this.accumulativeTime = 0;
@@ -45,7 +60,7 @@ export default class Scene {
     this.onEnter();
   }
 
-  private installSystems(systems: System[], ecs: ECS) {
+  installSystems(systems: System[], ecs: ECS) {
     for (const system of systems) {
       system(ecs, this.game);
     }
@@ -53,7 +68,7 @@ export default class Scene {
 
   start(options: any) {
     if (this.game.options.debug) console.log(`Scene ${this.constructor.name}: start`);
-    if (this.state === SceneState.STOPPED) {
+    if (this.state !== SceneState.STOPPED) {
       return;
     }
 
@@ -68,7 +83,7 @@ export default class Scene {
     }
 
     this.state = SceneState.STOPPED;
-    this.onExit();
+    this.onStop();
   }
 
   simulate(elapsed: number) {
@@ -80,12 +95,7 @@ export default class Scene {
       this.initialize();
       this.state = SceneState.RUNNING;
     }
-
-    if (this.initialized) {
-      this.initialized = false;
-      this.simulation.run(this.entities, 0);
-    }
-
+    
     this.accumulativeTime += elapsed;
     while (this.accumulativeTime >= this.simulationStepTime) {
       this.accumulativeTime -= this.simulationStepTime;
