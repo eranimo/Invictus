@@ -12,7 +12,7 @@ const config = {
   output: {
     filename: '[name].[hash].bundle.js',
     chunkFilename: '[name]-[chunkhash].js', 
-    "path": path.resolve('dist'),
+    path: path.resolve('dist'),
   },
   devtool: 'inline-source-map',
   resolve: {
@@ -71,14 +71,16 @@ const config = {
       name: 'vendor',
       minChunks: ({ resource }) => /node_modules/.test(resource),
     }),
+    new webpack.NamedModulesPlugin(),
     new webpack.WatchIgnorePlugin([
       /\.js$/,
       /\.d\.ts$/
     ]),
-    new webpack.HotModuleReplacementPlugin({ multiStep: false })
   ],
   devServer: {
     port: 4000,
+    inline: true,
+    hotOnly: true,
   }
 };
 

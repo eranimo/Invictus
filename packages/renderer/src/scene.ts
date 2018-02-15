@@ -72,7 +72,7 @@ class TileMap {
     this.spriteMap[tileID].texture = PIXI.Texture.EMPTY;
   }
 
-  public setTileFilter(x: number, y: number, colorMap) {
+  public setTileColorReplacements(x: number, y: number, colorMap) {
     const tileID = this.getTileID(x, y);
     const filters = [];
     for (const color of colorMap) {
@@ -82,6 +82,11 @@ class TileMap {
       filters.push(filter);
     }
     this.spriteMap[tileID].filters = filters;
+  }
+
+  public setTileRotation(x: number, y: number, rotation: number) {
+    const tileID = this.getTileID(x, y);
+    this.spriteMap[tileID].rotation = rotation * (Math.PI / 180);
   }
 
   public render(): PIXI.Container {
@@ -129,10 +134,13 @@ export default class SceneRenderer {
     container.scale = new PIXI.Point(scale, scale);
 
     const TILE_MOB = createTileTexture(this.resources.retro, 16, 32);
+    const TILE_DOTS_TWO = createTileTexture(this.resources.retro, 16, 37);
 
     const tilemap = new TileMap(this.app, CELL_WIDTH, CELL_HEIGHT, CELL_SIZE);
     tilemap.setTileTexture(5, 5, TILE_MOB);
-    tilemap.setTileFilter(5, 5, [
+    tilemap.setTileTexture(5, 10, TILE_DOTS_TWO);
+    tilemap.setTileRotation(5, 10, 90);
+    tilemap.setTileColorReplacements(5, 5, [
       [[0, 0, 0], [39 / 255, 166 / 255, 188 / 255]],
       [[1, 0, 0], [0, 0, 0, 0]],
     ])

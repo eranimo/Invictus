@@ -5,9 +5,40 @@ import * as KeyboardJS from 'keyboardjs';
 import { clamp } from 'lodash';
 
 import SceneRenderer from '@invictus/renderer/scene';
+import { Game, Scene } from '@invictus/engine';
 
 
 const scene = new SceneRenderer();
+
+let game;
+async function setup() {
+  console.log('setup');
+  console.log('data', module.hot.data);
+
+  const { MainScene } = await import('./scenes');
+  game = new Game({
+    debug: true,
+  });
+
+  console.log(MainScene.foobar);
+
+  game.registerScene('main', new MainScene(game));
+  game.runScene('main', {
+    x: 10,
+    y: 13,
+  });
+  game.start();
+}
+setup();
+
+
+if (module.hot) {
+  module.hot.accept('./scenes', () => {
+    setup();
+  });
+}
+
+
 // const mapgen = new MapGenerator({
 //   size: 1000,
 //   seed: 12312354786756, // Math.random(),

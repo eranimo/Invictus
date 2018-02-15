@@ -47,8 +47,5 @@
   "include": [
     "typings",
     "packages/*/src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

@@ -24,9 +24,6 @@ const config = {
   "include": [
     "typings",
     "packages/*/src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }
 console.log('Making tsconfig.json for lerna project...');
