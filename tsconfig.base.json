@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "target": "esnext",
+    "target": "es2015",
     "moduleResolution": "node",
     "outDir": "./dist/",
     "lib": ["esnext", "es2017", "dom"],

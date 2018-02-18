@@ -1,3 +1,4 @@
+/*
 import { Scene } from '@invictus/engine';
 import tilemapSystem from '../systems/tilemap';
 
@@ -40,3 +41,5 @@ export default class MainScene extends Scene {
     console.log('Main scene: exit');
   }
 }
+
+*/

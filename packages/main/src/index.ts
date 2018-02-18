@@ -1,36 +1,31 @@
-import Renderer from '@invictus/renderer';
-import MapGenerator from '@invictus/generator';
+// import Renderer from '@invictus/renderer';
+// import MapGenerator from '@invictus/generator';
 import './style.scss';
-import * as KeyboardJS from 'keyboardjs';
+// import * as KeyboardJS from 'keyboardjs';
 import { clamp } from 'lodash';
+import { SceneTree, Node, Tilemap, Viewport, Preloader } from '@invictus/engine';
 
-import SceneRenderer from '@invictus/renderer/scene';
-import { Game, Scene } from '@invictus/engine';
-
-
-// const scene = new SceneRenderer();
-
-let game;
 async function setup() {
-  console.log('setup');
-  console.log('data', module.hot.data);
+  const scene = new SceneTree();
+  const root = new Viewport('viewport');
 
-  const { MainScene } = await import('./scenes');
-  game = new Game({
-    debug: true,
-  });
+  // preload things
+  const preloader = new Preloader('resources');
+  const tilemapImg = await import('@invictus/renderer/images/tilemap.png');
+  await preloader.add('tilemap', tilemapImg);
+  root.addChild(preloader);
 
-  await game.registerScene('main', new MainScene(game));
-  game.runScene('main', {
-    x: 10,
-    y: 13,
-  });
-  game.start();
+  const tilemap = new Tilemap('tilemap');
+  root.addChild(tilemap);
+  await scene.changeScene(root);
+  console.log(preloader.resources);
+  scene.start();
 }
+
 setup();
 
 
-if (module.hot) module.hot.accept('./scenes', setup);
+// if (module.hot) module.hot.accept('./scenes', setup);
 
 
 // const mapgen = new MapGenerator({

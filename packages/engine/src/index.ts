@@ -1,6 +1,7 @@
 // classes
-export { default as Game } from './game';
-export { default as Scene } from './scene';
-
-// interfaces
-export { default as Prefab } from './prefabs';
+export { default as MainLoop } from './mainLoop';
+export { default as SceneTree } from './sceneTree';
+export { default as Node } from './node';
+export { default as Preloader } from './preloader';
+export { default as Tilemap } from './tilemap';
+export { default as Viewport } from './viewport';
