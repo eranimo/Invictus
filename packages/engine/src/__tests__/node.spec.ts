@@ -193,30 +193,66 @@ describe('Node', () => {
     expect(count).toBe(7);
   });
 
-  it('getNode', async () => {
-    const n1 = new Node('one', {
-      a: 1,
-      b: true
-    });
-    const scene = new SceneTree();
-    await scene.changeScene(n1);
-    const c1 = new Node('two_one', {
-      data: true
-    });
-    const c2 = new Node('two_two', {
-      data: false
-    });
-    n1.addChild(c1);
-    n1.addChild(c2);
+  describe('path operations', () => {
+    let root;
+    let c1;
+    let c2;
+    let c3_1;
 
-    const c3_1 = new Node('three_one', {
-      foo: 'bar'
-    });
-    c2.addChild(c3_1);
+    beforeAll(async () => {
+      root = new Node('root_node', {
+        a: 1,
+        b: true
+      });
+      const scene = new SceneTree();
+      await scene.changeScene(root);
+      c1 = new Node('two_one', {
+        data: true
+      });
+      c2 = new Node('two_two', {
+        data: false
+      });
+      root.addChild(c1);
+      root.addChild(c2);
 
-    expect(c1.getNode('two_two')).toBe(c2);
-    expect(n1.getNode('/root')).toBe(n1);
-    expect(c1.getNode('/root/two_one')).toBe(c1);
+      c3_1 = new Node('three_one', {
+        foo: 'bar'
+      });
+      c2.addChild(c3_1);
+    });
+
+    it('isRoot', () => {
+      expect(root.isRoot).toBe(true);
+      expect(c1.isRoot).toBe(false);
+    });
+
+    it('getPath', () => {
+      expect(root.getPath()).toBe('/root');
+      expect(c1.getPath()).toBe('/root/two_one');
+      expect(c2.getPath()).toBe('/root/two_two');
+      expect(c3_1.getPath()).toBe('/root/two_two/three_one');
+    });
+
+    describe('getNode', () => {
+      it('relative', () => {
+        expect(c2.getNode('two_two')).toBe(null);
+        expect(c2.getNode('three_one')).toBe(c3_1);
+        expect(root.getNode('two_two')).toBe(c2);
+        expect(root.getNode('two_two/three_one')).toBe(c3_1);
+      });
+
+      it('relative - upwards', () => {
+        expect(c3_1.getNode('..')).toBe(c2);
+        expect(c3_1.getNode('../..')).toBe(root);
+        expect(c3_1.getNode('../../two_one')).toBe(c1);
+      });
+
+      it('absolute', () => {
+        expect(root.getNode('/root')).toBe(root);
+        expect(c1.getNode('/root/two_one')).toBe(c1);
+        expect(c1.getNode('/root/two_two')).toBe(c2);
+      });
+    });
   });
 });
 

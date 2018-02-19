@@ -5,3 +5,4 @@ export { default as Node } from './node';
 export { default as Preloader } from './preloader';
 export { default as Tilemap } from './tilemap';
 export { default as Viewport } from './viewport';
+export { default as TileSet } from './tileset';

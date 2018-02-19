@@ -17,7 +17,7 @@ export default class Preloader extends Node {
     this.loader.add(name, path);
   }
 
-  async onEnterTree() {
+  async load() {
     return await new Promise((resolve, reject) => {
       this.loader.load((loader, resources) => {
         this.resources = resources;

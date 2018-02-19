@@ -101,20 +101,27 @@ export default class Node {
    *     foobar/barbaz (get nibling node "barbaz", a child of a sibling node)
    *     /root/foobar (get foobar via absolute path)
    * */
-  getNode(path: string): Node | null {
+  getNode(path: string): any | null {
     if (path.startsWith('/root/') && this.tree === null) {
       throw new Error('Cannot get absolute path when Node is not inside a SceneTree');
     }
-    const pathList = path.split('/');
+    let pathList = path.split('/');
 
     let isAbsolute = pathList[0] === '' && pathList[1] === 'root';
     if (isAbsolute) {
       pathList.shift();
       pathList.shift();
     }
+    let currentNode = isAbsolute ? this.tree.currentScene : this;
 
-    const currentNode = isAbsolute ? this.tree.currentScene : this.parent;
-    if (isAbsolute && pathList.length === 0) return currentNode;
+    pathList = pathList.filter(item => {
+      if (item === '..') {
+        currentNode = currentNode.parent;
+        return false;
+      }
+      return true;
+    })
+    if (pathList.length === 0) return currentNode;
 
     let i = 0;
     let found;
@@ -133,17 +140,26 @@ export default class Node {
     return null;
   }
 
+  get isRoot(): boolean {
+    if (this.tree === null) return false;
+    return this.tree.currentScene === this;
+  }
+
   getPath(): string {
     if (this.tree === null) return null;
 
-    const pathList = [this.name];
+    const pathList = [this.isRoot ? '/root' : this.name];
     
     this.forEachParent(parent => {
-      pathList.push(parent.name);
+      pathList.push(parent.isRoot ? '/root' : parent.name);
     });
     pathList.reverse();
 
     return pathList.join('/');
+  }
+
+  getChild(childName: string): Node {
+    return this.children[childName];
   }
 
   /**

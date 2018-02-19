@@ -3,22 +3,50 @@
 import './style.scss';
 // import * as KeyboardJS from 'keyboardjs';
 import { clamp } from 'lodash';
-import { SceneTree, Node, Tilemap, Viewport, Preloader } from '@invictus/engine';
+import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet } from '@invictus/engine';
 
+
+let colonistID = 1;
+function Colonist(parent: Node) {
+  const colonist = new Node(`colonist-${colonistID}`);
+  colonistID++;
+
+  parent.addChild(colonist);
+}
+
+/*
+
+- Viewport
+  - Preloader
+  - Tilemap
+    - colonist: Node
+      - 
+
+*/
 async function setup() {
   const scene = new SceneTree();
   const root = new Viewport('viewport');
 
   // preload things
-  const preloader = new Preloader('resources');
-  const tilemapImg = await import('@invictus/renderer/images/tilemap.png');
-  await preloader.add('tilemap', tilemapImg);
+  const preloader = new Preloader('preloader');
+  preloader.add('tilemap', await import('@invictus/renderer/images/tilemap.png'));
+  await preloader.load();
   root.addChild(preloader);
 
-  const tilemap = new Tilemap('tilemap');
+  const tileset = new TileSet(preloader.resources.tilemap, {
+    tileWidth: 16,
+    tileHeight: 16,
+  });
+  tileset.createTile(45, 'smile');
+
+  const tilemap = new Tilemap('tilemap', { width: 50, height: 50, cellSize: 16 });
+  tilemap.tileset = tileset;
+
+  tilemap.setCell(5, 5, 'smile')
   root.addChild(tilemap);
+
   await scene.changeScene(root);
-  console.log(preloader.resources);
+  console.log('preloader resources', preloader.resources);
   scene.start();
 }
 

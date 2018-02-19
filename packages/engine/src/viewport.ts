@@ -25,6 +25,14 @@ export default class Viewport extends Node {
     this.container = new Container;
   }
 
+  onEnterTree() {
+    document.body.appendChild(this.app.view);
+  }
+
+  onExitTree() {
+    document.body.removeChild(this.app.view);
+  }
+
   render() {
     this.app.renderer.render(this.container);
   }

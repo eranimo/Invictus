@@ -51,8 +51,8 @@ export default class SceneTree extends MainLoop {
   }
 
   async _notifySceneEnter(node: Node) {
-    await node.onEnterTree();
     node.tree = this;
+    await node.onEnterTree();
     let promises = [];
     node.forEachChildInTree((child => {
       promises.push(this._notifySceneEnter(child));
