@@ -4,10 +4,18 @@ import './style.scss';
 // import * as KeyboardJS from 'keyboardjs';
 import { clamp } from 'lodash';
 import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet } from '@invictus/engine';
+import Vector2D from 'victor';
+
+
+// class Colonist extends Node<any> {
+//   onEnterTree() {
+//     this.addChild();
+//   }
+// }
 
 
 let colonistID = 1;
-function Colonist(parent: Node<any>) {
+function makeColonist(parent: Node<any>) {
   const colonist = new Node(`colonist-${colonistID}`);
   colonistID++;
 
@@ -39,7 +47,12 @@ async function setup() {
   });
   tileset.createTile(45, 'smile');
 
-  const tilemap = new Tilemap('tilemap', { width: 50, height: 50, cellSize: 16 });
+  const tilemap = new Tilemap('tilemap', {
+    position: new Vector2D(0, 0),
+    width: 50,
+    height: 50,
+    cellSize: 16
+  });
   tilemap.tileset = tileset;
 
   tilemap.setCell(5, 5, 'smile')

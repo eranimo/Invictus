@@ -16,7 +16,7 @@ interface NodeDef<T> {
   children?: NodeDef<T>[],
 }
 
-export default class Node<T> {
+export default class Node<T extends object> {
   name: string;
   props: T;
   childrenSet: Set<Node<T>>;
@@ -24,10 +24,10 @@ export default class Node<T> {
   parent: Node<T>;
   tree: SceneTree | null;
 
-  static defaultProps: JsonMap = {};
+  static defaultProps = {};
 
   /** Creates a new Node */
-  constructor(name: string, props: JsonMap = {}) {
+  constructor(name: string, props?: T) {
     if (name === 'root') {
       throw new Error('Node name can not be \'root\'');
     }
@@ -35,10 +35,7 @@ export default class Node<T> {
       throw new Error('Invalid Node name');
     }
     this.name = name;
-    this.props = {
-      ...(this.constructor as any).defaultProps || {},
-      ...props,
-    };
+    this.props = Object.assign({}, new.target.defaultProps || {}, props);
     this.childrenSet = new Set();
     this.children = {};
     this.tree = null;
@@ -208,6 +205,9 @@ export default class Node<T> {
     }
     if (child.name in this.children) {
       throw new Error(`Node already has a child named '${child.name}'`);
+    }
+    if (child == this) {
+      throw new Error('Cannot add self as a child');
     }
     this.childrenSet.add(child);
     this.children[child.name] = child;

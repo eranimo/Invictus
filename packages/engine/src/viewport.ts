@@ -2,9 +2,10 @@ import Node from './node';
 import { Application, Container, settings } from 'pixi.js';
 
 
-export default class Viewport extends Node<{
+export interface ViewportProps {
   backgroundColor: number;
-}> {
+}
+export default class Viewport<T extends ViewportProps> extends Node<T> {
   app: Application;
   container: Container;
 

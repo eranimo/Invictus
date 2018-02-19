@@ -1,15 +1,17 @@
 import { MultiColorReplaceFilter, ColorReplaceFilter } from 'pixi-filters';
-import Node from './node';
+import Node2D, { Node2DProps } from './node2D';
 import Preloader from './preloader';
 import TileSet, { TileRef } from './tileset';
 import { Container, Sprite, Texture } from 'pixi.js';
 
 
-export default class Tilemap extends Node<{
+export interface TilemapProps extends Node2DProps {
   width: number;
   height: number;
   cellSize: number;
-}> {
+}
+
+export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
   public tileset: TileSet;
   private tilesetContainer: Container;
   private spriteMap: {
@@ -58,6 +60,8 @@ export default class Tilemap extends Node<{
     const viewport = this.getNode('/root');
     this.tilesetContainer = new Container();
     viewport.container.addChild(this.tilesetContainer);
+    viewport.container.x = this.props.position.x;
+    viewport.container.y = this.props.position.y;
     for (const sprite of Object.values(this.spriteMap)) {
       this.tilesetContainer.addChild(sprite);
     }
