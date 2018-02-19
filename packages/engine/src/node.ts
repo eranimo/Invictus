@@ -1,13 +1,13 @@
 import { mapValues, isEqual, every } from 'lodash';
 import SceneTree from './sceneTree';
+// import TYPE_MAP from './typeMap';
+
+const TYPE_MAP = {};
 
 
 type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
 interface JsonMap { [key: string]: AnyJson; }
 interface JsonArray extends Array<AnyJson> { }
-
-const TYPE_MAP = {
-};
 
 interface NodeDef<T> {
   type: string;

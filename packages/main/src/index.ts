@@ -2,8 +2,8 @@
 // import MapGenerator from '@invictus/generator';
 import './style.scss';
 // import * as KeyboardJS from 'keyboardjs';
-import { clamp } from 'lodash';
-import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet } from '@invictus/engine';
+import { clamp, random } from 'lodash';
+import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet, Tile } from '@invictus/engine';
 import Vector2D from 'victor';
 
 
@@ -27,8 +27,7 @@ function makeColonist(parent: Node<any>) {
 - Viewport
   - Preloader
   - Tilemap
-    - colonist: Node
-      - 
+    - Tile
 
 */
 async function setup() {
@@ -46,6 +45,7 @@ async function setup() {
     tileHeight: 16,
   });
   tileset.createTile(45, 'smile');
+  tileset.createTile(15, 'dots');
 
   const tilemap = new Tilemap('tilemap', {
     position: new Vector2D(0, 0),
@@ -55,12 +55,41 @@ async function setup() {
   });
   tilemap.tileset = tileset;
 
-  tilemap.setCell(5, 5, 'smile')
+  tilemap.setCell(new Vector2D(5, 5), 'smile')
+
   root.addChild(tilemap);
+
+  let tileID = 1;
+  function newTile(tileID, x, y) {
+    const tile = new Tile(`tile-${tileID}`, {
+      tileID,
+      position: new Vector2D(x, y),
+      colorReplacements: [
+        [[255 / 255, 255 / 255, 255 / 255], [231 / 255, 121 / 255, 129 / 255]],
+      ]
+    });
+    tilemap.addChild(tile);
+    tileID++;
+    return tile;
+  }
+
+  const tile = newTile('smile', 5, 5);
+  setInterval(() => {
+    tile.changePosition(new Vector2D(random(-1, 1), random(-1, 1)));
+  }, 1500);
 
   await scene.changeScene(root);
   console.log('preloader resources', preloader.resources);
   scene.start();
+
+  (window as any).scene = scene;
+  (window as any).exportMap = () => {
+    console.log(scene.currentScene.exportTreeJSON());
+  }
+  (window as any).importMap = (desc) => {
+    const root = Node.import(desc);
+    scene.changeScene(root);
+  }
 }
 
 setup();

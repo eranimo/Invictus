@@ -7,3 +7,4 @@ export { default as Preloader } from './preloader';
 export { default as Tilemap } from './tilemap';
 export { default as Viewport } from './viewport';
 export { default as TileSet } from './tileset';
+export { default as Tile } from './tile';

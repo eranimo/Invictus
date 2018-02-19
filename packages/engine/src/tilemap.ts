@@ -3,6 +3,7 @@ import Node2D, { Node2DProps } from './node2D';
 import Preloader from './preloader';
 import TileSet, { TileRef } from './tileset';
 import { Container, Sprite, Texture } from 'pixi.js';
+import Vector2D from 'victor';
 
 
 export interface TilemapProps extends Node2DProps {
@@ -23,27 +24,27 @@ export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
     this.spriteMap = {};
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        const tileID = this.getTileID(x, y);
+        const tileID = this.getTileID(new Vector2D(x, y));
         this.spriteMap[tileID] = new PIXI.Sprite();
         this.spriteMap[tileID].x = cellSize * x;
         this.spriteMap[tileID].y = cellSize * y;
       }
     }
   }
-  private getTileID(x: number, y: number) {
-    return x + (y * (this.props.width as number));
+  private getTileID(position: Vector2D) {
+    return position.x + (position.y * (this.props.width as number));
   }
 
-  public clearTile(x: number, y: number) {
-    const tileID = this.getTileID(x, y);
+  public clearTile(position: Vector2D) {
+    const tileID = this.getTileID(position);
     this.spriteMap[tileID].texture = PIXI.Texture.EMPTY;
+    this.spriteMap[tileID].filters = [];
   }
 
-  public setTileColorReplacements(x: number, y: number, colorMap) {
-    const tileID = this.getTileID(x, y);
+  public setTileColorReplacements(position: Vector2D, colorMap) {
+    const tileID = this.getTileID(position);
     const filters = [];
     for (const color of colorMap) {
-      console.log(color);
       const filter = new ColorReplaceFilter(color[0], color[1], .1);
       filter.resolution = window.devicePixelRatio;
       filters.push(filter);
@@ -51,8 +52,8 @@ export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
     this.spriteMap[tileID].filters = filters;
   }
 
-  public setTileRotation(x: number, y: number, rotation: number) {
-    const tileID = this.getTileID(x, y);
+  public setTileRotation(position: Vector2D, rotation: number) {
+    const tileID = this.getTileID(position);
     this.spriteMap[tileID].rotation = rotation * (Math.PI / 180);
   }
 
@@ -67,10 +68,11 @@ export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
     }
   }
   
-  setCell(x: number, y: number, tileRef: TileRef) {
+  setCell(position: Vector2D, tileRef: TileRef) {
     const tileTexture: Texture = this.tileset.getTile(tileRef);
-    const tileID = this.getTileID(x, y);
-    this.spriteMap[tileID].texture = tileTexture;
-    console.log('setCell', tileTexture);
+    const tileID = this.getTileID(position);
+    if (this.spriteMap[tileID]) {
+      this.spriteMap[tileID].texture = tileTexture;
+    }
   }
 }
