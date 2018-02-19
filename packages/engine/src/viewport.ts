@@ -2,7 +2,9 @@ import Node from './node';
 import { Application, Container, settings } from 'pixi.js';
 
 
-export default class Viewport extends Node {
+export default class Viewport extends Node<{
+  backgroundColor: number;
+}> {
   app: Application;
   container: Container;
 
@@ -12,9 +14,8 @@ export default class Viewport extends Node {
 
   init() {
     console.log();
-    const bgColor = (this.props.backgroundColor as number);
     this.app = new Application(800, 600, {
-      backgroundColor: bgColor,
+      backgroundColor: this.props.backgroundColor,
       width: window.innerWidth,
       height: window.innerHeight,
       resolution: window.devicePixelRatio,

@@ -4,7 +4,7 @@ import SceneTree from '../sceneTree';
 
 describe('Node', () => {
   test('default properties', () => {
-    class SomeNode extends Node {
+    class SomeNode extends Node<any> {
       static defaultProps = {
         bar: 'baz',
       };

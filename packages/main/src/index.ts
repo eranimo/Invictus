@@ -7,7 +7,7 @@ import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet } from '@invictu
 
 
 let colonistID = 1;
-function Colonist(parent: Node) {
+function Colonist(parent: Node<any>) {
   const colonist = new Node(`colonist-${colonistID}`);
   colonistID++;
 

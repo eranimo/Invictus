@@ -2,7 +2,7 @@ import Node from './node';
 import { loaders } from 'pixi.js';
 
 
-export default class Preloader extends Node {
+export default class Preloader extends Node<{}> {
   loader: loaders.Loader;
   resources: {
     [name: string]: loaders.Resource,

@@ -5,7 +5,11 @@ import TileSet, { TileRef } from './tileset';
 import { Container, Sprite, Texture } from 'pixi.js';
 
 
-export default class Tilemap extends Node {
+export default class Tilemap extends Node<{
+  width: number;
+  height: number;
+  cellSize: number;
+}> {
   public tileset: TileSet;
   private tilesetContainer: Container;
   private spriteMap: {
@@ -13,9 +17,7 @@ export default class Tilemap extends Node {
   };
 
   init() {
-    const width = this.props.width as number;
-    const height = this.props.height as number;
-    const cellSize = this.props.cellSize as number;
+    const { width, height, cellSize } = this.props;
     this.spriteMap = {};
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {

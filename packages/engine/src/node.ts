@@ -9,19 +9,19 @@ interface JsonArray extends Array<AnyJson> { }
 const TYPE_MAP = {
 };
 
-interface NodeDef {
+interface NodeDef<T> {
   type: string;
   name: string;
-  props: JsonMap,
-  children?: NodeDef[],
+  props: T,
+  children?: NodeDef<T>[],
 }
 
-export default class Node {
+export default class Node<T> {
   name: string;
-  props: JsonMap;
-  childrenSet: Set<Node>;
-  children: { [childName: string]: Node };
-  parent: Node;
+  props: T;
+  childrenSet: Set<Node<T>>;
+  children: { [childName: string]: Node<T> };
+  parent: Node<T>;
   tree: SceneTree | null;
 
   static defaultProps: JsonMap = {};
@@ -79,7 +79,7 @@ export default class Node {
     return this.constructor.name;
   }
 
-  static import(def: NodeDef) {
+  static import<T>(def: NodeDef<T>) {
     const con = TYPE_MAP[def.type] || Node;
     const node = new con(def.name, def.props);
     if (def.children) {
@@ -142,7 +142,7 @@ export default class Node {
 
   get isRoot(): boolean {
     if (this.tree === null) return false;
-    return this.tree.currentScene === this;
+    return this.tree.currentScene == this;
   }
 
   getPath(): string {
@@ -158,7 +158,7 @@ export default class Node {
     return pathList.join('/');
   }
 
-  getChild(childName: string): Node {
+  getChild(childName: string): Node<T> {
     return this.children[childName];
   }
 
@@ -166,7 +166,7 @@ export default class Node {
    * Gets the relative path string to a node
    * @param node Node to find path to
    */
-  getPathTo(node: Node) {
+  getPathTo(node: Node<T>) {
     // if not part of the same tree, return null
     if (node.tree != this.tree) {
       return null;
@@ -174,14 +174,14 @@ export default class Node {
   }
 
   // looping over nodes
-  forEachParent(func: (child: Node) => void) {
+  forEachParent(func: (child: Node<T>) => void) {
     if (this.parent) {
       func(this.parent);
       this.parent.forEachParent(func);
     }
   }
 
-  forEachChild(func: (child: Node) => void) {
+  forEachChild(func: (child: Node<T>) => void) {
     if (this.childCount === 0) return;
 
     this.childrenSet.forEach(func);
@@ -191,7 +191,7 @@ export default class Node {
    * Depth-first loop
    * @param func Function to run on each child in the tree
    */
-  forEachChildInTree(func: (child: Node) => void) {
+  forEachChildInTree(func: (child: Node<T>) => void) {
     if (this.childCount === 0) return;
 
     this.childrenSet.forEach(child => {
@@ -202,7 +202,7 @@ export default class Node {
 
   // basic node operations
 
-  addChild(child: Node) {
+  addChild(child: Node<any>) {
     if (this.childrenSet.has(child)) {
       throw new Error('Node instance is already a child of this node');
     }
@@ -221,11 +221,11 @@ export default class Node {
     }
   }
 
-  hasChild(child: Node) {
+  hasChild(child: Node<any>) {
     return this.childrenSet.has(child);
   }
 
-  removeChild(child: Node) {
+  removeChild(child: Node<any>) {
     this.childrenSet.delete(child);
     delete this.children[child.name];
     child.parent = null;
@@ -242,17 +242,17 @@ export default class Node {
 
   // replicating
 
-  duplicate(): Node {
+  duplicate(): Node<T> {
     return Node.import(this.export());
   }
 
-  duplicateTree(): Node {
+  duplicateTree(): Node<T> {
     return Node.import(this.exportTree());
   }
 
   // equality
 
-  isEqual(node: Node) {
+  isEqual(node: Node<any>) {
     return (
       this.type === node.type &&
       this.name === node.name &&
@@ -260,13 +260,13 @@ export default class Node {
     );
   }
 
-  isEqualTree(node: Node) {
+  isEqualTree(node: Node<any>) {
     return isEqual(this.exportTree(), node.exportTree());
   }
 
   // exporting
 
-  export(): NodeDef {
+  export(): NodeDef<T> {
     return {
       type: this.type,
       name: this.name,
@@ -274,8 +274,8 @@ export default class Node {
     };
   }
 
-  exportTree(): NodeDef {
-    const def: NodeDef = this.export();
+  exportTree(): NodeDef<T> {
+    const def: NodeDef<T> = this.export();
 
     if (this.childCount > 0) {
       def.children = [];

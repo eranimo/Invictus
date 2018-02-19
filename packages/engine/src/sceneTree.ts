@@ -10,7 +10,7 @@ import MainLoop from './mainLoop';
  * - calls node tree events
  */
 export default class SceneTree extends MainLoop {
-  currentScene: Node;
+  currentScene: Node<any>;
 
   constructor() {
     super();
@@ -39,18 +39,18 @@ export default class SceneTree extends MainLoop {
     this.forEachNode(node => node.render(elapsedTime));
   }
 
-  forEachNode(func: (node: Node) => void) {
+  forEachNode(func: (node: Node<any>) => void) {
     func(this.currentScene);
     this.currentScene.forEachChildInTree(func);
   }
 
-  _notifySceneExit(node: Node) {
+  _notifySceneExit(node: Node<any>) {
     node.onExitTree();
     node.tree = null;
     node.forEachChildInTree(this._notifySceneExit.bind(this));
   }
 
-  async _notifySceneEnter(node: Node) {
+  async _notifySceneEnter(node: Node<any>) {
     node.tree = this;
     await node.onEnterTree();
     let promises = [];
@@ -61,7 +61,7 @@ export default class SceneTree extends MainLoop {
     node.onReady();
   }
 
-  async changeScene(node: Node) {
+  async changeScene(node: Node<any>) {
     if (this.currentScene) {
       this._notifySceneExit(this.currentScene);
     }
@@ -76,6 +76,6 @@ export default class SceneTree extends MainLoop {
   }
 
   // events
-  onNodeAdded(node: Node) {}
-  onNodeRemoved(node: Node) {}
+  onNodeAdded(node: Node<any>) {}
+  onNodeRemoved(node: Node<any>) {}
 }
