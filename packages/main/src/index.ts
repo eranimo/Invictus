@@ -3,7 +3,7 @@
 import './style.scss';
 // import * as KeyboardJS from 'keyboardjs';
 import { clamp, random } from 'lodash';
-import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet, Tile } from '@invictus/engine';
+import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet, Tile, importScene } from '@invictus/engine';
 import Vector2D from 'victor';
 
 
@@ -35,51 +35,72 @@ async function setup() {
   const root = new Viewport('viewport');
 
   // preload things
-  const preloader = new Preloader('preloader');
-  preloader.add('tilemap', await import('@invictus/renderer/images/tilemap.png'));
-  await preloader.load();
+  const preloader = new Preloader('preloader', {
+    tilesets: {
+      tileset: {
+        url: await import('@invictus/renderer/images/tilemap.png'),
+        options: {
+          tileWidth: 16,
+          tileHeight: 16,
+          tiles: {
+            smile: {
+              index: 45,
+            },
+            dots: {
+              index: 15,
+            }
+          }
+        }
+      },
+    },
+  });
+  // preloader.add('tilemap', await import('@invictus/renderer/images/tilemap.png'));
+  // await preloader.load();
   root.addChild(preloader);
 
-  const tileset = new TileSet(preloader.resources.tilemap, {
-    tileWidth: 16,
-    tileHeight: 16,
-  });
-  tileset.createTile(45, 'smile');
-  tileset.createTile(15, 'dots');
+  // const tileset = new TileSet(preloader.resources.tilemap, {
+  //   tileWidth: 16,
+  //   tileHeight: 16,
+  // });
+  // tileset.createTile(45, 'smile');
+  // tileset.createTile(15, 'dots');
+  // scene.resources.tileset = tileset;
 
   const tilemap = new Tilemap('tilemap', {
     position: new Vector2D(0, 0),
     width: 50,
     height: 50,
-    cellSize: 16
+    cellSize: 16,
+    tileset: {
+      location: '/root/preloader',
+      resource: 'tileset',
+    },
   });
-  tilemap.tileset = tileset;
 
-  tilemap.setCell(new Vector2D(5, 5), 'smile')
+  // tilemap.setCell(new Vector2D(5, 5), 'smile')
 
   root.addChild(tilemap);
+  await scene.changeScene(root);
 
-  let tileID = 1;
+  let tileCount = 1
   function newTile(tileID, x, y) {
-    const tile = new Tile(`tile-${tileID}`, {
+    const tile = new Tile(`tile-${tileID}-${tileCount}`, {
       tileID,
-      position: new Vector2D(x, y),
+      position: { x, y },
       colorReplacements: [
         [[255 / 255, 255 / 255, 255 / 255], [231 / 255, 121 / 255, 129 / 255]],
       ]
     });
     tilemap.addChild(tile);
-    tileID++;
+    tileCount++;
     return tile;
   }
 
   const tile = newTile('smile', 5, 5);
-  setInterval(() => {
-    tile.changePosition(new Vector2D(random(-1, 1), random(-1, 1)));
-  }, 1500);
+  // setInterval(() => {
+  //   tile.changePosition(new Vector2D(random(-1, 1), random(-1, 1)));
+  // }, 1500);
 
-  await scene.changeScene(root);
-  console.log('preloader resources', preloader.resources);
   scene.start();
 
   (window as any).scene = scene;
@@ -87,8 +108,7 @@ async function setup() {
     console.log(scene.currentScene.exportTreeJSON());
   }
   (window as any).importMap = (desc) => {
-    const root = Node.import(desc);
-    scene.changeScene(root);
+    importScene(scene, desc);
   }
 }
 

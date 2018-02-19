@@ -1,15 +1,13 @@
 import { mapValues, isEqual, every } from 'lodash';
 import SceneTree from './sceneTree';
-// import TYPE_MAP from './typeMap';
-
-const TYPE_MAP = {};
+import { loaders } from 'pixi.js';
 
 
 type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
 interface JsonMap { [key: string]: AnyJson; }
 interface JsonArray extends Array<AnyJson> { }
 
-interface NodeDef<T> {
+export interface NodeDef<T> {
   type: string;
   name: string;
   props: T,
@@ -23,6 +21,10 @@ export default class Node<T extends object> {
   children: { [childName: string]: Node<T> };
   parent: Node<T>;
   tree: SceneTree | null;
+  resources: {
+    [name: string]: any
+  };
+  readyPromise: Promise<any>;
 
   static defaultProps = {};
 
@@ -32,7 +34,7 @@ export default class Node<T extends object> {
       throw new Error('Node name can not be \'root\'');
     }
     if (typeof name !== 'string' || name.length === 0) {
-      throw new Error('Invalid Node name');
+      throw new Error(`Invalid Node name '${name}'`);
     }
     this.name = name;
     this.props = Object.assign({}, new.target.defaultProps || {}, props);
@@ -40,10 +42,10 @@ export default class Node<T extends object> {
     this.children = {};
     this.tree = null;
     this.parent = null;
-    this.init();
+    this.resources = {};
   }
 
-  init() {}
+  async init() {}
 
   /** Called on every processing frame */
   process(
@@ -76,18 +78,6 @@ export default class Node<T extends object> {
     return this.constructor.name;
   }
 
-  static import<T>(def: NodeDef<T>) {
-    const con = TYPE_MAP[def.type] || Node;
-    const node = new con(def.name, def.props);
-    if (def.children) {
-      for (const childDef of Object.values(def.children)) {
-        const child = Node.import(childDef);
-        node.addChild(child);
-      }
-    }
-    return node;
-  }
-
   /** 
    * Gets a Node relative to this node
    * if they are in the same SceneTree
@@ -102,7 +92,8 @@ export default class Node<T extends object> {
     if (path.startsWith('/root/') && this.tree === null) {
       throw new Error('Cannot get absolute path when Node is not inside a SceneTree');
     }
-    let pathList = path.split('/');
+    const [pathPart, resourcePart] = path.split(':');
+    let pathList = pathPart.split('/');
 
     let isAbsolute = pathList[0] === '' && pathList[1] === 'root';
     if (isAbsolute) {
@@ -133,7 +124,12 @@ export default class Node<T extends object> {
       })
     }
     search(currentNode);
-    if (found) return found;
+    if (found) {
+      if (resourcePart) {
+        return found.resources[resourcePart];
+      }
+      return found;
+    }
     return null;
   }
 
@@ -238,16 +234,6 @@ export default class Node<T extends object> {
 
   get childCount(): number {
     return this.childrenSet.size;
-  }
-
-  // replicating
-
-  duplicate(): Node<T> {
-    return Node.import(this.export());
-  }
-
-  duplicateTree(): Node<T> {
-    return Node.import(this.exportTree());
   }
 
   // equality

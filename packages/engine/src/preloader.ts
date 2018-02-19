@@ -1,31 +1,45 @@
 import Node from './node';
 import { loaders } from 'pixi.js';
+import Tileset from './tileset';
 
 
-export default class Preloader extends Node<{}> {
+interface ResourceDef {
+  url: string;
+  options: any
+}
+export interface PreloaderProps {
+  tilesets: { [name: string]: ResourceDef },
+}
+export default class Preloader<T extends PreloaderProps> extends Node<T> {
   loader: loaders.Loader;
-  resources: {
-    [name: string]: loaders.Resource,
-  };
 
-  init() {
+  static defaultProps = {
+    tilesets: [],
+  }
+
+  async init() {
     this.loader = new loaders.Loader();
-    this.resources = {};
-  }
+    for (const [name, def] of Object.entries(this.props.tilesets)) {
+      this.loader.add(name, def.url);
+    }
 
-  add(name: string, path: any) {
-    this.loader.add(name, path);
-  }
-
-  async load() {
-    return await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       this.loader.load((loader, resources) => {
-        this.resources = resources;
+        console.log('Loader finished loading');
+        for (const [name, res] of Object.entries(resources)) {
+          const def = this.props.tilesets[name];
+          this.resources[name] = new Tileset(res as any, def.options);
+        }
+        console.log(this.resources);
         resolve();
       });
       this.loader.onError.add(() => {
         reject();
       });
     });
+  }
+
+  onExitTree() {
+    this.loader.removeAllListeners();
   }
 }

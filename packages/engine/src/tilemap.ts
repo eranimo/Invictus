@@ -10,16 +10,20 @@ export interface TilemapProps extends Node2DProps {
   width: number;
   height: number;
   cellSize: number;
+  tileset: {
+    location: string,
+    resource: string,
+  },
 }
 
 export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
-  public tileset: TileSet;
   private tilesetContainer: Container;
   private spriteMap: {
     [tileID: number]: Sprite
   };
 
-  init() {
+  async init() {
+    console.log('tilemap init');
     const { width, height, cellSize } = this.props;
     this.spriteMap = {};
     for (let x = 0; x < width; x++) {
@@ -31,6 +35,14 @@ export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
       }
     }
   }
+
+  get tileset() {
+    const { location, resource } = this.props.tileset;
+    const node = this.getNode(location);
+    console.log('found', node.resources, resource);
+    return node.resources[resource];
+  }
+
   private getTileID(position: Vector2D) {
     return position.x + (position.y * (this.props.width as number));
   }

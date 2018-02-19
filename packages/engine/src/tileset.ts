@@ -5,6 +5,11 @@ import { loaders, Texture } from 'pixi.js';
 export interface TileSetSettings {
   tileWidth: number;
   tileHeight: number;
+  tiles: {
+    [tileName: string]: {
+      index: number
+    }
+  }
 }
 
 export type TileRef = number | string;
@@ -26,6 +31,10 @@ export default class TileSet {
     this.settings = settings;
     this.tilesByID = {};
     this.tilesByName = {};
+
+    for (const [tileName, tileDef] of Object.entries(settings.tiles)) {
+      this.createTile(tileDef.index, tileName);
+    }
   }
 
   getTile(ref: TileRef): Texture {

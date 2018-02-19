@@ -13,7 +13,7 @@ export default class Viewport<T extends ViewportProps> extends Node<T> {
     backgroundColor: 0x111111,
   };
 
-  init() {
+  async init() {
     console.log();
     this.app = new Application(800, 600, {
       backgroundColor: this.props.backgroundColor,

@@ -12,6 +12,7 @@ export default class Tile<T extends TileProps> extends Node2D<T> {
   lastPosition: Vector2D;
 
   onReady() {
+    super.onReady();
     this.addTile();
   }
 
@@ -24,8 +25,8 @@ export default class Tile<T extends TileProps> extends Node2D<T> {
     if (this.lastPosition) {
       tilemap.clearTile(this.lastPosition)
     }
-    tilemap.setCell(this.props.position, this.props.tileID);
-    tilemap.setTileColorReplacements(this.props.position, this.props.colorReplacements);
-    this.lastPosition = this.props.position.clone();
+    tilemap.setCell(this.position, this.props.tileID);
+    tilemap.setTileColorReplacements(this.position, this.props.colorReplacements);
+    this.lastPosition = this.position.clone();
   }
 }

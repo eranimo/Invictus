@@ -82,19 +82,6 @@ describe('Node', () => {
     }));
   });
 
-  test('importing', () => {
-    const main = new Node('main', {
-      a: 1,
-      b: true
-    });
-    const child = new Node('child', {
-      a: 2,
-    });
-    main.addChild(child);
-    const exported = main.exportTree();
-    const imported = Node.import(exported);
-    expect(imported.name).toBe('main');
-  });
 
   test('isEqual', () => {
     const n1 = new Node('node', {
@@ -126,27 +113,6 @@ describe('Node', () => {
     });
     n2.addChild(c2);
     expect(n1.isEqualTree(n2)).toBe(true);
-  });
-
-  test('duplicate', () => {
-    const main = new Node('main', {
-      a: 1,
-      b: true
-    });
-    expect(main.isEqual(main.duplicate())).toBe(true);
-  });
-
-  test('duplicateTree', () => {
-    const main = new Node('main', {
-      a: 1,
-      b: true
-    });
-    const child = new Node('child', {
-      a: 2,
-    });
-    main.addChild(child);
-    expect(main.isEqualTree(main.duplicateTree())).toBe(true);
-    expect(main.isEqualTree(main.duplicate())).toBe(false);
   });
 
   test('forEachChild', () => {
