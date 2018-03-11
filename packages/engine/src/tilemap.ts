@@ -57,7 +57,9 @@ export default class Tilemap<T extends TilemapProps> extends Node2D<T> {
     const tileID = this.getTileID(position);
     const filters = [];
     for (const color of colorMap) {
-      const filter = new ColorReplaceFilter(color[0], color[1], .1);
+      const before = color[0].map(c => c / 255);
+      const after = color[1].map(c => c / 255);
+      const filter = new ColorReplaceFilter(before, after, .1);
       filter.resolution = window.devicePixelRatio;
       filters.push(filter);
     }

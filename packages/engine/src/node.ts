@@ -1,6 +1,7 @@
 import { mapValues, isEqual, every } from 'lodash';
 import SceneTree from './sceneTree';
 import { loaders } from 'pixi.js';
+import IBehavior from './behavior';
 
 
 type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
@@ -25,11 +26,12 @@ export default class Node<T extends object> {
     [name: string]: any
   };
   readyPromise: Promise<any>;
+  behavior: IBehavior;
 
   static defaultProps = {};
 
   /** Creates a new Node */
-  constructor(name: string, props?: T) {
+  constructor(name: string, props?: T, behavior?: IBehavior) {
     if (name === 'root') {
       throw new Error('Node name can not be \'root\'');
     }
@@ -43,6 +45,7 @@ export default class Node<T extends object> {
     this.tree = null;
     this.parent = null;
     this.resources = {};
+    this.behavior = behavior;
   }
 
   async init() {}
@@ -51,13 +54,17 @@ export default class Node<T extends object> {
   process(
     /** Time in ms since last process step */
     elapsedTime: number
-  ) {}
+  ) {
+    if (this.behavior && this.behavior.process) this.behavior.process.call(this, elapsedTime);
+  }
 
   /** Called on every render frame */
   render(
     /** Time in ms since last render step */
     elapsedTime: number
-  ) {}
+  ) {
+    if (this.behavior && this.behavior.render) this.behavior.render.call(this, elapsedTime);
+  }
 
   // scene 
 
@@ -66,13 +73,19 @@ export default class Node<T extends object> {
   }
   
   /** Called when Node enters a SceneTree */
-  onEnterTree() {}
+  onEnterTree() {
+    if (this.behavior && this.behavior.enter) this.behavior.enter.call(this);
+  }
 
   /** Called when Node exits a SceneTree */
-  onExitTree() {}
+  onExitTree() {
+    if (this.behavior && this.behavior.exit) this.behavior.exit();
+  }
 
   /** Called when all of Node's children have entered a SceneTree */
-  onReady() {}
+  onReady() {
+    if (this.behavior && this.behavior.ready) this.behavior.ready();
+  }
 
   get type() {
     return this.constructor.name;
@@ -155,6 +168,17 @@ export default class Node<T extends object> {
     return this.children[childName];
   }
 
+  getParentOfType(type: string): Node<T> {
+    let current: Node<T> = this.parent;
+    while (current !== null) {
+      if (current.type === type) {
+        return current;
+      }
+      current = current.parent;
+    }
+    return null;
+  }
+
   /**
    * Gets the relative path string to a node
    * @param node Node to find path to
@@ -215,6 +239,16 @@ export default class Node<T extends object> {
       this.tree._notifySceneEnter(child);
       this.tree.onNodeAdded(child);
     }
+  }
+
+  addChildFromBehavior(
+    name: string,
+    props?: any,
+    behavior?: IBehavior
+  ): Node<any> {
+    const node = new Node(name, props, behavior);
+    this.addChild(node);
+    return node;
   }
 
   hasChild(child: Node<any>) {

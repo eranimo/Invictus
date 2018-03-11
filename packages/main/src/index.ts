@@ -3,23 +3,44 @@
 import './style.scss';
 // import * as KeyboardJS from 'keyboardjs';
 import { clamp, random } from 'lodash';
-import { SceneTree, Node, Tilemap, Viewport, Preloader, TileSet, Tile, importScene } from '@invictus/engine';
+import {
+  SceneTree,
+  Node,
+  Tilemap,
+  Viewport,
+  Preloader,
+  TileSet,
+  Tile,
+  importScene,
+  IBehavior,
+} from '@invictus/engine';
 import Vector2D from 'victor';
 
 
-// class Colonist extends Node<any> {
-//   onEnterTree() {
-//     this.addChild();
-//   }
-// }
+const ColonistBehavior: IBehavior = {
+  enter() {
+    this.addChild(new Tile(`${this.name}-tile`, {
+      tileID: 'smile',
+      position: this.props.location,
+      colorReplacements: [
+        [[255, 255, 255], [231, 121, 129]],
+      ],
+    }));
+  }
+}
 
-
-let colonistID = 1;
-function makeColonist(parent: Node<any>) {
-  const colonist = new Node(`colonist-${colonistID}`);
-  colonistID++;
-
-  parent.addChild(colonist);
+const WallBehavior: IBehavior = {
+  enter() {
+    this.addChild(new Tile(`${this.name}-tile`, {
+      tileID: 'wall',
+      position: this.props.location,
+      colorReplacements: [
+        [[255, 0, 0], [56, 90, 145]],
+        [[0, 0, 0], [20, 20, 20]],
+        [[255, 255, 255], [36, 70, 125]],
+      ],
+    }));
+  }
 }
 
 /*
@@ -48,23 +69,17 @@ async function setup() {
             },
             dots: {
               index: 15,
-            }
+            },
+            wall: {
+              index: 0,
+            },
           }
         }
       },
     },
   });
-  // preloader.add('tilemap', await import('@invictus/renderer/images/tilemap.png'));
-  // await preloader.load();
   root.addChild(preloader);
 
-  // const tileset = new TileSet(preloader.resources.tilemap, {
-  //   tileWidth: 16,
-  //   tileHeight: 16,
-  // });
-  // tileset.createTile(45, 'smile');
-  // tileset.createTile(15, 'dots');
-  // scene.resources.tileset = tileset;
 
   const tilemap = new Tilemap('tilemap', {
     position: new Vector2D(0, 0),
@@ -77,29 +92,17 @@ async function setup() {
     },
   });
 
-  // tilemap.setCell(new Vector2D(5, 5), 'smile')
-
   root.addChild(tilemap);
   await scene.changeScene(root);
 
-  let tileCount = 1
-  function newTile(tileID, x, y) {
-    const tile = new Tile(`tile-${tileID}-${tileCount}`, {
-      tileID,
-      position: { x, y },
-      colorReplacements: [
-        [[255 / 255, 255 / 255, 255 / 255], [231 / 255, 121 / 255, 129 / 255]],
-      ]
-    });
-    tilemap.addChild(tile);
-    tileCount++;
-    return tile;
-  }
+  tilemap.addChildFromBehavior('colonist', {
+    location: { x: 10, y: 10 }
+  }, ColonistBehavior);
 
-  const tile = newTile('smile', 5, 5);
-  // setInterval(() => {
-  //   tile.changePosition(new Vector2D(random(-1, 1), random(-1, 1)));
-  // }, 1500);
+  tilemap.addChildFromBehavior('wall', {
+    location: { x: 0, y: 0 }
+  }, WallBehavior);
+
 
   scene.start();
 

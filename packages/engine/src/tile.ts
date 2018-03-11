@@ -21,12 +21,15 @@ export default class Tile<T extends TileProps> extends Node2D<T> {
   }
   
   private addTile() {
-    const tilemap = this.parent as Tilemap<any>;
+    const tilemap = this.getParentOfType('Tilemap') as Tilemap<any>;
+    if (!tilemap) {
+      throw new Error(`Tile (${this.name}) must be a child of a Tilemap`);
+    }
     if (this.lastPosition) {
       tilemap.clearTile(this.lastPosition)
     }
     tilemap.setCell(this.position, this.props.tileID);
-    tilemap.setTileColorReplacements(this.position, this.props.colorReplacements);
+    tilemap.setTileColorReplacements(this.position, this.props.colorReplacements || []);
     this.lastPosition = this.position.clone();
   }
 }
