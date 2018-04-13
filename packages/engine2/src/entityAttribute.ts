@@ -4,7 +4,9 @@ import EntityComponent from './entityComponent';
 import { EventCallback } from './eventEmitter';
 
 
-export default abstract class EntityAttribute<T> extends EntityComponent {
+export default class EntityAttribute<T> extends EntityComponent {
+  public static identifier?: string = null;
+
   private _value: T | null;
   private eventEmitter: EventEmitter;
 

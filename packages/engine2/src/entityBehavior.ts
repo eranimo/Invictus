@@ -3,7 +3,9 @@ import { EventCallback } from './eventEmitter';
 import EntityComponent from './entityComponent';
 
 
-export default abstract class EntityBehavior extends EntityComponent {
+export default class EntityBehavior extends EntityComponent {
+  public static identifier?: string = null;
+
   /** Called when added to an Entity */
   onAdd() {}
 

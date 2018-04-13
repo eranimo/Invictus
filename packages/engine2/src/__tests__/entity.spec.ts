@@ -3,20 +3,24 @@ import EntityAttribute from '../entityAttribute';
 import EntityBehavior from '../entityBehavior';
 
 
-type THealthAttribute = number;
-class HealthAttribute extends EntityAttribute<THealthAttribute> {
-  protected onChange(newValue: THealthAttribute): THealthAttribute | null {
+class HealthAttribute extends EntityAttribute<number> {
+  public static identifier?: string = 'health';
+
+  protected onChange(newValue: number): number | null {
     return Math.max(newValue, 0);
   }
 }
 
 class DamageBehavior extends EntityBehavior {
+  public static identifier?: string = 'damage';
+  public static requirements = ['health'];
+
   onAdd() {
     this.onEntityEvent('damage', this.onDamage.bind(this));
   }
 
   onDamage(event) {
-    const health = this.entity.attributes.get('health');
+    const health = this.entity.attributes.get(HealthAttribute);
     health.value -= event.amount;
   }
 }
@@ -34,14 +38,13 @@ describe('Entity', () => {
   });
 
   describe('attributes', () => {
-    let health;
+    let health: HealthAttribute;
     beforeEach(() => {
-      health = new HealthAttribute(wall, 1);
-      wall.addAttribute('health', health);
+      health = <HealthAttribute>wall.addAttribute(HealthAttribute, 1);
     });
 
     afterAll(() => {
-      wall.removeAttribute('health');
+      wall.removeAttribute(HealthAttribute);
     });
 
     it('initial value', () => {
@@ -49,12 +52,12 @@ describe('Entity', () => {
     });
 
     it('addAttribute', () => {
-      expect(wall.attributes.has('health')).toBeTruthy();
+      expect(wall.attributes.has(HealthAttribute)).toBeTruthy();
     });
 
     it('removeAttribute', () => {
-      wall.removeAttribute('health');
-      expect(wall.attributes.has('health')).not.toBeTruthy();
+      wall.removeAttribute(HealthAttribute);
+      expect(wall.attributes.has(HealthAttribute)).not.toBeTruthy();
     });
 
     it('onChange method', () => {
@@ -74,17 +77,15 @@ describe('Entity', () => {
 
   describe('behaviors', () => {
     it('addBehavior', () => {
-      const damage = new DamageBehavior(wall);
-      wall.addBehavior('damage', damage);
-      expect(wall.behaviors.has('damage')).toBeTruthy();
+      const damage = wall.addBehavior(DamageBehavior);
+      expect(wall.behaviors.has(DamageBehavior)).toBeTruthy();
     });
 
     it('removeBehavior', () => {
-      const damage = new DamageBehavior(wall);
-      wall.addBehavior('damage', damage);
-      wall.removeBehavior('damage');
+      const damage = wall.addBehavior(DamageBehavior);
+      wall.removeBehavior(DamageBehavior);
 
-      expect(wall.behaviors.has('damage')).not.toBeTruthy();
+      expect(wall.behaviors.has(DamageBehavior)).not.toBeTruthy();
     });
   });
 });

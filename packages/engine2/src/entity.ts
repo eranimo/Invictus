@@ -3,10 +3,13 @@ import EntityBehavior from './entityBehavior';
 import EventEmitter from './eventEmitter';
 
 
+type Constructor<T> = new (...args: any[]) => T;
+type InstanceMap<T> = Map<Constructor<T>, T>
+
 export default class Entity extends EventEmitter {
   id: number; // unique
-  attributes: Map<string, EntityAttribute<any>>;
-  behaviors: Map<string, EntityBehavior>;
+  attributes: InstanceMap<EntityAttribute<any>>;
+  behaviors: InstanceMap<EntityBehavior>;
 
   constructor() {
     super();
@@ -15,33 +18,40 @@ export default class Entity extends EventEmitter {
   }
 
   addAttribute<T>(
-    name: string,
-    attribute: EntityAttribute<T>
-  ) {
-    this.attributes.set(name, attribute);
+    attributeClass: Constructor<EntityAttribute<T>>,
+    initialValue: any
+  ): EntityAttribute<T> {
+    const attrubute: EntityAttribute<T> = new attributeClass(this, initialValue);
+    this.attributes.set(attributeClass, attrubute);
+    return attrubute;
   }
 
-  removeAttribute<T>(name: string) {
-    if (!this.attributes.has(name)) {
-      throw new Error(`Attribute '${name}' not found`);
+  removeAttribute<T>(
+    attributeClass: Constructor<EntityAttribute<T>>
+  ) {
+    if (!this.attributes.has(attributeClass)) {
+      throw new Error(`Attribute '${attributeClass.name}' not found`);
     }
-    this.attributes.delete(name);
+    this.attributes.delete(attributeClass);
   }
 
   addBehavior(
-    name: string,
-    behavior: EntityBehavior
-  ) {
-    this.behaviors.set(name, behavior);
+    behaviorClass: Constructor<EntityBehavior>
+  ): EntityBehavior {
+    const behavior = new behaviorClass(this);
+    this.behaviors.set(behaviorClass, behavior);
     behavior.onAdd();
+    return behavior;
   }
 
-  removeBehavior(name: string) {
-    if (!this.behaviors.has(name)) {
-      throw new Error(`Behavior '${name}' not found`);
+  removeBehavior(
+    behaviorClass: Constructor<EntityBehavior>
+  ) {
+    if (!this.behaviors.has(behaviorClass)) {
+      throw new Error(`Behavior '${behaviorClass.name}' not found`);
     }
-    const behavior = this.behaviors.get(name);
+    const behavior = this.behaviors.get(behaviorClass);
     behavior.onRemove();
-    this.behaviors.delete(name);
+    this.behaviors.delete(behaviorClass);
   }
 }
