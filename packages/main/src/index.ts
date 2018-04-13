@@ -18,15 +18,16 @@ import Vector2D from 'victor';
 
 
 const ColonistBehavior: IBehavior = {
-  enter() {
-    this.addChild(new Tile(`${this.name}-tile`, {
+  init() {
+    this.tile = new Tile(`${this.name}-tile`, {
       tileID: 'smile',
       position: this.props.location,
       colorReplacements: [
         [[255, 255, 255], [231, 121, 129]],
       ],
-    }));
-  }
+    });
+    this.addChild(this.tile);
+  },
 }
 
 const WallBehavior: IBehavior = {

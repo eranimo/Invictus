@@ -46,6 +46,8 @@ export default class Node<T extends object> {
     this.parent = null;
     this.resources = {};
     this.behavior = behavior;
+    
+    if (this.behavior && this.behavior.init) this.behavior.init.call(this);
   }
 
   async init() {}

@@ -1,4 +1,6 @@
 export default interface IBehavior {
+  init?();
+
   /** Called when Node enters a SceneTree */
   enter?();
 
