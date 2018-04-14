@@ -40,7 +40,7 @@ describe('Entity', () => {
   describe('attributes', () => {
     let health: HealthAttribute;
     beforeEach(() => {
-      health = <HealthAttribute>wall.addAttribute(HealthAttribute, 1);
+      health = wall.addAttribute(HealthAttribute, 1);
     });
 
     afterAll(() => {

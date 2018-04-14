@@ -17,11 +17,11 @@ export default class Entity extends EventEmitter {
     this.behaviors = new Map();
   }
 
-  addAttribute<T>(
-    attributeClass: Constructor<EntityAttribute<T>>,
+  addAttribute<T extends EntityAttribute>(
+    attributeClass: Constructor<T>,
     initialValue: any
-  ): EntityAttribute<T> {
-    const attrubute: EntityAttribute<T> = new attributeClass(this, initialValue);
+  ): T {
+    const attrubute: T = new attributeClass(this, initialValue);
     this.attributes.set(attributeClass, attrubute);
     return attrubute;
   }
@@ -35,10 +35,10 @@ export default class Entity extends EventEmitter {
     this.attributes.delete(attributeClass);
   }
 
-  addBehavior(
-    behaviorClass: Constructor<EntityBehavior>
-  ): EntityBehavior {
-    const behavior = new behaviorClass(this);
+  addBehavior<T extends EntityBehavior>(
+    behaviorClass: Constructor<T>
+  ): T {
+    const behavior: T = new behaviorClass(this);
     this.behaviors.set(behaviorClass, behavior);
     behavior.onAdd();
     return behavior;
