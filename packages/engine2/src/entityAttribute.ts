@@ -5,8 +5,6 @@ import { EventCallback } from './eventEmitter';
 
 
 export default abstract class EntityAttribute<T = any> extends EntityComponent {
-  public static identifier?: string = null;
-
   private _value: T | null;
   private eventEmitter: EventEmitter;
 

@@ -4,15 +4,12 @@ import EntityBehavior from '../entityBehavior';
 
 
 class HealthAttribute extends EntityAttribute<number> {
-  public static identifier?: string = 'health';
-
   protected onChange(newValue: number): number | null {
     return Math.max(newValue, 0);
   }
 }
 
 class DamageBehavior extends EntityBehavior {
-  public static identifier?: string = 'damage';
   public static requirements = ['health'];
 
   onAdd() {
