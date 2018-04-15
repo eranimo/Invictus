@@ -1,4 +1,4 @@
-class MainLoop {
+export default class MainLoop {
   lastTime: number
   running: boolean;
 

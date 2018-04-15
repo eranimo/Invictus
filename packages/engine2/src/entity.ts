@@ -1,13 +1,8 @@
 import EntityAttribute from './entityAttribute';
 import EntityBehavior from './entityBehavior';
 import EventEmitter from './utils/eventEmitter';
+import { Constructable, InstanceMap } from './types';
 
-
-export interface Constructable<T> {
-  new(...args): T;
-  prototype: T
-}
-export type InstanceMap<T> = Map<Constructable<T>, T>
 
 export default class Entity extends EventEmitter {
   id: number; // unique
@@ -42,9 +37,9 @@ export default class Entity extends EventEmitter {
     behaviorClass: Constructable<T>
   ): T {
     const behavior: T = new behaviorClass(this);
-    const canUseBehavior = behavior.verify();
-    if (!canUseBehavior) {
-      throw new Error(`Behavior '${behaviorClass.name}' missing required attributes`);
+    const missingAttr = behavior.verify();
+    if (missingAttr.length > 0) {
+      throw new Error(`Behavior '${behaviorClass.name}' missing required attributes: ${missingAttr.join(', ')} (has ${this.attributeList.join(', ')})`);
     }
     this.behaviors.set(behaviorClass, behavior);
     behavior.onAdd();
@@ -60,5 +55,13 @@ export default class Entity extends EventEmitter {
     const behavior = this.behaviors.get(behaviorClass);
     behavior.onRemove();
     this.behaviors.delete(behaviorClass);
+  }
+
+  get attributeList(): string[] {
+    return Array.from(this.attributes.keys()).map(i => i.name);
+  }
+
+  get behaviorList(): string[] {
+    return Array.from(this.behaviors.keys()).map(i => i.name);
   }
 }

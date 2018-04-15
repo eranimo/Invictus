@@ -1,4 +1,5 @@
-import Entity, { Constructable } from './entity';
+import Entity from './entity';
+import { Constructable } from './types';
 import { EventCallback } from './utils/eventEmitter';
 import EntityComponent from './entityComponent';
 import EntityAttribute from './entityAttribute';
@@ -20,13 +21,18 @@ export default abstract class EntityBehavior extends EntityComponent {
   onDraw(elapsedTime: number) { }
 
   /** Verify that this behavior can attach to this component */
-  verify(): boolean {
+  verify(): string[] {
+    const missing = [];
     const reqs = Array.from(this.entity.attributes.keys());
     for (const attr of (this.constructor as any).requirements) {
-      if (!reqs.includes(attr)) {
-        return false;
+      if (!this.entity.attributes.has(attr)) {
+        missing.push(attr.name);
       }
     }
-    return true;
+    return missing;
+  }
+
+  getAttribute(attributeClass: Constructable<EntityAttribute>) {
+    return this.entity.attributes.get(attributeClass);
   }
 }

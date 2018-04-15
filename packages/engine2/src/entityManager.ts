@@ -1,4 +1,8 @@
+import EntityAttribute from './entityAttribute';
+import EntityBehavior from './entityBehavior';
+import EventEmitter from './utils/eventEmitter';
 import Entity from './entity';
+import { Constructable, InstanceMap } from './types';
 
 
 export default class EntityManager {
@@ -24,5 +28,21 @@ export default class EntityManager {
   removeEntity(entity: Entity) {
     this.entities.delete(entity);
     delete this.entities[entity.id];
+  }
+
+  createEntity(
+    attributes: [Constructable<EntityAttribute>, any][] = [],
+    behaviors: Constructable<EntityBehavior>[] = [],
+  ): Entity {
+    const entity = new Entity();
+    for (const item of attributes) {
+      entity.addAttribute(item[0], item[1]);
+    }
+
+    for (const behavior of behaviors) {
+      entity.addBehavior(behavior);
+    }
+    this.addEntity(entity);
+    return entity;
   }
 }

@@ -4,7 +4,7 @@ import EntityBehavior from '../entityBehavior';
 
 
 class HealthAttribute extends EntityAttribute<number> {
-  protected onChange(newValue: number): number | null {
+  onChange(newValue: number): number | null {
     return Math.max(newValue, 0);
   }
 }

@@ -9,7 +9,7 @@ export default abstract class EntityAttribute<T = any> extends EntityComponent {
 
   constructor(entity: Entity, initialValue: T = null) {
     super(entity);
-    this._value = initialValue;
+    this._value = this.onChange(initialValue);
     this.eventEmitter = new EventEmitter();
   }
 
@@ -32,9 +32,7 @@ export default abstract class EntityAttribute<T = any> extends EntityComponent {
     this.value = null;
   }
 
-  protected onChange(newValue: T): T | null {
+  onChange(newValue: T): T | null {
     return newValue;
   }
-
-  protected isValid() { }
 }
