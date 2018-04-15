@@ -24,6 +24,12 @@ export default class Entity extends EventEmitter {
     return attrubute;
   }
 
+  getAttribute<T extends EntityAttribute>(
+    attributeClass: Constructable<EntityAttribute>
+  ): T {
+    return this.attributes.get(attributeClass) as T;
+  }
+
   removeAttribute<T>(
     attributeClass: Constructable<EntityAttribute<T>>
   ) {
@@ -55,6 +61,24 @@ export default class Entity extends EventEmitter {
     const behavior = this.behaviors.get(behaviorClass);
     behavior.onRemove();
     this.behaviors.delete(behaviorClass);
+  }
+
+  hasAttributes(...attributes: Constructable<EntityAttribute>[]) {
+    for (const attr of this.attributes.keys()) {
+      if (!attributes.includes(attr)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  hasBehaviors(...behaviors: Constructable<EntityBehavior>[]) {
+    for (const behavior of this.behaviors.keys()) {
+      if (!behaviors.includes(behavior)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   get attributeList(): string[] {

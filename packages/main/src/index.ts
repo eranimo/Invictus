@@ -5,9 +5,12 @@ import {
   Tileset,
   Entity,
   EntityAttribute,
-  EntityBehavior
+  EntityBehavior,
+  Tilemap,
 } from '@invictus/engine2';
+import { PositionAttribute } from '@invictus/engine2/prefabs/tile';
 // import { Sprite } from 'pixi.js';
+import _ from 'lodash';
 
 
 class MainScene extends Scene {
@@ -41,14 +44,35 @@ class MainScene extends Scene {
       }
     });
 
-    const tile = this.prefabs.tile({
+    const colonist: Entity = this.prefabs.tile({
       tileset: 'tileset',
       tileName: 'smile',
       colorReplacements: [
         [[255, 255, 255], [231, 121, 129]],
+        [[0, 0, 0], [231-50, 121-100, 129-100]],
       ],
+      rotation: 0,
     });
-    console.log(tile);
+    colonist.addAttribute(PositionAttribute, { x: 1, y: 1 });
+
+    const tilemap = new Tilemap({
+      width: 30,
+      height: 30,
+      tileset: this.tileset,
+    });
+    tilemap.addEntity(colonist);
+
+    setInterval(() => {
+      const pos = colonist.getAttribute(PositionAttribute);
+      pos.value = {
+        x: _.clamp(pos.value.x + _.random(-1, 1), 0, 30),
+        y: _.clamp(pos.value.y + _.random(-1, 1), 0, 30),
+      };
+    }, 4000)
+    tilemap.attachTo(this.game.viewport);
+    console.log(colonist);
+    console.log('Tileset', this.tileset);
+    console.log('Game', this.game);
   }
 }
 

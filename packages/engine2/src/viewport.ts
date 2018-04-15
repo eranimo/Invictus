@@ -16,6 +16,7 @@ export default class Viewport {
     });
     settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.container = new Container();
+    this.app.stage.addChild(this.container);
     document.body.appendChild(this.app.view);
   }
 }
