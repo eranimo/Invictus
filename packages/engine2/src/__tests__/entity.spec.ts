@@ -10,7 +10,7 @@ class HealthAttribute extends EntityAttribute<number> {
 }
 
 class DamageBehavior extends EntityBehavior {
-  public static requirements = ['health'];
+  static requirements = [HealthAttribute];
 
   onAdd() {
     this.onEntityEvent('damage', this.onDamage.bind(this));
@@ -73,12 +73,18 @@ describe('Entity', () => {
   });
 
   describe('behaviors', () => {
+    it('attribute validation', () => {
+      expect(() => wall.addBehavior(DamageBehavior)).toThrow();
+    });
+
     it('addBehavior', () => {
+      wall.addAttribute(HealthAttribute, 1);
       const damage = wall.addBehavior(DamageBehavior);
       expect(wall.behaviors.has(DamageBehavior)).toBeTruthy();
     });
 
     it('removeBehavior', () => {
+      wall.addAttribute(HealthAttribute, 1);
       const damage = wall.addBehavior(DamageBehavior);
       wall.removeBehavior(DamageBehavior);
 

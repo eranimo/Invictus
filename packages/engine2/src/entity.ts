@@ -3,8 +3,11 @@ import EntityBehavior from './entityBehavior';
 import EventEmitter from './eventEmitter';
 
 
-type Constructor<T> = new (...args: any[]) => T;
-type InstanceMap<T> = Map<Constructor<T>, T>
+export interface Constructable<T> {
+  new(...args): T;
+  prototype: T
+}
+export type InstanceMap<T> = Map<Constructable<T>, T>
 
 export default class Entity extends EventEmitter {
   id: number; // unique
@@ -18,7 +21,7 @@ export default class Entity extends EventEmitter {
   }
 
   addAttribute<T extends EntityAttribute>(
-    attributeClass: Constructor<T>,
+    attributeClass: Constructable<T>,
     initialValue: any
   ): T {
     const attrubute: T = new attributeClass(this, initialValue);
@@ -27,7 +30,7 @@ export default class Entity extends EventEmitter {
   }
 
   removeAttribute<T>(
-    attributeClass: Constructor<EntityAttribute<T>>
+    attributeClass: Constructable<EntityAttribute<T>>
   ) {
     if (!this.attributes.has(attributeClass)) {
       throw new Error(`Attribute '${attributeClass.name}' not found`);
@@ -36,16 +39,20 @@ export default class Entity extends EventEmitter {
   }
 
   addBehavior<T extends EntityBehavior>(
-    behaviorClass: Constructor<T>
+    behaviorClass: Constructable<T>
   ): T {
     const behavior: T = new behaviorClass(this);
+    const canUseBehavior = behavior.verify();
+    if (!canUseBehavior) {
+      throw new Error(`Behavior '${behaviorClass.name}' missing required attributes`);
+    }
     this.behaviors.set(behaviorClass, behavior);
     behavior.onAdd();
     return behavior;
   }
 
   removeBehavior(
-    behaviorClass: Constructor<EntityBehavior>
+    behaviorClass: Constructable<EntityBehavior>
   ) {
     if (!this.behaviors.has(behaviorClass)) {
       throw new Error(`Behavior '${behaviorClass.name}' not found`);
