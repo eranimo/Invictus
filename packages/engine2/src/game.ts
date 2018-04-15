@@ -2,16 +2,19 @@ import EntityManager from './entityManager';
 import Scene from './scene';
 import { Constructable } from './types';
 import MainLoop from './mainLoop';
+import Viewport from './viewport';
 
 
 export default class Game extends MainLoop {
   scenes: Map<string, Scene>;
   activeScene: Scene;
+  viewport: Viewport;
 
   constructor() {
     super();
     this.scenes = new Map();
     this.activeScene = null;
+    this.viewport = new Viewport();
   }
 
   loadScene(sceneClass: Constructable<Scene>, name: string) {
