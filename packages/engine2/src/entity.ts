@@ -1,6 +1,6 @@
 import EntityAttribute from './entityAttribute';
 import EntityBehavior from './entityBehavior';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 
 
 export interface Constructable<T> {

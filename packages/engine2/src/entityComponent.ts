@@ -1,5 +1,5 @@
 import Entity from './entity';
-import { EventCallback } from './eventEmitter';
+import { EventCallback } from './utils/eventEmitter';
 
 
 export default abstract class EntityComponent {

@@ -1,5 +1,5 @@
 import Entity, { Constructable } from './entity';
-import { EventCallback } from './eventEmitter';
+import { EventCallback } from './utils/eventEmitter';
 import EntityComponent from './entityComponent';
 import EntityAttribute from './entityAttribute';
 
@@ -22,10 +22,8 @@ export default abstract class EntityBehavior extends EntityComponent {
   /** Verify that this behavior can attach to this component */
   verify(): boolean {
     const reqs = Array.from(this.entity.attributes.keys());
-    console.log('REQs', reqs);
     for (const attr of (this.constructor as any).requirements) {
       if (!reqs.includes(attr)) {
-        console.log('Missing ', attr.name)
         return false;
       }
     }

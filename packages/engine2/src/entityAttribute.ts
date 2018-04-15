@@ -1,7 +1,6 @@
 import Entity from './entity';
-import EventEmitter from './eventEmitter';
 import EntityComponent from './entityComponent';
-import { EventCallback } from './eventEmitter';
+import EventEmitter, { EventCallback } from './utils/eventEmitter';
 
 
 export default abstract class EntityAttribute<T = any> extends EntityComponent {
