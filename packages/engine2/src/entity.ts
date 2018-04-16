@@ -25,7 +25,7 @@ export default class Entity extends EventEmitter {
   }
 
   getAttribute<T extends EntityAttribute>(
-    attributeClass: Constructable<EntityAttribute>
+    attributeClass: Constructable<T>
   ): T {
     return this.attributes.get(attributeClass) as T;
   }

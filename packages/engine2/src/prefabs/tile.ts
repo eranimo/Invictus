@@ -47,7 +47,16 @@ export class TileBehavior extends EntityBehavior {
   static requirements = [TileAttribute];
 
   onAdd() {
-    // const tile: TileAttribute = this.getAttribute(TileAttribute);
+    const tile = this.getAttribute(TileAttribute);
+    this.onEntityEvent('TILE_INPUT', (eventName, event) => {
+      if (eventName === 'click') {
+        this.handleClick(event);
+      }
+    });
+  }
+
+  handleClick(event) {
+
   }
 }
 

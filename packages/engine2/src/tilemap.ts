@@ -30,11 +30,22 @@ export default class Tilemap {
     this.tilesetContainer = new Container()
     fill(this.layerMap, (x: number, y: number) => {
       const sprite = new Sprite();
+      sprite.interactive = true;
+      sprite.on('click', this.sendEventToEntities('click', x, y));
       sprite.x = this.tileset.settings.tileWidth * x;
       sprite.y = this.tileset.settings.tileHeight * y;
       return sprite;
     });
     this.entities = new Set();
+  }
+
+  private sendEventToEntities(eventName: string, x: number, y: number) {
+    return event => {
+      const entities = this.getEntitiesAtLocation(x, y);
+      entities.forEach(entity => {
+        entity.emit('TILE_INPUT', eventName, event);
+      });
+    }
   }
 
   public attachTo(app) {
