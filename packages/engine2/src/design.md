@@ -17,11 +17,10 @@ Behaviors do not use or know about other behaviors. They only know about some of
 
 ## Things
 
-
 ### Attributes
-- TileAttribute: tileID, colors, rotation
-- GridPositionAttribute: x, y
-- HealthAttribute: current_health, max_health
+- [x] TileAttribute: tileID, colors, rotation
+- [x] GridPositionAttribute: x, y
+- [ ] HealthAttribute: current_health, max_health
 
 ### Behaviors
 - GridInputBehavior: listens to grid input event

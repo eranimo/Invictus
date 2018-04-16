@@ -43,6 +43,7 @@ export default class TileRenderer {
       height: 30,
       tileWidth: 16,
       tileHeight: 16,
+      layers: 2,
     }, this);
   }
 

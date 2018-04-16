@@ -8,6 +8,7 @@ export interface ITile {
   tileName: string;
   colorReplacements: any;
   rotation: number;
+  layer: number;
 }
 
 export class TileAttribute extends EntityAttribute<ITile> {
@@ -16,6 +17,9 @@ export class TileAttribute extends EntityAttribute<ITile> {
   onChange(value) {
     if (value.rotation === undefined) {
       value.rotation = 0;
+    }
+    if (value.layer === undefined) {
+      value.layer = 0;
     }
     if (value.colorReplacements) {
       this.filters = [];

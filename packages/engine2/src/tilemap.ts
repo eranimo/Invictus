@@ -16,12 +16,15 @@ interface TilemapOptions {
   height: number;
   tileWidth: number;
   tileHeight: number;
+  layers: number;
 }
 
 export default class Tilemap {
   public settings: TilemapOptions;
 
-  private layerMap: ndarray<Sprite>;
+  private layerMap: ndarray<{
+    [layerID: number]: Sprite
+  }>;
   private tileset: Tileset;
   private tileContainer: Container;
   private tileRenderer: TileRenderer;
@@ -34,12 +37,14 @@ export default class Tilemap {
     this.layerMap = ndarray([], [settings.width, settings.height]);
     this.tileContainer = new Container()
     fill(this.layerMap, (x: number, y: number) => {
-      const sprite = new Sprite();
-      // sprite.interactive = true;
-      // sprite.on('click', this.sendEventToEntities('click', x, y));
-      sprite.x = this.settings.tileWidth * x;
-      sprite.y = this.settings.tileHeight * y;
-      return sprite;
+      let sprites = {};
+      for (let i = 0; i < settings.layers; i++) {
+        const sprite = new Sprite();
+        sprite.x = this.settings.tileWidth * x;
+        sprite.y = this.settings.tileHeight * y;
+        sprites[i] = sprite;
+      }
+      return sprites;
     });
 
     tileRenderer.container.addChild(this.tileContainer);
@@ -48,8 +53,10 @@ export default class Tilemap {
 
     for (let x = 0; x < this.layerMap.shape[0]; x++) {
       for (let y = 0; y < this.layerMap.shape[1]; y++) {
-        const sprite = this.layerMap.get(x, y);
-        this.tileContainer.addChild(sprite);
+        const layers = this.layerMap.get(x, y);
+        Object.values(layers).forEach(sprite => {
+          this.tileContainer.addChild(sprite);
+        });
       }
     }
     this.tileRenderer = tileRenderer;
@@ -62,8 +69,9 @@ export default class Tilemap {
     const entities: Set<Entity> = this.tileRenderer.game.gameGrid.getCell(x, y);
     this.clearTile(x, y);
     entities.forEach((entity: Entity) => {
-      const sprite = this.layerMap.get(x, y);
       const tile: TileAttribute = entity.getAttribute<TileAttribute>(TileAttribute);
+      const layers = this.layerMap.get(x, y);
+      const sprite = layers[tile.value.layer];
       const tileset = this.tileRenderer.getTileset(tile.value.tileset);
       const tileTexture: Texture = tileset.getTile(tile.value.tileName);
       sprite.texture = tileTexture;
@@ -79,9 +87,12 @@ export default class Tilemap {
   }
 
   private clearTile(x: number, y: number) {
-    const sprite = this.layerMap.get(x, y);
-    sprite.texture = PIXI.Texture.EMPTY;
-    sprite.filters = [];
-    sprite.rotation = 0;
+    const layers = this.layerMap.get(x, y);
+    for (let i = 0; i < this.settings.layers; i++) {
+      const sprite = layers[i];
+      sprite.texture = PIXI.Texture.EMPTY;
+      sprite.filters = [];
+      sprite.rotation = 0;
+    }
   }
 }
