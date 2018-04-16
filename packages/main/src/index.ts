@@ -59,13 +59,13 @@ class MainScene extends Scene {
     ], [GridInputBehavior]);
     this.game.gameGrid.addEntity(colonist);
 
-    setInterval(() => {
-      const pos = colonist.getAttribute(GridPositionAttribute);
-      pos.value = {
-        x: _.clamp(pos.value.x + _.random(-1, 1), 0, 30),
-        y: _.clamp(pos.value.y + _.random(-1, 1), 0, 30),
-      };
-    }, 4000);
+    // setInterval(() => {
+    //   const pos = colonist.getAttribute(GridPositionAttribute);
+    //   pos.value = {
+    //     x: _.clamp(pos.value.x + _.random(-1, 1), 0, 30),
+    //     y: _.clamp(pos.value.y + _.random(-1, 1), 0, 30),
+    //   };
+    // }, 4000);
     console.log(colonist);
     console.log('Tileset', this.tileset);
     console.log('Game', this.game);

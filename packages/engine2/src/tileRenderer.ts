@@ -48,7 +48,8 @@ export default class TileRenderer {
 
   handleInputEvent(eventName) {
     return data => {
-      const { x, y } = data.screen;
+      console.log(data);
+      const { x, y } = data.world;
       const entities: Set<Entity> = this.tilemap.getEntitiesAtPoint(x, y);
       entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, 'click'));
     }
