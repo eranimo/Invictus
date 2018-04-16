@@ -2,19 +2,25 @@ import EntityManager from './entityManager';
 import Scene from './scene';
 import { Constructable } from './types';
 import MainLoop from './mainLoop';
-import Viewport from './viewport';
+import TileRenderer from './tileRenderer';
+import GameGrid from './gameGrid';
 
 
 export default class Game extends MainLoop {
   scenes: Map<string, Scene>;
   activeScene: Scene;
-  viewport: Viewport;
+  tileRenderer: TileRenderer;
+  gameGrid: GameGrid;
 
   constructor() {
     super();
     this.scenes = new Map();
     this.activeScene = null;
-    this.viewport = new Viewport();
+    this.gameGrid = new GameGrid({
+      width: 30,
+      height: 30,
+    }, this);
+    this.tileRenderer = new TileRenderer(this);
   }
 
   loadScene(sceneClass: Constructable<Scene>, name: string) {

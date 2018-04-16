@@ -11,6 +11,7 @@ export default abstract class EntityAttribute<T = any> extends EntityComponent {
     super(entity);
     this._value = this.onChange(initialValue);
     this.eventEmitter = new EventEmitter();
+    this.onInit();
   }
 
   get value() {
@@ -32,6 +33,7 @@ export default abstract class EntityAttribute<T = any> extends EntityComponent {
     this.value = null;
   }
 
+  onInit() {};
   onChange(newValue: T): T | null {
     return newValue;
   }

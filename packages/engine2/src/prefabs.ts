@@ -1,4 +1,4 @@
-import createTile, { ITile } from './prefabs/tile';
+import createTile from './prefabs/tile';
 import EntityManager from './entityManager';
 import Entity from './entity';
 
