@@ -1,4 +1,4 @@
-import createTile from './prefabs/tile';
+import createTerrain from './prefabs/terrain';
 import EntityManager from './entityManager';
 import Entity from './entity';
 
@@ -9,6 +9,6 @@ export interface Prefabs {
 }
 export default function createPrefabs(manager: EntityManager): Prefabs {
   return {
-    tile: createTile(manager)
+    terrain: createTerrain(manager)
   }
 }

@@ -58,8 +58,9 @@ class MainScene extends Scene {
       }],
       [GridPositionAttribute, { x: 1, y: 1 }],
     ], [GridInputBehavior]);
-    const terrain: Entity = this.entityManager.createEntity([
-      [TileAttribute, {
+
+    const terrain = this.prefabs.terrain({
+      tile: {
         tileset: 'tileset',
         tileName: 'dots',
         layer: 0,
@@ -67,9 +68,9 @@ class MainScene extends Scene {
           [[255, 255, 255], [100, 100, 100]],
         ],
         rotation: 0,
-      }],
-      [GridPositionAttribute, { x: 1, y: 1 }],
-    ], []);
+      },
+      position: { x: 1, y: 1 },
+    });
 
     this.game.gameGrid.addEntity(terrain);
     this.game.gameGrid.addEntity(colonist);
@@ -81,9 +82,6 @@ class MainScene extends Scene {
     //     y: _.clamp(pos.value.y + _.random(-1, 1), 0, 30),
     //   };
     // }, 4000);
-    console.log(colonist);
-    console.log('Tileset', this.tileset);
-    console.log('Game', this.game);
   }
 }
 
