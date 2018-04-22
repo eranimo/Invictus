@@ -89,11 +89,16 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     if (this.selectedCellCount === 0) {
       this.selectCell(coord);
     } else {
-      if (this.isCellSelected(coord)) {
-        this.unselectCell(coord);
-      } else {
-        this.unselectAll();
+      const shiftPressed = this.game.input.isPressed('shift');
+      if (shiftPressed) {
         this.selectCell(coord);
+      } else {
+        if (this.isCellSelected(coord)) {
+          this.unselectCell(coord);
+        } else {
+          this.unselectAll();
+          this.selectCell(coord);
+        }
       }
     }
   }

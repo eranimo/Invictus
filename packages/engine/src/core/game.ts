@@ -4,6 +4,7 @@ import { Constructable } from './types';
 import MainLoop from './mainLoop';
 import TileRenderer from './tileRenderer';
 import GameGrid from './gameGrid';
+import InputManager from './inputManager';
 
 
 export default class Game extends MainLoop {
@@ -11,6 +12,7 @@ export default class Game extends MainLoop {
   activeScene: Scene;
   tileRenderer: TileRenderer;
   gameGrid: GameGrid;
+  input: InputManager;
 
   constructor() {
     super();
@@ -21,6 +23,7 @@ export default class Game extends MainLoop {
       height: 30,
     }, this);
     this.tileRenderer = new TileRenderer(this);
+    this.input = new InputManager();
   }
 
   loadScene(sceneClass: Constructable<Scene>, name: string) {
@@ -38,6 +41,7 @@ export default class Game extends MainLoop {
     if (this.activeScene) {
       this.activeScene.setInactive();
     }
+    this.input.reset(name);
   }
 
   stopScene() {
