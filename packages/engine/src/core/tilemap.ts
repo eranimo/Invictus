@@ -1,5 +1,5 @@
 import ndarray from 'ndarray';
-import { Container, Sprite, Texture, Point } from 'pixi.js';
+import { Container, Sprite, Texture, Point, Graphics } from 'pixi.js';
 import fill from 'ndarray-fill';
 import { ColorReplaceFilter } from 'pixi-filters';
 
@@ -22,8 +22,20 @@ interface TilemapOptions {
 }
 
 export enum TilemapEvents {
-  CELL_HOVER
+  CELL_HOVER,
+  CELL_SELECTED,
+  CELL_UNSELECTED,
 };
+
+function makeSelectedCellTexture(width: number, height: number): Texture {
+  const g = new Graphics()
+  g.lineColor = 0xFFFFFF;
+  g.lineWidth = 1;
+
+  g.fillAlpha = 1;
+  g.drawRect(0, 0, width, height);
+  return g.generateCanvasTexture();
+}
 
 /**
  * Handles rendering of tiles, rendering of selected tiles, hovered tile
@@ -35,6 +47,7 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     [layerID: number]: Sprite
   }>;
   private hoverSpriteMap: ndarray<Sprite>;
+  private selectedSpriteMap: ndarray<Sprite>;
   private tileset: Tileset;
   private tileContainer: Container;
   private tileRenderer: TileRenderer;
@@ -50,6 +63,7 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     // create sprite 2D arrays
     this.layerMap = ndarray([], [settings.width, settings.height]);
     this.hoverSpriteMap = ndarray([], [settings.width, settings.height]);
+    this.selectedSpriteMap = ndarray([], [settings.width, settings.height]);
 
     // create tile container and listen to events
     this.tileContainer = new Container()
@@ -81,6 +95,21 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
       }
     }
 
+    const selectedCellTexture = makeSelectedCellTexture(
+      this.settings.tileWidth,
+      this.settings.tileHeight
+    );
+    fill(this.selectedSpriteMap, (x: number, y: number) => {
+      const selectedSprite = new Sprite(selectedCellTexture);
+      selectedSprite.alpha = 0;
+      selectedSprite.width = this.settings.tileWidth;
+      selectedSprite.height = this.settings.tileHeight;
+      selectedSprite.x = this.settings.tileWidth * x;
+      selectedSprite.y = this.settings.tileHeight * y;
+      this.tileContainer.addChild(selectedSprite);
+      return selectedSprite;
+    });
+
     fill(this.hoverSpriteMap, (x: number, y: number) => {
       const hoverSprite = new Sprite(Texture.WHITE);
       hoverSprite.alpha = 0;
@@ -97,9 +126,11 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
 
     // handle incomming tilemap events
     this.on(TilemapEvents.CELL_HOVER, this.handleCellHover.bind(this));
+    this.on(TilemapEvents.CELL_SELECTED, this.handleCellSelected.bind(this));
+    this.on(TilemapEvents.CELL_UNSELECTED, this.handleCellUnselected.bind(this));
   }
 
-  private handleCellHover(newHover, oldHover) {
+  private handleCellHover(newHover: Point, oldHover: Point) {
     let hoverSprite;
     if (oldHover) {
       hoverSprite = this.hoverSpriteMap.get(oldHover.x, oldHover.y);
@@ -110,6 +141,20 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
     if (hoverSprite) {
       hoverSprite.alpha = 0.1;
+    }
+  }
+
+  private handleCellSelected(cell: Point) {
+    const selectedSprite = this.selectedSpriteMap.get(cell.x, cell.y);
+    if (selectedSprite) {
+      selectedSprite.alpha = 1;
+    }
+  }
+
+  private handleCellUnselected(cell: Point) {
+    const selectedSprite = this.selectedSpriteMap.get(cell.x, cell.y);
+    if (selectedSprite) {
+      selectedSprite.alpha = 0;
     }
   }
 
@@ -157,11 +202,11 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     return this.tileRenderer.game.gameGrid.getCell(x, y);
   }
 
-  private worldCoordToCell(coord: Point) {
-    return {
-      x: Math.floor(coord.x / this.settings.tileWidth),
-      y: Math.floor(coord.y / this.settings.tileHeight),
-    };
+  worldCoordToCell(coord: Point) {
+    return new Point(
+      Math.floor(coord.x / this.settings.tileWidth),
+      Math.floor(coord.y / this.settings.tileHeight),
+    );
   }
 
   private clearTile(x: number, y: number) {

@@ -52,6 +52,20 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
 
   selectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 1);
+    this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_SELECTED, coord);
+  }
+
+  unselectCell(coord: Point) {
+    this.selectedCells.set(coord.x, coord.y, 0);
+    this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, coord);
+  }
+
+  toggleCell(coord: Point) {
+    if (this.isCellSelected(coord)) {
+      this.unselectCell(coord);
+    } else {
+      this.selectCell(coord);
+    }
   }
 
   setHoverCell(coord: Point) {
