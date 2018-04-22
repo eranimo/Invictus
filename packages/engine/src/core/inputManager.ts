@@ -41,8 +41,8 @@ export default class InputManager {
   }
 
   public reset(context: string) {
-    Keyboard.reset();
-    this.basicListeners();
+    // Keyboard.reset();
+    // this.basicListeners();
     Keyboard.setContext(context);
     this.pressedKeys = {};
   }

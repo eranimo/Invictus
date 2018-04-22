@@ -46,6 +46,11 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
 
     this.selectedCellCount = 0;
     this.hoverCell = null;
+
+    this.game.input.on('esc', () => {
+      console.log('unselect all cells');
+      this.unselectAll();
+    })
   }
 
   public isCellSelected(coord: Point): boolean {
@@ -91,10 +96,19 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     } else {
       const shiftPressed = this.game.input.isPressed('shift');
       if (shiftPressed) {
-        this.selectCell(coord);
-      } else {
         if (this.isCellSelected(coord)) {
           this.unselectCell(coord);
+        } else {
+          this.selectCell(coord);
+        }
+      } else {
+        if (this.isCellSelected(coord)) {
+          if (this.selectedCellCount > 1) {
+            this.unselectAll();
+            this.selectCell(coord);
+          } else {
+            this.unselectCell(coord);
+          }
         } else {
           this.unselectAll();
           this.selectCell(coord);

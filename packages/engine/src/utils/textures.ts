@@ -1,13 +1,14 @@
 import { Graphics, Texture } from 'pixi.js';
 
 
-export function makeSelectedCellTexture(width: number, height: number): Texture {
+export function makeSelectedCellTexture(width: number, height: number, gap: number = 1): Texture {
   const g = new Graphics();
   g.lineColor = 0xFFFFFF;
   g.lineWidth = 1;
-
-  g.fillAlpha = 1;
+  g.drawRect(gap, gap, width - gap, height - gap);
+  g.beginFill(0, 0);
   g.drawRect(0, 0, width, height);
+  g.endFill();
   return g.generateCanvasTexture();
 }
 

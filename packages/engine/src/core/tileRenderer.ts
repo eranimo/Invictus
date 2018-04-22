@@ -64,6 +64,17 @@ export default class TileRenderer {
     ));
     this.grid.alpha = this.gridEnabled ? 0.1 : 0;
     this.viewport.addChild(this.grid);
+
+    KeyboardJS.bind('g', event => {
+      console.log('toggle grid visibility');
+      if (this.gridEnabled) {
+        this.grid.alpha = 0;
+        this.gridEnabled = false;
+      } else {
+        this.grid.alpha = 0.1;
+        this.gridEnabled = true;
+      }
+    });
   }
 
   handleClick(data) {
