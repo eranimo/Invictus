@@ -1,6 +1,6 @@
-import Entity from '@invictus/engine/core/entity';
-import EntityAttribute from '@invictus/engine/core/entityAttribute';
-import EntityBehavior from '@invictus/engine/core/entityBehavior';
+import Entity from '../entity';
+import EntityAttribute from '../entityAttribute';
+import EntityBehavior from '../entityBehavior';
 
 
 class HealthAttribute extends EntityAttribute<number> {
