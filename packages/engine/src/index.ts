@@ -4,5 +4,6 @@ export { default as Tileset } from '@invictus/engine/core/tileset';
 export { default as Tilemap } from '@invictus/engine/core/tilemap';
 export { default as GameGrid } from '@invictus/engine/core/gameGrid';
 export { default as Entity } from '@invictus/engine/core/entity';
+export { default as EntityManager } from '@invictus/engine/core/entityManager';
 export { default as EntityBehavior } from '@invictus/engine/core/entityBehavior';
 export { default as EntityAttribute } from '@invictus/engine/core/entityAttribute';

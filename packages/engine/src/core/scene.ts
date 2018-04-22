@@ -40,7 +40,7 @@ export default abstract class Scene {
   constructor(game: Game, name: string) {
     this.game = game;
     this.name = name;
-    this.entityManager = new EntityManager();
+    this.entityManager = new EntityManager(this.game.onEntityAdded, this.game.onEntityRemoved);
     this.loader = new loaders.Loader();
     this.resources = new Map();
     this.state = SceneState.LOADING;

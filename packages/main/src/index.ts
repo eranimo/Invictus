@@ -12,6 +12,7 @@ import {
 import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/components/grid';
 import { TileAttribute } from '@invictus/engine/components/tile';
 import _ from 'lodash';
+import colonistFactory from './entities/colonist';
 
 
 class MainScene extends Scene {
@@ -45,19 +46,7 @@ class MainScene extends Scene {
       }
     }));
 
-    const colonist: Entity = this.entityManager.createEntity([
-      [TileAttribute, {
-        tileset: 'tileset',
-        tileName: 'smile',
-        layer: 1,
-        colorReplacements: [
-          [[255, 255, 255], [231, 121, 129]],
-          [[0, 0, 0], [231 - 50, 121 - 100, 129 - 100]],
-        ],
-        rotation: 0,
-      }],
-      [GridPositionAttribute, { x: 1, y: 1 }],
-    ], [GridInputBehavior]);
+    const colonist: Entity = colonistFactory(this.entityManager);
 
     const terrain = this.prefabs.terrain({
       tile: {
@@ -72,8 +61,6 @@ class MainScene extends Scene {
       position: { x: 1, y: 1 },
     });
 
-    this.game.gameGrid.addEntity(terrain);
-    this.game.gameGrid.addEntity(colonist);
 
     // setInterval(() => {
     //   const pos = colonist.getAttribute(GridPositionAttribute);

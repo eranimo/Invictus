@@ -9,6 +9,7 @@ import { Coordinate } from './types';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
 import { GridPositionAttribute, GRID_POSITION_EVENTS } from '@invictus/engine/components/grid';
 import Game from './game';
+import System from './system';
 import { TilemapEvents } from '@invictus/engine/core/tilemap';
 
 
@@ -26,6 +27,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
   public settings: GridSettings;
   public game: Game;
   public hoverCell: Point | null;
+
   private selectedCells: ndarray<number>;
   private selectedCellCount: number;
 
@@ -51,6 +53,12 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
       console.log('unselect all cells');
       this.unselectAll();
     })
+
+    const system = this.game.createSystem('gameGridSystem', [
+      GridPositionAttribute
+    ])
+    console.log('GAME GRID SYSTEM');
+    system.on('add', this.handleAddEntity.bind(this))
   }
 
   public isCellSelected(coord: Point): boolean {
@@ -122,7 +130,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     this.hoverCell = coord;
   }
 
-  public addEntity(entity: Entity) {
+  private handleAddEntity(entity: Entity) {
     const valid = entity.hasAttributes(GridPositionAttribute);
     this.watchEntity(entity);
     // TODO: remove and unwatch

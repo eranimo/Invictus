@@ -8,10 +8,17 @@ import { Constructable, InstanceMap } from './types';
 export default class EntityManager {
   entities: Set<Entity>;
   entityMap: { [entityID: number]: Entity };
+  onEntityAdded: Function;
+  onEntityRemoved: Function;
 
-  constructor() {
+  constructor(
+    onEntityAdded?: (entity: Entity) => void,
+    onEntityRemoved?: (entity: Entity) => void
+  ) {
     this.entities = new Set();
     this.entityMap = {};
+    this.onEntityAdded = onEntityAdded;
+    this.onEntityRemoved = onEntityRemoved;
   }
 
   get entityCount(): number {
@@ -23,17 +30,20 @@ export default class EntityManager {
     this.entities[id] = entity;
     entity.id = id;
     this.entities.add(entity);
+    if (this.onEntityAdded) this.onEntityAdded(entity);
   }
 
   removeEntity(entity: Entity) {
     this.entities.delete(entity);
     delete this.entities[entity.id];
+    if (this.onEntityRemoved) this.onEntityRemoved(entity);
   }
 
   createEntity(
     attributes: [Constructable<EntityAttribute>, any][] = [],
     behaviors: Constructable<EntityBehavior>[] = [],
   ): Entity {
+    console.log('CREATE ENTITY');
     const entity = new Entity();
     for (const item of attributes) {
       entity.addAttribute(item[0], item[1]);
