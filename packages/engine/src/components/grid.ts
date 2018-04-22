@@ -1,7 +1,7 @@
-import EntityAttribute from './../entityAttribute';
-import EntityBehavior from './../entityBehavior';
-import GameGrid from '../gameGrid';
-import { Coordinate } from '../types';
+import EntityAttribute from '@invictus/engine/core/entityAttribute';
+import EntityBehavior from '@invictus/engine/core/entityBehavior';
+import GameGrid from '@invictus/engine/core/gameGrid';
+import { Coordinate } from '@invictus/engine/core/types';
 
 
 export const GRID_POSITION_EVENTS = {

@@ -1,5 +1,5 @@
 import Entity from './entity';
-import { EventCallback } from './utils/eventEmitter';
+import { EventCallback } from '@invictus/engine/utils/eventEmitter';
 
 
 export default abstract class EntityComponent {

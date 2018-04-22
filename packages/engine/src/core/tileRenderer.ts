@@ -4,7 +4,7 @@ import Game from './game';
 import Tilemap from './tilemap';
 import Tileset from './tileset';
 import Entity from './entity';
-import { GRID_INPUT_EVENTS } from './components/grid';
+import { GRID_INPUT_EVENTS } from '@invictus/engine/components/grid';
 
 
 export default class TileRenderer {

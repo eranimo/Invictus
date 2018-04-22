@@ -12,11 +12,11 @@
       "@invictus/engine/*": [
         "./engine/src/*"
       ],
-      "@invictus/engine2": [
-        "./engine2/src"
+      "@invictus/engine_old": [
+        "./engine_old/src"
       ],
-      "@invictus/engine2/*": [
-        "./engine2/src/*"
+      "@invictus/engine_old/*": [
+        "./engine_old/src/*"
       ],
       "@invictus/generator": [
         "./generator/src"

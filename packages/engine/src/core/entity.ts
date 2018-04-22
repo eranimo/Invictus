@@ -1,6 +1,6 @@
-import EntityAttribute from './entityAttribute';
-import EntityBehavior from './entityBehavior';
-import EventEmitter from './utils/eventEmitter';
+import EntityAttribute from '@invictus/engine/core/entityAttribute';
+import EntityBehavior from '@invictus/engine/core/entityBehavior';
+import EventEmitter from '@invictus/engine/utils/eventEmitter';
 import { Constructable, InstanceMap } from './types';
 
 

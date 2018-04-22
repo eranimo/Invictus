@@ -8,9 +8,9 @@ import {
   EntityBehavior,
   Tilemap,
   GameGrid
-} from '@invictus/engine2';
-import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine2/components/grid';
-import { TileAttribute } from '@invictus/engine2/components/tile';
+} from '@invictus/engine';
+import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/components/grid';
+import { TileAttribute } from '@invictus/engine/components/tile';
 import _ from 'lodash';
 
 

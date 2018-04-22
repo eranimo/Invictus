@@ -6,9 +6,9 @@ import { ColorReplaceFilter } from 'pixi-filters';
 import Tileset from './tileset';
 import Entity from './entity';
 import GameGrid, { GAME_GRID_EVENTS } from './gameGrid';
-import { TileAttribute } from './components/tile';
-import TileRenderer from './tileRenderer';
-import { GridPositionAttribute } from './components/grid';
+import { TileAttribute } from '@invictus/engine/components/tile';
+import TileRenderer from '@invictus/engine/core/tileRenderer';
+import { GridPositionAttribute } from '@invictus/engine/components/grid';
 
 
 interface TilemapOptions {

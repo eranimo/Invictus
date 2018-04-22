@@ -4,8 +4,8 @@ import Scene from './scene';
 import fill from 'ndarray-fill';
 import EntityAttribute from './entityAttribute';
 import { Coordinate } from './types';
-import EventEmitter from './utils/eventEmitter';
-import { GridPositionAttribute, GRID_POSITION_EVENTS } from './components/grid';
+import EventEmitter from '@invictus/engine/utils/eventEmitter';
+import { GridPositionAttribute, GRID_POSITION_EVENTS } from '@invictus/engine/components/grid';
 import Game from './game';
 
 
@@ -37,6 +37,7 @@ export default class GameGrid extends EventEmitter {
   public addEntity(entity: Entity) {
     const valid = entity.hasAttributes(GridPositionAttribute);
     this.watchEntity(entity);
+    // TODO: remove and unwatch
     entity.emit(GRID_POSITION_EVENTS.ADDED_TO_GRID, this);
     this.entities.add(entity);
   }

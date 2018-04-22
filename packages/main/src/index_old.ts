@@ -13,7 +13,7 @@ import {
   Tile,
   importScene,
   IBehavior,
-} from '@invictus/engine';
+} from '@invictus/engine_old';
 import Vector2D from 'victor';
 
 

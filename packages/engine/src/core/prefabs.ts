@@ -1,4 +1,4 @@
-import createTerrain from './prefabs/terrain';
+import createTerrain from '@invictus/engine/prefabs/terrain';
 import EntityManager from './entityManager';
 import Entity from './entity';
 

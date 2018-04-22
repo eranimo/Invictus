@@ -1,6 +1,6 @@
 import Entity from './entity';
 import { Constructable } from './types';
-import { EventCallback } from './utils/eventEmitter';
+import { EventCallback } from '@invictus/engine/utils/eventEmitter';
 import EntityComponent from './entityComponent';
 import EntityAttribute from './entityAttribute';
 

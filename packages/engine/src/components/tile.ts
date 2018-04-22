@@ -1,6 +1,6 @@
 import { ColorReplaceFilter } from 'pixi-filters';
-import EntityAttribute from './../entityAttribute';
-import EntityBehavior from './../entityBehavior';
+import EntityAttribute from '@invictus/engine/core/entityAttribute';
+import EntityBehavior from '@invictus/engine/core/entityBehavior';
 
 
 export interface ITile {
