@@ -43,6 +43,8 @@ export class GridInputBehavior extends EntityBehavior {
     this.onEntityEvent(GRID_INPUT_EVENTS.CELL_EVENT, (eventName, event) => {
       if (eventName === 'click') {
         this.handleClick();
+      } else if (eventName === 'mouseover') {
+        console.log('mouse over!');
       }
     });
   }

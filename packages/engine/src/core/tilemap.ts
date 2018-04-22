@@ -1,14 +1,16 @@
 import ndarray from 'ndarray';
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Container, Sprite, Texture, Point } from 'pixi.js';
 import fill from 'ndarray-fill';
 import { ColorReplaceFilter } from 'pixi-filters';
 
 import Tileset from './tileset';
 import Entity from './entity';
-import GameGrid, { GAME_GRID_EVENTS } from './gameGrid';
+import GameGrid, { GameGridEvents } from './gameGrid';
 import { TileAttribute } from '@invictus/engine/components/tile';
 import TileRenderer from '@invictus/engine/core/tileRenderer';
 import { GridPositionAttribute } from '@invictus/engine/components/grid';
+import { GRID_INPUT_EVENTS } from '@invictus/engine/components/grid';
+import EventEmitter from '@invictus/engine/utils/eventEmitter';
 
 
 interface TilemapOptions {
@@ -19,12 +21,20 @@ interface TilemapOptions {
   layers: number;
 }
 
-export default class Tilemap {
+export enum TilemapEvents {
+  CELL_HOVER
+};
+
+/**
+ * Handles rendering of tiles, rendering of selected tiles, hovered tile
+ */
+export default class Tilemap extends EventEmitter<TilemapEvents> {
   public settings: TilemapOptions;
 
   private layerMap: ndarray<{
     [layerID: number]: Sprite
   }>;
+  private hoverSpriteMap: ndarray<Sprite>;
   private tileset: Tileset;
   private tileContainer: Container;
   private tileRenderer: TileRenderer;
@@ -33,24 +43,35 @@ export default class Tilemap {
     settings: TilemapOptions,
     tileRenderer: TileRenderer,
   ) {
+    super();
     this.settings = settings;
+    this.tileRenderer = tileRenderer;
+
+    // create sprite 2D arrays
     this.layerMap = ndarray([], [settings.width, settings.height]);
+    this.hoverSpriteMap = ndarray([], [settings.width, settings.height]);
+
+    // create tile container and listen to events
     this.tileContainer = new Container()
+    this.tileContainer.interactive = true;
+    this.tileContainer.on('mousemove', (event: PIXI.interaction.InteractionEvent) => {
+      const coord: Point = this.tileRenderer.viewport.toWorld(event.data.global.x, event.data.global.y);
+      const { x, y } = this.worldCoordToCell(coord);
+      this.tileRenderer.game.gameGrid.setHoverCell(new Point(x, y));
+    });
+    tileRenderer.viewport.addChild(this.tileContainer);
+    tileRenderer.viewport.x = 0;
+    tileRenderer.viewport.y = 0;
+
+    // create layers and sprites
     fill(this.layerMap, (x: number, y: number) => {
       let sprites = {};
       for (let i = 0; i < settings.layers; i++) {
-        const sprite = new Sprite();
-        sprite.x = this.settings.tileWidth * x;
-        sprite.y = this.settings.tileHeight * y;
+        const sprite = this.createSprite(i, x, y);
         sprites[i] = sprite;
       }
       return sprites;
     });
-
-    tileRenderer.container.addChild(this.tileContainer);
-    tileRenderer.container.x = 0;
-    tileRenderer.container.y = 0;
-
     for (let x = 0; x < this.layerMap.shape[0]; x++) {
       for (let y = 0; y < this.layerMap.shape[1]; y++) {
         const layers = this.layerMap.get(x, y);
@@ -59,8 +80,59 @@ export default class Tilemap {
         });
       }
     }
-    this.tileRenderer = tileRenderer;
-    tileRenderer.game.gameGrid.on(GAME_GRID_EVENTS.CELL_CHANGED, this.updateTile.bind(this))
+
+    fill(this.hoverSpriteMap, (x: number, y: number) => {
+      const hoverSprite = new Sprite(Texture.WHITE);
+      hoverSprite.alpha = 0;
+      hoverSprite.width = this.settings.tileWidth;
+      hoverSprite.height = this.settings.tileHeight;
+      hoverSprite.x = this.settings.tileWidth * x;
+      hoverSprite.y = this.settings.tileHeight * y;
+      this.tileContainer.addChild(hoverSprite);
+      return hoverSprite;
+    });
+
+    // react to game grid events
+    this.tileRenderer.game.gameGrid.on(GameGridEvents.CELL_CHANGED, this.updateTile.bind(this))
+
+    // handle incomming tilemap events
+    this.on(TilemapEvents.CELL_HOVER, this.handleCellHover.bind(this));
+  }
+
+  private handleCellHover(newHover, oldHover) {
+    let hoverSprite;
+    if (oldHover) {
+      hoverSprite = this.hoverSpriteMap.get(oldHover.x, oldHover.y);
+      if (hoverSprite) {
+        hoverSprite.alpha = 0;
+      }
+    }
+    hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
+    if (hoverSprite) {
+      hoverSprite.alpha = 0.1;
+    }
+  }
+
+  public handleTileEvent(eventName: string, coordinate: Point) {
+    const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
+    entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
+  }
+
+  private createSprite(layer: number, x: number, y: number): Sprite {
+    const sprite = new Sprite();
+    sprite.interactive = true;
+    sprite.on('mouseover', this.handleSpriteEvent('mouseover'));
+    sprite.on('mouseout', this.handleSpriteEvent('mouseout'));
+    sprite.x = this.settings.tileWidth * x;
+    sprite.y = this.settings.tileHeight * y;
+    return sprite;
+  }
+
+  private handleSpriteEvent(eventName: string) {
+    return (event: PIXI.interaction.InteractionEvent) => {
+      const coord: Point = this.tileRenderer.viewport.toWorld(event.data.global.x, event.data.global.y);
+      this.handleTileEvent('mouseover', coord);
+    }
   }
 
   private updateTile(event) {
@@ -80,10 +152,16 @@ export default class Tilemap {
     });
   }
 
-  getEntitiesAtPoint(x: number, y: number): Set<Entity> {
-    const cx = Math.floor(x / this.settings.tileWidth);
-    const cy = Math.floor(y / this.settings.tileHeight);
-    return this.tileRenderer.game.gameGrid.getCell(cx, cy);
+  getEntitiesAtPoint(coord: Point): Set<Entity> {
+    const { x, y } = this.worldCoordToCell(coord);
+    return this.tileRenderer.game.gameGrid.getCell(x, y);
+  }
+
+  private worldCoordToCell(coord: Point) {
+    return {
+      x: Math.floor(coord.x / this.settings.tileWidth),
+      y: Math.floor(coord.y / this.settings.tileHeight),
+    };
   }
 
   private clearTile(x: number, y: number) {

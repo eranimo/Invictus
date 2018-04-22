@@ -1,4 +1,6 @@
 import ndarray from 'ndarray';
+import { Point } from 'pixi.js';
+
 import Entity from './entity';
 import Scene from './scene';
 import fill from 'ndarray-fill';
@@ -7,6 +9,7 @@ import { Coordinate } from './types';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
 import { GridPositionAttribute, GRID_POSITION_EVENTS } from '@invictus/engine/components/grid';
 import Game from './game';
+import { TilemapEvents } from '@invictus/engine/core/tilemap';
 
 
 interface GridSettings {
@@ -14,24 +17,46 @@ interface GridSettings {
   height: number;
 };
 
-export const GAME_GRID_EVENTS = {
-  CELL_CHANGED: 'CELL_CHANGED',
+export enum GameGridEvents {
+  CELL_CHANGED
 };
 
 type GameGridCell = Set<Entity>;
-export default class GameGrid extends EventEmitter {
+export default class GameGrid extends EventEmitter<GameGridEvents> {
+  public settings: GridSettings;
+  public game: Game;
+  public hoverCell: Point | null;
+  private selectedCells: ndarray<number>;
+
   private entities: Set<Entity>;
-  settings: GridSettings;
   private entityMap: ndarray<Set<Entity>>;
-  game: Game;
 
   constructor(settings: GridSettings, game: Game) {
     super();
     this.settings = settings;
     this.game = game;
     this.entities = new Set();
+
     this.entityMap = ndarray([], [settings.width, settings.height]);
     fill(this.entityMap, () => new Set());
+
+    this.selectedCells = ndarray([], [settings.width, settings.height]);
+    fill(this.selectedCells, () => 0);
+
+    this.hoverCell = null;
+  }
+
+  isCellSelected(coord: Point): boolean {
+    return this.selectedCells.get(coord.x, coord.y) === 1;
+  }
+
+  selectCell(coord: Point) {
+    this.selectedCells.set(coord.x, coord.y, 1);
+  }
+
+  setHoverCell(coord: Point) {
+    this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_HOVER, coord, this.hoverCell);
+    this.hoverCell = coord;
   }
 
   public addEntity(entity: Entity) {
@@ -45,11 +70,11 @@ export default class GameGrid extends EventEmitter {
   private watchEntity(entity) {
     const gridPosition = entity.getAttribute(GridPositionAttribute);
     this.updateEntityLocation(entity, null, gridPosition.value);
-    this.emit(GAME_GRID_EVENTS.CELL_CHANGED, gridPosition.value);
+    this.emit(GameGridEvents.CELL_CHANGED, gridPosition.value);
     gridPosition.subscribe(event => {
       this.updateEntityLocation(entity, event.oldValue, event.newValue);
-      this.emit(GAME_GRID_EVENTS.CELL_CHANGED, event.oldValue);
-      this.emit(GAME_GRID_EVENTS.CELL_CHANGED, event.newValue);
+      this.emit(GameGridEvents.CELL_CHANGED, event.oldValue);
+      this.emit(GameGridEvents.CELL_CHANGED, event.newValue);
     });
   }
 
