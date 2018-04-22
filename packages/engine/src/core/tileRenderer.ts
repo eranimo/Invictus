@@ -54,7 +54,7 @@ export default class TileRenderer {
   handleClick(data) {
     this.tilemap.handleTileEvent('click', data.world);
     const cell = this.tilemap.worldCoordToCell(data.world);
-    this.game.gameGrid.toggleCell(cell);
+    this.game.gameGrid.handleCellSelection(cell);
   }
 
   addTileset(name: string, tileset: Tileset) {

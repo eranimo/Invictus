@@ -27,6 +27,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
   public game: Game;
   public hoverCell: Point | null;
   private selectedCells: ndarray<number>;
+  private selectedCellCount: number;
 
   private entities: Set<Entity>;
   private entityMap: ndarray<Set<Entity>>;
@@ -43,6 +44,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     this.selectedCells = ndarray([], [settings.width, settings.height]);
     fill(this.selectedCells, () => 0);
 
+    this.selectedCellCount = 0;
     this.hoverCell = null;
   }
 
@@ -52,12 +54,27 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
 
   public selectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 1);
+    this.selectedCellCount++;
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_SELECTED, coord);
   }
 
   public unselectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 0);
+    this.selectedCellCount--;
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, coord);
+  }
+
+  public unselectAll() {
+    for (let x = 0; x < this.settings.width; x++) {
+      for (let y = 0; y < this.settings.width; y++) {
+        const selected = this.selectedCells.get(x, y);
+        if (selected === 1) {
+          this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, { x, y });
+          this.selectedCells.set(x, y, 0);
+        }
+      }
+    }
+    this.selectedCellCount = 0;
   }
 
   public toggleCell(coord: Point) {
@@ -65,6 +82,19 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
       this.unselectCell(coord);
     } else {
       this.selectCell(coord);
+    }
+  }
+
+  public handleCellSelection(coord: Point) {
+    if (this.selectedCellCount === 0) {
+      this.selectCell(coord);
+    } else {
+      if (this.isCellSelected(coord)) {
+        this.unselectCell(coord);
+      } else {
+        this.unselectAll();
+        this.selectCell(coord);
+      }
     }
   }
 
