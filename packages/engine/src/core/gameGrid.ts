@@ -46,21 +46,21 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     this.hoverCell = null;
   }
 
-  isCellSelected(coord: Point): boolean {
+  public isCellSelected(coord: Point): boolean {
     return this.selectedCells.get(coord.x, coord.y) === 1;
   }
 
-  selectCell(coord: Point) {
+  public selectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 1);
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_SELECTED, coord);
   }
 
-  unselectCell(coord: Point) {
+  public unselectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 0);
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, coord);
   }
 
-  toggleCell(coord: Point) {
+  public toggleCell(coord: Point) {
     if (this.isCellSelected(coord)) {
       this.unselectCell(coord);
     } else {
@@ -68,7 +68,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     }
   }
 
-  setHoverCell(coord: Point) {
+  public setHoverCell(coord: Point) {
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_HOVER, coord, this.hoverCell);
     this.hoverCell = coord;
   }
@@ -79,6 +79,10 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     // TODO: remove and unwatch
     entity.emit(GRID_POSITION_EVENTS.ADDED_TO_GRID, this);
     this.entities.add(entity);
+  }
+
+  public getCell(x: number, y: number): GameGridCell {
+    return this.entityMap.get(x, y);
   }
 
   private watchEntity(entity) {
@@ -104,9 +108,5 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     } else {
       console.log(`Entity moved to ${newLocation.x},${newLocation.y}`);
     }
-  }
-
-  public getCell(x: number, y: number): GameGridCell {
-    return this.entityMap.get(x, y);
   }
 }

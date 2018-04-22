@@ -130,6 +130,23 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     this.on(TilemapEvents.CELL_UNSELECTED, this.handleCellUnselected.bind(this));
   }
 
+  public handleTileEvent(eventName: string, coordinate: Point) {
+    const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
+    entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
+  }
+
+  public getEntitiesAtPoint(coord: Point): Set<Entity> {
+    const { x, y } = this.worldCoordToCell(coord);
+    return this.tileRenderer.game.gameGrid.getCell(x, y);
+  }
+
+  public worldCoordToCell(coord: Point) {
+    return new Point(
+      Math.floor(coord.x / this.settings.tileWidth),
+      Math.floor(coord.y / this.settings.tileHeight),
+    );
+  }
+
   private handleCellHover(newHover: Point, oldHover: Point) {
     let hoverSprite;
     if (oldHover) {
@@ -156,11 +173,6 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     if (selectedSprite) {
       selectedSprite.alpha = 0;
     }
-  }
-
-  public handleTileEvent(eventName: string, coordinate: Point) {
-    const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
-    entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
   }
 
   private createSprite(layer: number, x: number, y: number): Sprite {
@@ -195,18 +207,6 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
       sprite.filters = (tile as any).filters;
       sprite.rotation = tile.value.rotation * (Math.PI / 180)
     });
-  }
-
-  getEntitiesAtPoint(coord: Point): Set<Entity> {
-    const { x, y } = this.worldCoordToCell(coord);
-    return this.tileRenderer.game.gameGrid.getCell(x, y);
-  }
-
-  worldCoordToCell(coord: Point) {
-    return new Point(
-      Math.floor(coord.x / this.settings.tileWidth),
-      Math.floor(coord.y / this.settings.tileHeight),
-    );
   }
 
   private clearTile(x: number, y: number) {
