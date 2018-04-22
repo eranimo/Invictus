@@ -104,10 +104,10 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     fill(this.hoverSpriteMap, (x: number, y: number) => {
       const hoverSprite = new Sprite(Texture.WHITE);
       hoverSprite.alpha = 0;
-      hoverSprite.width = this.settings.tileWidth;
-      hoverSprite.height = this.settings.tileHeight;
-      hoverSprite.x = this.settings.tileWidth * x;
-      hoverSprite.y = this.settings.tileHeight * y;
+      hoverSprite.width = this.settings.tileWidth - 1;
+      hoverSprite.height = this.settings.tileHeight - 1;
+      hoverSprite.x = 1 + this.settings.tileWidth * x;
+      hoverSprite.y = 1 + this.settings.tileHeight * y;
       this.tileContainer.addChild(hoverSprite);
       return hoverSprite;
     });
