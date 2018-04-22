@@ -16,6 +16,7 @@ export default class Game extends MainLoop {
 
   constructor() {
     super();
+    this.input = new InputManager();
     this.scenes = new Map();
     this.activeScene = null;
     this.gameGrid = new GameGrid({
@@ -23,7 +24,6 @@ export default class Game extends MainLoop {
       height: 30,
     }, this);
     this.tileRenderer = new TileRenderer(this);
-    this.input = new InputManager();
   }
 
   loadScene(sceneClass: Constructable<Scene>, name: string) {

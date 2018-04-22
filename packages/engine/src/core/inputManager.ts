@@ -14,10 +14,10 @@ export default class InputManager {
   }
 
   private basicListeners() {
-    this.listen('shift');
+    this.listen('shift', false);
   }
 
-  public listen(key: string) {
+  public listen(key: string, repeat: boolean = true) {
     Keyboard.bind(
       key,
       (event) => {
@@ -27,8 +27,13 @@ export default class InputManager {
       (event) => {
         if (DEBUG) console.log(`${key} released`);
         this.pressedKeys[key] = false;
-      }
+      },
+      repeat
     );
+  }
+
+  public on(key, onPressed?, onReleased?, repeat?) {
+    Keyboard.bind(key, onPressed, onReleased, repeat);
   }
 
   public isPressed(key: string): boolean {

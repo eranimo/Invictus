@@ -11,6 +11,7 @@ import TileRenderer from '@invictus/engine/core/tileRenderer';
 import { GridPositionAttribute } from '@invictus/engine/components/grid';
 import { GRID_INPUT_EVENTS } from '@invictus/engine/components/grid';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
+import { makeSelectedCellTexture } from '@invictus/engine/utils/textures';
 
 
 interface TilemapOptions {
@@ -26,16 +27,6 @@ export enum TilemapEvents {
   CELL_SELECTED,
   CELL_UNSELECTED,
 };
-
-function makeSelectedCellTexture(width: number, height: number): Texture {
-  const g = new Graphics()
-  g.lineColor = 0xFFFFFF;
-  g.lineWidth = 1;
-
-  g.fillAlpha = 1;
-  g.drawRect(0, 0, width, height);
-  return g.generateCanvasTexture();
-}
 
 /**
  * Handles rendering of tiles, rendering of selected tiles, hovered tile

@@ -1,9 +1,11 @@
-import { Application, Container, settings } from 'pixi.js';
+import { Application, Container, settings, Sprite } from 'pixi.js';
 import Viewport from 'pixi-viewport';
 import Game from './game';
 import Tilemap from './tilemap';
 import Tileset from './tileset';
 import Entity from './entity';
+import { makeGridTexture } from '@invictus/engine/utils/textures';
+import KeyboardJS from 'keyboardjs';
 
 
 /**
@@ -17,6 +19,8 @@ export default class TileRenderer {
   game: Game;
   tilesets: Map<string, Tileset>;
   tilemap: Tilemap;
+  grid: Sprite;
+  gridEnabled: boolean;
 
   constructor(game: Game) {
     this.game = game;
@@ -49,6 +53,17 @@ export default class TileRenderer {
       tileHeight: 16,
       layers: 2,
     }, this);
+
+    this.gridEnabled = true;
+    this.grid = new Sprite(makeGridTexture(
+      30 * 16,
+      30 * 16,
+      16,
+      16,
+      0xFFFFFF
+    ));
+    this.grid.alpha = this.gridEnabled ? 0.1 : 0;
+    this.viewport.addChild(this.grid);
   }
 
   handleClick(data) {
