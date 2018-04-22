@@ -7,3 +7,4 @@ export { default as Entity } from '@invictus/engine/core/entity';
 export { default as EntityManager } from '@invictus/engine/core/entityManager';
 export { default as EntityBehavior } from '@invictus/engine/core/entityBehavior';
 export { default as EntityAttribute } from '@invictus/engine/core/entityAttribute';
+export { Coordinate } from '@invictus/engine/core/types';

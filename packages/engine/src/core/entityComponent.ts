@@ -7,7 +7,10 @@ export default abstract class EntityComponent {
 
   constructor(entity: Entity) {
     this.entity = entity;
+    this.onInit();
   }
+
+  onInit() {}
 
   /** Send an entity event */
   emitEntityEvent(eventName: string, ...props) {

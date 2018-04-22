@@ -29,6 +29,16 @@ export class GridPositionAttribute extends EntityAttribute<Coordinate> {
     }
     return value;
   }
+
+  moveRight() {
+    const newValue = {
+      x: this.value.x + 1,
+      y: this.value.y
+    };
+    if (this.gameGrid.isValid(newValue.x, newValue.y)) {
+      this.value = newValue;
+    }
+  }
 }
 
 export const GRID_INPUT_EVENTS = {

@@ -9,6 +9,7 @@ import System from './system';
 import Entity from './entity';
 import EntityAttribute from './entityAttribute';
 import EntityBehavior from './entityBehavior';
+import { TimeManager } from './time';
 
 
 export default class Game extends MainLoop {
@@ -18,6 +19,8 @@ export default class Game extends MainLoop {
   gameGrid: GameGrid;
   input: InputManager;
   systems: Map<string, System>;
+  ticks: number;
+  time: TimeManager;
 
   constructor() {
     super();
@@ -29,7 +32,9 @@ export default class Game extends MainLoop {
       width: 30,
       height: 30,
     }, this);
+    this.ticks = 0;
     this.tileRenderer = new TileRenderer(this);
+    this.time = new TimeManager(this);
   }
 
   createSystem(
@@ -82,6 +87,8 @@ export default class Game extends MainLoop {
   }
 
   process(elapsedTime: number) {
+    this.ticks++;
+    this.time.process();
     for (const scene of this.scenes.values()) {
       scene.entityManager.entities.forEach(entity => {
         entity.behaviors.forEach(behavior => behavior.onUpdate(elapsedTime));

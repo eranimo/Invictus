@@ -142,6 +142,10 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     return this.entityMap.get(x, y);
   }
 
+  public isValid(x: number, y: number): boolean {
+    return x > 0 && y > 0 && x < this.settings.width && y < this.settings.height;
+  }
+
   private watchEntity(entity) {
     const gridPosition = entity.getAttribute(GridPositionAttribute);
     this.updateEntityLocation(entity, null, gridPosition.value);

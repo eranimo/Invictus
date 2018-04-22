@@ -1,11 +1,27 @@
 import {
   Entity,
   EntityManager,
+  EntityBehavior,
+  Coordinate
 } from '@invictus/engine';
 import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/components/grid';
 import { TileAttribute } from '@invictus/engine/components/tile';
 
 
+class AIBehavior extends EntityBehavior {
+  static requirements = [GridPositionAttribute];
+
+  onInit() {
+  }
+
+  onAdd() {
+    const gridPosition = this.getAttribute(GridPositionAttribute) as GridPositionAttribute;
+
+  }
+
+  onUpdate() {
+  }
+}
 
 export default function colonistFactory(entityManager: EntityManager): Entity {
   return entityManager.createEntity([
@@ -20,5 +36,5 @@ export default function colonistFactory(entityManager: EntityManager): Entity {
       rotation: 0,
     }],
     [GridPositionAttribute, { x: 1, y: 1 }],
-  ], [GridInputBehavior]);
+  ], [GridInputBehavior, AIBehavior]);
 }
