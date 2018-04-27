@@ -8,7 +8,7 @@ import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/compo
 import { TileAttribute } from '@invictus/engine/components/tile';
 
 
-class AIBehavior extends EntityBehavior {
+class ActorBehavior extends EntityBehavior {
   static requirements = [GridPositionAttribute];
 
   onInit() {
@@ -19,8 +19,7 @@ class AIBehavior extends EntityBehavior {
 
   }
 
-  onUpdate() {
-  }
+  onUpdate(elapsedTime: number) { }
 }
 
 export default function colonistFactory(entityManager: EntityManager): Entity {
@@ -36,5 +35,5 @@ export default function colonistFactory(entityManager: EntityManager): Entity {
       rotation: 0,
     }],
     [GridPositionAttribute, { x: 1, y: 1 }],
-  ], [GridInputBehavior, AIBehavior]);
+  ], [GridInputBehavior, ActorBehavior]);
 }
