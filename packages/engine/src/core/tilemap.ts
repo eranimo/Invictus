@@ -59,6 +59,7 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     // create tile container and listen to events
     this.tileContainer = new Container()
     this.tileContainer.interactive = true;
+    this.tileContainer.cursor = 'default';
     this.tileContainer.on('mousemove', (event: PIXI.interaction.InteractionEvent) => {
       const coord: Point = this.tileRenderer.viewport.toWorld(event.data.global.x, event.data.global.y);
       const { x, y } = this.worldCoordToCell(coord);
@@ -95,8 +96,8 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
       selectedSprite.alpha = 0;
       selectedSprite.width = this.settings.tileWidth;
       selectedSprite.height = this.settings.tileHeight;
-      selectedSprite.x = this.settings.tileWidth * x;
-      selectedSprite.y = this.settings.tileHeight * y;
+      selectedSprite.x = Math.round(this.settings.tileWidth * x);
+      selectedSprite.y = Math.round(this.settings.tileHeight * y);
       this.tileContainer.addChild(selectedSprite);
       return selectedSprite;
     });
@@ -106,8 +107,8 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
       hoverSprite.alpha = 0;
       hoverSprite.width = this.settings.tileWidth - 1;
       hoverSprite.height = this.settings.tileHeight - 1;
-      hoverSprite.x = 1 + this.settings.tileWidth * x;
-      hoverSprite.y = 1 + this.settings.tileHeight * y;
+      hoverSprite.x = 1 + Math.round(this.settings.tileWidth * x);
+      hoverSprite.y = 1 + Math.round(this.settings.tileHeight * y);
       this.tileContainer.addChild(hoverSprite);
       return hoverSprite;
     });
@@ -123,7 +124,7 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
 
   public handleTileEvent(eventName: string, coordinate: Point) {
     const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
-    entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
+    if (entities) entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
   }
 
   public getEntitiesAtPoint(coord: Point): Set<Entity> {
