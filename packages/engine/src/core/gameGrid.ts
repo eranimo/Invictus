@@ -8,9 +8,10 @@ import EntityAttribute from './entityAttribute';
 import { Coordinate } from './types';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
 import { GridPositionAttribute, GRID_POSITION_EVENTS } from '@invictus/engine/components/grid';
-import Game from './game';
+import Game, { UIEvents } from './game';
 import System from './system';
 import { TilemapEvents } from '@invictus/engine/core/tilemap';
+import { UIAttribute } from '@invictus/engine/components/ui';
 
 
 interface GridSettings {
@@ -69,12 +70,14 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     this.selectedCells.set(coord.x, coord.y, 1);
     this.selectedCellCount++;
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_SELECTED, coord);
+    this.game.ui.emit(UIEvents.CELL_SELECTED, this.getCellEventData(coord));
   }
 
   public unselectCell(coord: Point) {
     this.selectedCells.set(coord.x, coord.y, 0);
     this.selectedCellCount--;
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, coord);
+    this.game.ui.emit(UIEvents.CELL_UNSELECTED, coord);
   }
 
   public unselectAll() {
@@ -83,6 +86,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
         const selected = this.selectedCells.get(x, y);
         if (selected === 1) {
           this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, { x, y });
+          this.game.ui.emit(UIEvents.CELL_UNSELECTED, { x, y });
           this.selectedCells.set(x, y, 0);
         }
       }
@@ -125,9 +129,23 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     }
   }
 
-  public setHoverCell(coord: Point) {
+  public setHoverCell(coord: Point | null) {
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_HOVER, coord, this.hoverCell);
+    this.game.ui.emit(UIEvents.CELL_HOVERED, coord);
     this.hoverCell = coord;
+  }
+
+  private getCellEventData(coord: Point) {
+    return {
+      coord,
+      entities: Array.from(this.getCell(coord.x, coord.y))
+        .filter(entity => entity.hasAttributes(UIAttribute))
+        .filter(entity => entity.attributes.get(UIAttribute).value.isVisible)
+        .map(entity => ({
+          id: entity.id,
+          name: entity.attributes.get(UIAttribute).value.name
+        })),
+    };
   }
 
   private handleAddEntity(entity: Entity) {

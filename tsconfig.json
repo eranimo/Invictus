@@ -12,18 +12,6 @@
       "@invictus/engine/*": [
         "./engine/src/*"
       ],
-      "@invictus/engine_old": [
-        "./engine_old/src"
-      ],
-      "@invictus/engine_old/*": [
-        "./engine_old/src/*"
-      ],
-      "@invictus/generator": [
-        "./generator/src"
-      ],
-      "@invictus/generator/*": [
-        "./generator/src/*"
-      ],
       "@invictus/main": [
         "./main/src"
       ],

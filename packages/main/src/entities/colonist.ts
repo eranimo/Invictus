@@ -6,6 +6,7 @@ import {
 } from '@invictus/engine';
 import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/components/grid';
 import { TileAttribute } from '@invictus/engine/components/tile';
+import { UIAttribute } from '@invictus/engine/components/ui';
 
 
 class ActorBehavior extends EntityBehavior {
@@ -22,8 +23,14 @@ class ActorBehavior extends EntityBehavior {
   onUpdate(elapsedTime: number) { }
 }
 
-export default function colonistFactory(entityManager: EntityManager): Entity {
+export default function colonistFactory(
+  settings: {
+    name: string,
+  },
+  entityManager: EntityManager
+): Entity {
   return entityManager.createEntity([
+    [UIAttribute, { name, isVisible: true, isSelectable: true }],
     [TileAttribute, {
       tileset: 'tileset',
       tileName: 'smile',

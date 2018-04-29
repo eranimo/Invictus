@@ -63,7 +63,11 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     this.tileContainer.on('mousemove', (event: PIXI.interaction.InteractionEvent) => {
       const coord: Point = this.tileRenderer.viewport.toWorld(event.data.global.x, event.data.global.y);
       const { x, y } = this.worldCoordToCell(coord);
-      this.tileRenderer.game.gameGrid.setHoverCell(new Point(x, y));
+      if (this.tileRenderer.game.gameGrid.isValid(x, y)) {
+        this.tileRenderer.game.gameGrid.setHoverCell(new Point(x, y));
+      } else {
+        this.tileRenderer.game.gameGrid.setHoverCell(null);
+      }
     });
     tileRenderer.viewport.addChild(this.tileContainer);
     tileRenderer.viewport.x = 0;
@@ -147,9 +151,11 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
         hoverSprite.alpha = 0;
       }
     }
-    hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
-    if (hoverSprite) {
-      hoverSprite.alpha = 0.1;
+    if (newHover) {
+      hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
+      if (hoverSprite) {
+        hoverSprite.alpha = 0.1;
+      }
     }
   }
 

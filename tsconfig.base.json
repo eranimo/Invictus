@@ -14,6 +14,7 @@
       "packages/*/node_modules/@types",
       "typings"
     ],
+    "jsx": "react",
     "sourceMap": true
   }
 }

@@ -13,6 +13,7 @@ import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/compo
 import { TileAttribute } from '@invictus/engine/components/tile';
 import _ from 'lodash';
 import colonistFactory from './entities/colonist';
+import { renderUI } from '@invictus/renderer';
 
 
 class MainScene extends Scene {
@@ -46,7 +47,9 @@ class MainScene extends Scene {
       }
     }));
 
-    const colonist: Entity = colonistFactory(this.entityManager);
+    const colonist: Entity = colonistFactory({
+      name: 'Jane'
+    }, this.entityManager);
 
     const terrain = this.prefabs.terrain({
       tile: {
@@ -73,6 +76,7 @@ class MainScene extends Scene {
 }
 
 const game = new Game();
+renderUI(game.ui);
 game.loadScene(MainScene, 'main');
 game.startScene('main');
 game.start();

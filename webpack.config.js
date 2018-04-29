@@ -6,12 +6,11 @@ var { TsConfigPathsPlugin, CheckerPlugin } = require('awesome-typescript-loader'
 const config = {
   entry: {
     main: './packages/main/src/index.ts',
-    generator: './packages/generator/src/index.ts',
     renderer: './packages/renderer/src/index.ts',
   },
   output: {
     filename: '[name].[hash].bundle.js',
-    chunkFilename: '[name]-[chunkhash].js', 
+    chunkFilename: '[name]-[chunkhash].js',
     path: path.resolve('dist'),
   },
   devtool: 'inline-source-map',
@@ -59,7 +58,14 @@ const config = {
             options: {}
           }
         ]
-      }
+      },
+      {
+        test: /\.(ttf|eot|woff|woff2)$/,
+        loader: "file-loader",
+        options: {
+          name: "fonts/[name].[ext]",
+        },
+      },
     ]
   },
   plugins: [

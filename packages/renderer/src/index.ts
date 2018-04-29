@@ -1,4 +1,2 @@
-import { Renderer as _Renderer } from './renderer';
-
-const Renderer = _Renderer;
-export default Renderer;
+import './style.scss';
+export { default as renderUI } from './ui';

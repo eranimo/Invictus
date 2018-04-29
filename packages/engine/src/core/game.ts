@@ -10,7 +10,15 @@ import Entity from './entity';
 import EntityAttribute from './entityAttribute';
 import EntityBehavior from './entityBehavior';
 import { TimeManager } from './time';
+import EventEmitter from '@invictus/engine/utils/eventEmitter';
 
+
+export enum UIEvents {
+  CELL_CHANGED,
+  CELL_HOVERED,
+  CELL_SELECTED,
+  CELL_UNSELECTED,
+}
 
 export default class Game extends MainLoop {
   scenes: Map<string, Scene>;
@@ -21,6 +29,7 @@ export default class Game extends MainLoop {
   systems: Map<string, System>;
   ticks: number;
   time: TimeManager;
+  ui: EventEmitter<UIEvents>;
 
   constructor() {
     super();
@@ -35,6 +44,7 @@ export default class Game extends MainLoop {
     this.ticks = 0;
     this.tileRenderer = new TileRenderer(this);
     this.time = new TimeManager(this);
+    this.ui = new EventEmitter();
   }
 
   createSystem(
