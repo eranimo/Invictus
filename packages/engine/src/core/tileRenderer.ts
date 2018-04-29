@@ -41,7 +41,14 @@ export default class TileRenderer {
     });
     this.viewport
       .drag()
-      .on('clicked', this.handleClick.bind(this));
+      .on('clicked', this.handleClick.bind(this))
+      .on('drag-end', () => {
+        // snap to rounded pixels after panning
+        this.viewport.moveCorner(
+          Math.round(this.viewport.left),
+          Math.round(this.viewport.top),
+        );
+      });
     this.app.stage.addChild(this.viewport);
     document.body.appendChild(this.app.view);
     this.tilesets = new Map();
