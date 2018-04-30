@@ -6,17 +6,30 @@ import { UIState } from './store';
 const mapStateToProps = (state: UIState) => ({
   hoveredCell: state.hoveredCell,
   selectedCells: state.selectedCells,
+  entitiesMap: state.entitiesMap,
 });
 
-const Stats = connect(mapStateToProps)(({ hoveredCell, selectedCells }) => {
+const Stats = connect(mapStateToProps)(({
+  hoveredCell,
+  selectedCells,
+  entitiesMap,
+}) => {
   return (
     <div style={{ color: 'white' }}>
       Hovered: {hoveredCell ? `(${hoveredCell.x}, ${hoveredCell.y})` : 'none'}
-      <br />
-      Selected: {selectedCells.map(cell => `(${cell.x}, ${cell.y})`).join(', ')}
+      {selectedCells.map((cell) => {
+        const entities = entitiesMap.get(cell);
+        return (
+          <div key={cell.hashCode()}>
+            Cell: ({cell.get('y')}, {cell.get('y')})<br />
+            Entities: {entities.count()}
+          </div>
+        )
+      })}
     </div>
   );
 });
+Stats.displayName = 'Stats';
 
 
 export default class App extends Component {

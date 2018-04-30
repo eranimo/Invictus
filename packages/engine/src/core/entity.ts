@@ -64,8 +64,8 @@ export default class Entity extends EventEmitter {
   }
 
   hasAttributes(...attributes: Constructable<EntityAttribute>[]) {
-    for (const attr of this.attributes.keys()) {
-      if (!attributes.includes(attr)) {
+    for (const attr of attributes) {
+      if (!this.attributes.has(attr)) {
         return false;
       }
     }
@@ -73,8 +73,8 @@ export default class Entity extends EventEmitter {
   }
 
   hasBehaviors(...behaviors: Constructable<EntityBehavior>[]) {
-    for (const behavior of this.behaviors.keys()) {
-      if (!behaviors.includes(behavior)) {
+    for (const behavior of behaviors) {
+      if (!this.behaviors.has(behavior)) {
         return false;
       }
     }

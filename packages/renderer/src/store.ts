@@ -1,47 +1,50 @@
 import { createStore, combineReducers, Store } from 'redux';
 import { Point } from 'pixi.js';
 import * as Immutable from 'immutable';
-import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
-
+import { CellFactory, ICellRecord } from './records/cell'
+import { EntityFactory, IEntityRecord } from './records/entity'
 
 import EventEmitter from "@invictus/engine/utils/eventEmitter";
 import { UIEvents } from "@invictus/engine/core/game";
 
 
-interface ICell  {
-  x: number;
-  y: number;
-}
-interface ICellRecord extends TypedRecord<ICellRecord>, ICell { }
-
-const defaultCell = { x: null, y: null };
-const CellFactory = makeTypedFactory<ICell, ICellRecord>(defaultCell);
-
-
 export type UIState = {
   hoveredCell: Point | null,
   selectedCells: Immutable.Set<ICellRecord>,
+  entitiesMap: Immutable.Map<ICellRecord, Immutable.Set<IEntityRecord>>,
 };
 
-const defaultState = {
+const defaultState: UIState = {
   hoveredCell: null,
   selectedCells: Immutable.Set([]),
+  entitiesMap: Immutable.Map([]),
 }
+
+const mapEntitiesToSet = (entities) => Immutable.Set.of(
+  ...entities.map(entity => EntityFactory(entity))
+);
 
 function rootReducer(state: UIState = defaultState, action): UIState {
   switch (action.type) {
-    case UIEvents.CELL_HOVERED:
+    case 'CELL_HOVERED':
       return { ...state, hoveredCell: action.payload }
-    case UIEvents.CELL_SELECTED:
+    case 'CELL_SELECTED': {
+      const cell = CellFactory(action.payload.coord);
+      const entitySet = mapEntitiesToSet(action.payload.entities);
+
       return {
         ...state,
-        selectedCells: state.selectedCells.add(CellFactory(action.payload.coord)),
+        selectedCells: state.selectedCells.add(cell),
+        entitiesMap: state.entitiesMap.set(cell, entitySet),
       };
-    case UIEvents.CELL_UNSELECTED:
+    }
+    case 'CELL_UNSELECTED': {
+      const cell = CellFactory(action.payload.coord);
       return {
         ...state,
-        selectedCells: state.selectedCells.remove(CellFactory(action.payload)),
+        selectedCells: state.selectedCells.remove(cell)
       };
+    }
     default:
       return state;
   }
@@ -55,13 +58,13 @@ const store: Store<UIState> = configureStore();
 
 export function connectStore(events: EventEmitter<UIEvents>) {
   events.on(UIEvents.CELL_HOVERED, (coord: Point) => {
-    store.dispatch({ type: UIEvents.CELL_HOVERED, payload: coord });
+    store.dispatch({ type: 'CELL_HOVERED', payload: coord });
   });
   events.on(UIEvents.CELL_SELECTED, (data) => {
-    store.dispatch({ type: UIEvents.CELL_SELECTED, payload: data });
+    store.dispatch({ type: 'CELL_SELECTED', payload: data });
   });
-  events.on(UIEvents.CELL_UNSELECTED, (coord: Point) => {
-    store.dispatch({ type: UIEvents.CELL_UNSELECTED, payload: coord });
+  events.on(UIEvents.CELL_UNSELECTED, (data) => {
+    store.dispatch({ type: 'CELL_UNSELECTED', payload: data });
   });
 }
 

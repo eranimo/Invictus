@@ -77,7 +77,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
     this.selectedCells.set(coord.x, coord.y, 0);
     this.selectedCellCount--;
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, coord);
-    this.game.ui.emit(UIEvents.CELL_UNSELECTED, coord);
+    this.game.ui.emit(UIEvents.CELL_UNSELECTED, this.getCellEventData(coord));
   }
 
   public unselectAll() {
@@ -86,7 +86,7 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
         const selected = this.selectedCells.get(x, y);
         if (selected === 1) {
           this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_UNSELECTED, { x, y });
-          this.game.ui.emit(UIEvents.CELL_UNSELECTED, { x, y });
+          this.game.ui.emit(UIEvents.CELL_UNSELECTED, this.getCellEventData(new Point(x, y)));
           this.selectedCells.set(x, y, 0);
         }
       }
@@ -131,20 +131,25 @@ export default class GameGrid extends EventEmitter<GameGridEvents> {
 
   public setHoverCell(coord: Point | null) {
     this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_HOVER, coord, this.hoverCell);
-    this.game.ui.emit(UIEvents.CELL_HOVERED, coord);
+    if (coord && (!this.hoverCell || !this.hoverCell.equals(coord))) {
+      this.game.ui.emit(UIEvents.CELL_HOVERED, coord);
+    }
     this.hoverCell = coord;
   }
 
   private getCellEventData(coord: Point) {
+    console.log(this.getCell(coord.x, coord.y));
+    const entities = Array.from(this.getCell(coord.x, coord.y))
+      .filter(entity => entity.hasAttributes(UIAttribute))
+      .filter(entity => entity.attributes.get(UIAttribute).value.isVisible)
+      .map(entity => ({
+        id: entity.id,
+        name: entity.attributes.get(UIAttribute).value.name
+      }));
+    console.log('entities', entities);
     return {
       coord,
-      entities: Array.from(this.getCell(coord.x, coord.y))
-        .filter(entity => entity.hasAttributes(UIAttribute))
-        .filter(entity => entity.attributes.get(UIAttribute).value.isVisible)
-        .map(entity => ({
-          id: entity.id,
-          name: entity.attributes.get(UIAttribute).value.name
-        })),
+      entities,
     };
   }
 

@@ -9,6 +9,12 @@ class HealthAttribute extends EntityAttribute<number> {
   }
 }
 
+class FooAttribute extends EntityAttribute<number> {
+  onChange(newValue: number): number | null {
+    return Math.max(newValue, 0);
+  }
+}
+
 class DamageBehavior extends EntityBehavior {
   static requirements = [HealthAttribute];
 
@@ -50,6 +56,14 @@ describe('Entity', () => {
 
     it('addAttribute', () => {
       expect(wall.attributes.has(HealthAttribute)).toBeTruthy();
+    });
+
+    it('hasAttributes', () => {
+      let foo = new Entity();
+      foo.addAttribute(HealthAttribute, 1);
+      foo.addAttribute(FooAttribute, 1);
+      expect(foo.hasAttributes(HealthAttribute)).toBeTruthy();
+      expect(foo.hasAttributes(FooAttribute)).toBeTruthy();
     });
 
     it('removeAttribute', () => {
