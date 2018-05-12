@@ -1,29 +1,29 @@
 /** A  */
-export interface Observer<T> {
-  onNotify(object: T, data: any): void
+export interface IObserver<T> {
+  onNotify(object: T, data: any): void;
 }
 
 export class Subject<T> {
-  observers: Set<Observer<T>>;
+  public observers: Set<IObserver<T>>;
 
   constructor() {
     this.observers = new Set();
   }
 
-  addObserver(observer: Observer<T>) {
+  public addObserver(observer: IObserver<T>) {
     this.observers.add(observer);
   }
 
-  removeObserver(observer: Observer<T>) {
+  public removeObserver(observer: IObserver<T>) {
     this.observers.delete(observer);
   }
 
-  isObserving(observer: Observer<T>): boolean {
+  public isObserving(observer: IObserver<T>): boolean {
     return this.observers.has(observer);
   }
 
   /** Notify each observer of  */
-  notify(object: T, data: any) {
+  public notify(object: T, data: any) {
     for (const observer of this.observers) {
       observer.onNotify(object, data);
     }

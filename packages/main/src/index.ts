@@ -1,27 +1,26 @@
-import './style.scss';
 import {
   Game,
   Scene,
   Tileset,
 } from '@invictus/engine';
 import { GridPositionComponent } from '@invictus/engine/components';
-import _ from 'lodash';
-import colonistFactory from './entities/colonist';
 import { renderUI } from '@invictus/renderer';
+import colonistFactory from './entities/colonist';
+import './style.scss';
 
 
 class MainScene extends Scene {
-  tileset: Tileset;
+  public tileset: Tileset;
 
-  async init() {
+  public async init() {
     this.addResource('tileset', await import('@invictus/renderer/images/tilemap.png'));
   }
 
-  onStart() {
+  public onStart() {
     console.log('Main Scene: start');
   }
 
-  onReady() {
+  public onReady() {
     console.log('Main Scene: ready');
     console.log('resources', this.resources);
     const tilesetRes = this.resources.get('tileset').data;
@@ -38,14 +37,14 @@ class MainScene extends Scene {
         wall: {
           index: 0,
         },
-      }
+      },
     }));
 
     const colonist: number = colonistFactory({
-      name: 'Jane'
+      name: 'Jane',
     }, this.entityManager);
 
-    const terrain = this.prefabs.terrain({
+    this.prefabs.terrain({
       tile: {
         tileset: 'tileset',
         tileName: 'dots',
@@ -57,7 +56,6 @@ class MainScene extends Scene {
       },
       position: { x: 1, y: 1 },
     });
-
 
     setInterval(() => {
       const pos = this.entityManager.getComponent<GridPositionComponent>(colonist, 'GridPositionComponent');

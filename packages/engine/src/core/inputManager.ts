@@ -1,11 +1,10 @@
 import Keyboard from 'keyboardjs';
 
-
 const DEBUG = false;
 
 export default class InputManager {
   private pressedKeys: {
-    [key: string]: boolean
+    [key: string]: boolean,
   };
 
   constructor() {
@@ -13,22 +12,18 @@ export default class InputManager {
     this.basicListeners();
   }
 
-  private basicListeners() {
-    this.listen('shift', false);
-  }
-
   public listen(key: string, repeat: boolean = true) {
     Keyboard.bind(
       key,
       (event) => {
-        if (DEBUG) console.log(`${key} pressed`);
+        if (DEBUG) { console.log(`${key} pressed`); }
         this.pressedKeys[key] = true;
       },
       (event) => {
-        if (DEBUG) console.log(`${key} released`);
+        if (DEBUG) { console.log(`${key} released`); }
         this.pressedKeys[key] = false;
       },
-      repeat
+      repeat,
     );
   }
 
@@ -45,5 +40,9 @@ export default class InputManager {
     // this.basicListeners();
     Keyboard.setContext(context);
     this.pressedKeys = {};
+  }
+
+  private basicListeners() {
+    this.listen('shift', false);
   }
 }

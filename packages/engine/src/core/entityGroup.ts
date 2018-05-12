@@ -1,6 +1,5 @@
+import { Subject, SubscriptionLike } from 'rxjs';
 import EntityManager, { ComponentMap, EntityMap } from "./entityManager";
-import { Subject, Observable, SubscriptionLike } from 'rxjs';
-
 
 export default class EntityGroup {
   public entityIDs: Set<number>;
@@ -28,6 +27,24 @@ export default class EntityGroup {
     this.componentWatcher$ = new Subject();
     this.addedEntities$ = new Subject();
     this.removedEntities$ = new Subject();
+  }
+
+  /** Watch for entity changes */
+  public watch() {
+    this.manager.entityMap.subscribe(this.entityWatcher$);
+    this.manager.entityMap.subscribe((entityMap) => {
+      for (const components of this.manager.entityMap.values()) {
+        components.subscribe(this.componentWatcher$);
+      }
+    });
+    this.entityWatcher$.subscribe(this.handleChanges.bind(this));
+    this.componentWatcher$.subscribe(this.handleChanges.bind(this));
+  }
+
+  /** Stop watching for entity changes */
+  public unwatch() {
+    this.entityWatcherSubscription$.unsubscribe();
+    this.componentWatcherSubscription$.unsubscribe();
   }
 
   /** Rebuild entity list based on current state of the world */
@@ -62,28 +79,5 @@ export default class EntityGroup {
     }
     this.removedEntities$.next(removed);
     this.entityIDs = entityIDs;
-  }
-
-  /** Watch for entity changes */
-  public watch() {
-    this.manager.entityMap.subscribe(this.entityWatcher$);
-    this.manager.entityMap.subscribe(entityMap => {
-      for (const [entityID, components] of this.manager.entityMap.entries()) {
-        components.subscribe(this.componentWatcher$);
-      }
-    });
-    this.entityWatcher$.subscribe(this.handleChanges.bind(this));
-    this.componentWatcher$.subscribe(this.handleChanges.bind(this));
-  }
-
-  /** Stop watching for entity changes */
-  public unwatch() {
-    this.entityWatcherSubscription$.unsubscribe();
-    this.componentWatcherSubscription$.unsubscribe();
-  }
-
-  /** Gets all the specified components in the entity group */
-  public getComponents(...components: string[]) {
-
   }
 }

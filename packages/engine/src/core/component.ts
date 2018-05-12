@@ -1,11 +1,10 @@
 import { BehaviorSubject, Subscription } from 'rxjs';
 
-
 export default class Component<T> {
+  public static defaultValue = {};
+
   public value: T | null;
   public value$: BehaviorSubject<T>;
-
-  static defaultValue = {};
 
   constructor(initialValue: T = null) {
     this.value = initialValue || new.target.defaultValue as T;
@@ -13,21 +12,23 @@ export default class Component<T> {
     this.onChange();
   }
 
-  set<K extends keyof T>(key: K, value: T[K]) {
+  public set<K extends keyof T>(key: K, value: T[K]) {
     this.value[key] = value;
     this.value$.next(this.value);
     this.onChange();
   }
 
-  get<K extends keyof T>(key: K) {
+  public get<K extends keyof T>(key: K) {
     return this.value[key];
   }
 
-  subscribe(
-    next?: (value: T) => void, error?: (error: any) => void, complete?: () => void
+  public subscribe(
+    next?: (value: T) => void, error?: (error: any) => void, complete?: () => void,
   ): Subscription {
     return this.value$.subscribe(next, error, complete);
   }
 
-  onChange() {}
+  public onChange() {
+    // not implemented
+  }
 }

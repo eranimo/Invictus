@@ -1,31 +1,30 @@
 import { loaders, Texture } from 'pixi.js';
 
-
-export interface TileSetSettings {
+export interface ITileSetSettings {
   tileWidth: number;
   tileHeight: number;
   tiles: {
     [tileName: string]: {
-      index: number
-    }
-  }
+      index: number,
+    },
+  };
 }
 
 export type TileRef = number | string;
 
 export default class Tileset {
-  resource: loaders.Resource;
-  settings: TileSetSettings;
+  public resource: loaders.Resource;
+  public settings: ITileSetSettings;
 
   private tilesByID: {
-    [tileID: string]: Texture
-  }
+    [tileID: string]: Texture,
+  };
 
   private tilesByName: {
-    [tileID: string]: Texture
-  }
+    [tileID: string]: Texture,
+  };
 
-  constructor(resource: loaders.Resource, settings: TileSetSettings) {
+  constructor(resource: loaders.Resource, settings: ITileSetSettings) {
     this.resource = resource;
     this.settings = settings;
     this.tilesByID = {};
@@ -36,7 +35,7 @@ export default class Tileset {
     }
   }
 
-  getTile(ref: TileRef): Texture {
+  public getTile(ref: TileRef): Texture {
     if (typeof ref === 'number') {
       return this.tilesByID[ref];
     }
@@ -46,12 +45,12 @@ export default class Tileset {
     return null;
   }
 
-  createTile(tileID: number, name: string): Texture {
-    const base = this.resource.texture.baseTexture
+  public createTile(tileID: number, name: string): Texture {
+    const base = this.resource.texture.baseTexture;
     const width = (base.width / this.settings.tileWidth);
     const height = (base.height / this.settings.tileHeight);
     const x = tileID % width;
-    const y = Math.floor(tileID / width);
+    const y = Math.floor(tileID / height);
     const texture = new PIXI.Texture(base);
     texture.frame = new PIXI.Rectangle(
       x * this.settings.tileWidth,

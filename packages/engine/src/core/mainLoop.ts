@@ -1,13 +1,13 @@
 export default class MainLoop {
-  lastTime: number
-  running: boolean;
+  public lastTime: number;
+  public running: boolean;
 
   constructor() {
     this.lastTime = -1;
     this.running = false;
   }
 
-  start() {
+  public start() {
     console.log(`Game Loop: start`);
     if (this.running) {
       return;
@@ -17,21 +17,25 @@ export default class MainLoop {
     window.requestAnimationFrame(this.run.bind(this));
   }
 
-  stop() {
+  public stop() {
     console.log(`Game Loop: stop`);
     if (this.running) {
       this.running = false;
     }
   }
 
-  process(elapsedTime: number) { }
-  render(elapsedTime: number) { }
+  public process(elapsedTime: number) {
+    // not implemented
+  }
+  public render(elapsedTime: number) {
+    // not implemented
+  }
 
   private run(time) {
     if (this.lastTime === -1) {
       this.lastTime = time;
     }
-    var elapsed = time - this.lastTime;
+    const elapsed = time - this.lastTime;
     this.lastTime = time;
 
     // simulate scenes

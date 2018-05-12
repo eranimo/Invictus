@@ -1,7 +1,7 @@
-import { Action, Parallel, Sequence } from '../action';
+import { Action, Parallel } from '../action';
+
 
 class TestAction extends Action {}
-
 
 describe('Action', () => {
   it('should run if not finished', () => {

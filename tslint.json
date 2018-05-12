@@ -1,0 +1,14 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "quotemark": false,
+    "no-consecutive-blank-lines": false,
+    "max-classes-per-file": false,
+    "no-console": false,
+    "object-literal-sort-keys": false,
+    "no-empty": false
+  },
+  "linterOptions": {
+    "exclude": ["node_modules", "packages/**/node_modules/"]
+  }
+}

@@ -15,6 +15,7 @@
       "typings"
     ],
     "jsx": "react",
-    "sourceMap": true
+    "sourceMap": true,
+    "noUnusedLocals": true
   }
 }

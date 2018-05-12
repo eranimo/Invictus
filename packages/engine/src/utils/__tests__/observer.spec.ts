@@ -1,27 +1,26 @@
-import { Observer, Subject } from '../observer';
-
+import { IObserver, Subject } from '../observer';
 
 class Health {
-  value: number;
-  subject: Subject<Health>;
+  public value: number;
+  public subject: Subject<Health>;
 
   constructor(value: number) {
     this.value = value;
     this.subject = new Subject<Health>();
   }
 
-  update(newValue: number) {
+  public update(newValue: number) {
     this.subject.notify(this, { newValue, oldValue: this.value });
     this.value = newValue;
   }
 }
 
-class HealthWatcher implements Observer<Health> {
+class HealthWatcher implements IObserver<Health> {
   constructor(health: Health) {
     health.subject.addObserver(this);
   }
 
-  onNotify(health: Health, data: any) {}
+  public onNotify(health: Health, data: any) {}
 }
 
 describe('Observer', () => {

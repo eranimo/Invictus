@@ -1,13 +1,12 @@
 import createTerrain from '@invictus/engine/prefabs/terrain';
 import EntityManager from './entityManager';
 
-
 export type Prefab = (options: any) => number;
-export interface Prefabs {
-  [prefabName: string]: Prefab
+export interface IPrefabs {
+  [prefabName: string]: Prefab;
 }
-export default function createPrefabs(manager: EntityManager): Prefabs {
+export default function createPrefabs(manager: EntityManager): IPrefabs {
   return {
-    terrain: createTerrain(manager)
-  }
+    terrain: createTerrain(manager),
+  };
 }

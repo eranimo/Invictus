@@ -1,6 +1,5 @@
 import { makeTypedFactory, TypedRecord } from 'typed-immutable-record';
 
-
 export interface IEntity {
   id: string;
   name: string;

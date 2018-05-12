@@ -1,5 +1,5 @@
-import { Application, Container, settings, Sprite, Point, Texture } from 'pixi.js';
 import Viewport from 'pixi-viewport';
+import { Application, settings } from 'pixi.js';
 import Game from './game';
 import Tileset from './tileset';
 
@@ -10,11 +10,11 @@ import Tileset from './tileset';
  * Handles Viewport events
  */
 export default class TileRenderer {
-  app: Application;
-  viewport: Viewport;
-  game: Game;
-  tilesets: Map<string, Tileset>;
-  isDragging: boolean;
+  public app: Application;
+  public viewport: Viewport;
+  public game: Game;
+  public tilesets: Map<string, Tileset>;
+  public isDragging: boolean;
 
   constructor(game: Game) {
     this.game = game;
@@ -51,11 +51,11 @@ export default class TileRenderer {
     this.tilesets = new Map();
   }
 
-  addTileset(name: string, tileset: Tileset) {
+  public addTileset(name: string, tileset: Tileset) {
     this.tilesets.set(name, tileset);
   }
 
-  getTileset(name: string): Tileset {
+  public getTileset(name: string): Tileset {
     if (!this.tilesets.has(name)) {
       throw new Error(`TileRenderer does not have tileset named '${name}'`);
     }

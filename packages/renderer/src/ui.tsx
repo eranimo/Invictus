@@ -4,10 +4,9 @@ import ReactDOM from 'react-dom';
 import { UIEvents } from "@invictus/engine/core/game";
 import EventEmitter from "@invictus/engine/utils/eventEmitter";
 
+import { Provider } from 'react-redux';
 import App from './app';
 import store, { connectStore } from './store';
-import { Provider } from 'react-redux';
-
 
 export default function renderUI(events: EventEmitter<UIEvents>) {
   connectStore(events);
@@ -18,6 +17,6 @@ export default function renderUI(events: EventEmitter<UIEvents>) {
     <Provider store={store}>
       <App />
     </Provider>,
-    root
+    root,
   );
 }

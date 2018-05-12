@@ -1,11 +1,11 @@
-import Scene from './scene';
-import { Container, Point, Sprite, Texture } from 'pixi.js';
-import fill from 'ndarray-fill';
-import ndarray from 'ndarray';
 import { makeGridTexture } from '@invictus/engine/utils/textures';
-import KeyboardJS from 'keyboardjs';
 import { makeSelectedCellTexture } from '@invictus/engine/utils/textures';
+import KeyboardJS from 'keyboardjs';
+import ndarray from 'ndarray';
+import fill from 'ndarray-fill';
+import { Container, Point, Sprite, Texture } from 'pixi.js';
 import { UIEvents } from './game';
+import Scene from './scene';
 
 /**
  * Handles:
@@ -16,13 +16,13 @@ import { UIEvents } from './game';
 interface IGridUISettings {
   width: number;
   height: number;
-  tileWidth: number,
-  tileHeight: number,
+  tileWidth: number;
+  tileHeight: number;
 }
 
 export class GridUI {
-  scene: Scene;
-  settings: IGridUISettings;
+  public scene: Scene;
+  public settings: IGridUISettings;
 
   private hoverCell: Point;
   private hoverSpriteMap: ndarray<Sprite>;
@@ -64,12 +64,12 @@ export class GridUI {
       30 * 16,
       16,
       16,
-      0xFFFFFF
+      0xFFFFFF,
     ));
     this.gridLines.alpha = this.gridLinesEnabled ? 0.1 : 0;
     viewport.addChild(this.gridLines);
 
-    KeyboardJS.bind('g', event => {
+    KeyboardJS.bind('g', (event) => {
       console.log('toggle grid visibility');
       if (this.gridLinesEnabled) {
         this.gridLines.alpha = 0;
@@ -85,7 +85,7 @@ export class GridUI {
 
     const selectedCellTexture = makeSelectedCellTexture(
       this.settings.tileWidth,
-      this.settings.tileHeight
+      this.settings.tileHeight,
     );
     fill(this.selectedSpriteMap, (x: number, y: number) => {
       const selectedSprite = new Sprite(selectedCellTexture);
@@ -108,7 +108,7 @@ export class GridUI {
     viewport.addChild(container);
   }
 
-  handleMouseMove = (event: PIXI.interaction.InteractionEvent) => {
+  public handleMouseMove = (event: PIXI.interaction.InteractionEvent) => {
     const cell = this.getCellFromScreen(event);
     const hoverCell = this.isCellValid(cell) ? cell : null;
     this.handleCellHover(this.hoverCell, hoverCell);
@@ -116,41 +116,25 @@ export class GridUI {
     if (hoverCell) {
       this.scene.game.ui.emit(UIEvents.CELL_HOVERED, hoverCell);
     }
-  };
+  }
 
-  handleClick = (event: PIXI.interaction.InteractionEvent) => {
+  public handleClick = (event: PIXI.interaction.InteractionEvent) => {
     if (!this.scene.game.tileRenderer.isDragging) {
       const cell = this.getCellFromScreen(event);
       this.handleCellSelection(cell);
     }
-  };
+  }
 
-  isCellValid(cell: Point): boolean {
+  public isCellValid(cell: Point): boolean {
     return cell.x > 0 && cell.y > 0 && cell.x < this.settings.width && cell.y < this.settings.height;
   }
 
-  getCellFromScreen(event: PIXI.interaction.InteractionEvent) {
+  public getCellFromScreen(event: PIXI.interaction.InteractionEvent) {
     const viewport = this.scene.game.tileRenderer.viewport;
     const coord: Point = viewport.toWorld(event.data.global.x, event.data.global.y);
     const cx = Math.floor(coord.x / this.settings.tileWidth);
     const cy = Math.floor(coord.y / this.settings.tileHeight);
     return new Point(cx, cy);
-  }
-
-  private handleCellHover(oldHover: Point, newHover: Point) {
-    let hoverSprite;
-    if (oldHover) {
-      hoverSprite = this.hoverSpriteMap.get(oldHover.x, oldHover.y);
-      if (hoverSprite) {
-        hoverSprite.alpha = 0;
-      }
-    }
-    if (newHover) {
-      hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
-      if (hoverSprite) {
-        hoverSprite.alpha = 0.1;
-      }
-    }
   }
 
   public isCellSelected(coord: Point): boolean {
@@ -221,6 +205,22 @@ export class GridUI {
           this.unselectAll();
           this.selectCell(cell);
         }
+      }
+    }
+  }
+
+  private handleCellHover(oldHover: Point, newHover: Point) {
+    let hoverSprite;
+    if (oldHover) {
+      hoverSprite = this.hoverSpriteMap.get(oldHover.x, oldHover.y);
+      if (hoverSprite) {
+        hoverSprite.alpha = 0;
+      }
+    }
+    if (newHover) {
+      hoverSprite = this.hoverSpriteMap.get(newHover.x, newHover.y);
+      if (hoverSprite) {
+        hoverSprite.alpha = 0.1;
       }
     }
   }

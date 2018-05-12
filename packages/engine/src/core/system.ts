@@ -1,17 +1,16 @@
-import EntityGroup from './entityGroup';
-import Scene from './scene';
-import Component from './component';
-import EntityManager, { ComponentMap } from './entityManager';
 import { Subscription } from 'rxjs';
-
+import Component from './component';
+import EntityGroup from './entityGroup';
+import EntityManager, { ComponentMap } from './entityManager';
+import Scene from './scene';
 
 export abstract class System {
-  manager: EntityManager;
-  group: EntityGroup;
-  scene: Scene;
+  public static systemName: string;
+  public static requiredComponents: string[];
 
-  static systemName: string;
-  static requiredComponents: string[];
+  public manager: EntityManager;
+  public group: EntityGroup;
+  public scene: Scene;
 
   constructor(scene: Scene, manager: EntityManager) {
     this.scene = scene;
@@ -19,16 +18,16 @@ export abstract class System {
     const requiredComponents = new.target.requiredComponents || [];
     this.group = new EntityGroup(this.manager, requiredComponents);
     console.log(this.group);
-    this.group.addedEntities$.subscribe(entityIDs =>
-      entityIDs.forEach(this.onEntityAdded.bind(this))
+    this.group.addedEntities$.subscribe((entityIDs) =>
+      entityIDs.forEach(this.onEntityAdded.bind(this)),
     );
-    this.group.removedEntities$.subscribe(entityIDs =>
-      entityIDs.forEach(this.onEntityRemoved.bind(this))
+    this.group.removedEntities$.subscribe((entityIDs) =>
+      entityIDs.forEach(this.onEntityRemoved.bind(this)),
     );
     this.group.watch();
   }
 
-  init(options: any) {}
+  public init(options: any) {}
 
   get entities(): Set<number> {
     return this.group.entityIDs;
@@ -42,6 +41,12 @@ export abstract class System {
     return this.scene.game;
   }
 
+  public process(elapsedTime: number) {
+    for (const entityID of this.group.entityIDs) {
+      this.processEntity(entityID, elapsedTime);
+    }
+  }
+
   // signals
   protected onEntityAdded(entityID: number) {}
   protected onEntityRemoved(entityID: number) {}
@@ -49,17 +54,10 @@ export abstract class System {
   // methods
   protected processEntity(entityID: number, elapsedTime: number) {}
 
-  public process(elapsedTime: number) {
-    for (const entityID of this.group.entityIDs) {
-      this.processEntity(entityID, elapsedTime);
-    }
-  }
-
   protected getEntity(entityID: number): ComponentMap {
     return this.manager.getEntity(entityID);
   }
 }
-
 
 export abstract class ReactiveSystem extends System {
   private subscriptions: Map<Component<any>, Subscription>;
@@ -73,7 +71,7 @@ export abstract class ReactiveSystem extends System {
     for (const name of (this.constructor as any).requiredComponents as string[]) {
       const comp: Component<any> = this.manager.getComponent(entityID, name);
       let oldValue = Object.assign({}, comp.value);
-      const subscription: Subscription = comp.subscribe(newValue => {
+      const subscription: Subscription = comp.subscribe((newValue) => {
         this.handleChanges(entityID, name, oldValue, comp.value);
         oldValue = Object.assign({}, comp.value);
       });

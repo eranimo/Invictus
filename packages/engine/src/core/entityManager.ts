@@ -1,14 +1,14 @@
-import { Constructable, InstanceMap } from './types';
+import { ObservableMap } from 'observable-collection';
 import Component from './component';
-import { ObservableMap, ObservableSet } from 'observable-collection';
+import { IConstructable } from './types';
 
 
 export type ComponentMap = ObservableMap<string, Component<any>>;
 export type EntityMap = ObservableMap<number, ComponentMap>;
-export type ComponentClassMap = ObservableMap<string, Constructable<Component<any>>>;
+export type ComponentClassMap = ObservableMap<string, IConstructable<Component<any>>>;
 
 export default class EntityManager {
-  entityMap: EntityMap;
+  public entityMap: EntityMap;
   private knownComponents: ComponentClassMap;
 
   constructor() {
@@ -20,37 +20,37 @@ export default class EntityManager {
     return this.entityMap.size;
   }
 
-  registerComponent<T>(name: string, componentClass: Constructable<Component<T>>) {
+  public registerComponent<T>(name: string, componentClass: IConstructable<Component<T>>) {
     this.knownComponents.set(name, componentClass);
   }
 
-  isComponent(component: string): boolean {
+  public isComponent(component: string): boolean {
     return this.knownComponents.has(component);
   }
 
-  createEntity(): number {
+  public createEntity(): number {
     const id = this.entityCount + 1;
     const entity: ComponentMap = new ObservableMap<string, Component<any>>([]);
     this.entityMap.set(id, entity);
     return id;
   }
 
-  hasEntity(entityID: number): boolean {
+  public hasEntity(entityID: number): boolean {
     return this.entityMap.has(entityID);
   }
 
-  getEntity(entityID: number): ComponentMap {
+  public getEntity(entityID: number): ComponentMap {
     if (!this.hasEntity(entityID)) {
       throw new Error(`Entity ${entityID} not found`);
     }
     return this.entityMap.get(entityID);
   }
 
-  removeEntity(entityID): boolean {
+  public removeEntity(entityID): boolean {
     return this.entityMap.delete(entityID);
   }
 
-  addComponent<T>(entityID: number, component: string, data: T): Component<T> {
+  public addComponent<T>(entityID: number, component: string, data: T): Component<T> {
     const entity = this.getEntity(entityID);
     if (!this.isComponent(component)) {
       throw new Error(`Component ${component} not found`);
@@ -61,17 +61,17 @@ export default class EntityManager {
     return componentInstance as Component<T>;
   }
 
-  getComponent<T extends Component<any>>(entityID: number, component: string): T {
+  public getComponent<T extends Component<any>>(entityID: number, component: string): T {
     const entity = this.getEntity(entityID);
     return entity.get(component) as T;
   }
 
-  removeComponent(entityID: number, component: string) {
+  public removeComponent(entityID: number, component: string) {
     const entity = this.getEntity(entityID);
     entity.delete(component);
   }
 
-  hasComponent(entityID: number, component: string): boolean {
+  public hasComponent(entityID: number, component: string): boolean {
     const entity = this.getEntity(entityID);
     return entity.has(component);
   }

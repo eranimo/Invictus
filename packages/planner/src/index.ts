@@ -1,1 +1,1 @@
-export { Agent, Plan, Action, Goal } from './plan';
+export { Agent, Plan, IAction, IGoal } from './plan';

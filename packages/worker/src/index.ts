@@ -5,7 +5,7 @@ export async function runWorker(worker: any, data: any) {
   const context = new worker();
   return new Promise((resolve, reject) => {
     context.postMessage(data);
-    context.addEventListener('message', result => {
+    context.addEventListener('message', (result) => {
       resolve(result.data);
     });
   });
@@ -13,16 +13,18 @@ export async function runWorker(worker: any, data: any) {
 
 let messageID: number = 0;
 export class PromiseWorker {
-  _worker: any;
-  callbacks: { [messageID: number]: Function }
+  public worker: any;
+  public callbacks: {
+    [messageID: number]: (error, result) => any,
+  };
   constructor(worker) {
-    this._worker = worker;
+    this.worker = worker;
     this.callbacks = {};
-    this._worker.addEventListener('message', event => {
+    this.worker.addEventListener('message', (event) => {
       this._onMessage(event);
     });
   }
-  _onMessage(event) {
+  public _onMessage(event) {
     if (!event.data) {
       return;
     }
@@ -38,7 +40,7 @@ export class PromiseWorker {
     callback(error, result);
   }
 
-  postMessage(data: any, transferrables?: any[]) {
+  public postMessage(data: any, transferrables?: any[]) {
     messageID++;
 
     return new Promise((resolve, reject) => {
@@ -49,8 +51,8 @@ export class PromiseWorker {
           return reject(errorObj);
         }
         resolve(result);
-      }
-      this._worker.postMessage([messageID, data], transferrables);
+      };
+      this.worker.postMessage([messageID, data], transferrables);
     });
   }
 }
@@ -63,7 +65,7 @@ export function registerPromiseWorker(context: Worker, callback: (message: any) 
         stack: error.stack,
       }]);
     } else {
-      context.postMessage([id, null, result])
+      context.postMessage([id, null, result]);
     }
 
   }
@@ -83,9 +85,9 @@ export function registerPromiseWorker(context: Worker, callback: (message: any) 
       postOutgoingMessage(event, id, null, result.res);
     } else {
       result.res.then(
-        finalResult => postOutgoingMessage(event, id, null, finalResult),
-        finalError => postOutgoingMessage(event, id, finalError)
-      )
+        (finalResult) => postOutgoingMessage(event, id, null, finalResult),
+        (finalError) => postOutgoingMessage(event, id, finalError),
+      );
     }
   }
   function onIncomingMessage(event: any) {

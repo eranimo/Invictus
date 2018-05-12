@@ -1,11 +1,9 @@
 import ndarray from 'ndarray';
-import { Container, Sprite, Texture, Point, Graphics } from 'pixi.js';
 import fill from 'ndarray-fill';
+import { Container, Sprite, Texture } from 'pixi.js';
 
+import { TileComponent } from '@invictus/engine/components';
 import { ReactiveSystem } from '../system';
-import Tileset from '../tileset';
-import { TileComponent, GridPositionComponent } from '@invictus/engine/components';
-
 
 
 export interface ITilemapSettings {
@@ -17,17 +15,16 @@ export interface ITilemapSettings {
 }
 
 export default class TilemapSystem extends ReactiveSystem {
-  static systemName = 'Tilemap';
-  static requiredComponents = ['GridPositionComponent', 'TileComponent'];
+  public static systemName = 'Tilemap';
+  public static requiredComponents = ['GridPositionComponent', 'TileComponent'];
 
   public settings: ITilemapSettings;
   private layerMap: ndarray<{
-    [layerID: number]: Sprite
+    [layerID: number]: Sprite,
   }>;
-  private tileset: Tileset;
   private tileContainer: Container;
 
-  init(settings: ITilemapSettings) {
+  public init(settings: ITilemapSettings) {
     this.settings = settings;
     const tileRenderer = this.game.tileRenderer;
 
@@ -35,14 +32,14 @@ export default class TilemapSystem extends ReactiveSystem {
     this.layerMap = ndarray([], [settings.width, settings.height]);
 
     // create tile container and listen to events
-    this.tileContainer = new Container()
+    this.tileContainer = new Container();
     tileRenderer.viewport.addChild(this.tileContainer);
     tileRenderer.viewport.x = 0;
     tileRenderer.viewport.y = 0;
 
     // create layers and sprites
     fill(this.layerMap, (x: number, y: number) => {
-      let sprites = {};
+      const sprites = {};
       for (let i = 0; i < settings.layers; i++) {
         const sprite = this.createSprite(i, x, y);
         sprites[i] = sprite;
@@ -52,7 +49,7 @@ export default class TilemapSystem extends ReactiveSystem {
     for (let x = 0; x < this.layerMap.shape[0]; x++) {
       for (let y = 0; y < this.layerMap.shape[1]; y++) {
         const layers = this.layerMap.get(x, y);
-        Object.values(layers).forEach(sprite => {
+        Object.values(layers).forEach((sprite) => {
           this.tileContainer.addChild(sprite);
         });
       }
@@ -68,7 +65,7 @@ export default class TilemapSystem extends ReactiveSystem {
         this.updateTile(newValue.x, newValue.y);
       }
     } else if (component === 'TileComponent') {
-
+      // TODO: handle tile changes
     }
   }
 
@@ -86,7 +83,7 @@ export default class TilemapSystem extends ReactiveSystem {
       const tileTexture: Texture = tileset.getTile(tile.value.tileName);
       sprite.texture = tileTexture;
       sprite.filters = (tile as any).filters;
-      sprite.rotation = tile.value.rotation * (Math.PI / 180)
+      sprite.rotation = tile.value.rotation * (Math.PI / 180);
     }
   }
 

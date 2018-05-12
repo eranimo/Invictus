@@ -1,23 +1,21 @@
 import {
   EntityManager,
-  Coordinate
 } from '@invictus/engine';
 import {
-  UIComponent,
-  TileComponent,
-  GridPositionComponent
+  IGridPosition,
+  ITileComponent,
+  IUIComponent,
 } from '@invictus/engine/components';
-
 
 export default function colonistFactory(
   settings: {
     name: string,
   },
-  entityManager: EntityManager
+  entityManager: EntityManager,
 ): number {
   const entityID = entityManager.createEntity();
-  entityManager.addComponent(entityID, 'UIComponent', { name, isVisible: true, isSelectable: true })
-  entityManager.addComponent(entityID, 'TileComponent', {
+  entityManager.addComponent<IUIComponent>(entityID, 'UIComponent', { name, isVisible: true, isSelectable: true });
+  entityManager.addComponent<ITileComponent>(entityID, 'TileComponent', {
     tileset: 'tileset',
     tileName: 'smile',
     layer: 1,
@@ -27,6 +25,6 @@ export default function colonistFactory(
     ],
     rotation: 0,
   });
-  entityManager.addComponent(entityID, 'GridPositionComponent', { x: 1, y: 1 });
+  entityManager.addComponent<IGridPosition>(entityID, 'GridPositionComponent', { x: 1, y: 1 });
   return entityID;
 }

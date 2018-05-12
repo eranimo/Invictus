@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { UIState } from './store';
+import { IUIState } from './store';
 
 
-const mapStateToProps = (state: UIState) => ({
+const mapStateToProps = (state: IUIState) => ({
   hoveredCell: state.hoveredCell,
   selectedCells: state.selectedCells,
   entitiesMap: state.entitiesMap,
@@ -24,16 +24,15 @@ const Stats = connect(mapStateToProps)(({
             Cell: ({cell.get('y')}, {cell.get('y')})<br />
             Entities: {entities.count()}
           </div>
-        )
+        );
       })}
     </div>
   );
 });
 Stats.displayName = 'Stats';
 
-
 export default class App extends Component {
-  render() {
+  public render() {
     return (
       <div>
         <Stats />

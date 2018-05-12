@@ -3,5 +3,6 @@
   "version": "1.0.0",
   "dependencies": {
     "renderer": "1.0.0"
-  }
+  },
+  "private": true
 }

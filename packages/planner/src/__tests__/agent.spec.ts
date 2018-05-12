@@ -1,70 +1,69 @@
-import { Agent, Plan, Action, Goal } from '../plan';
+import { Agent, IAction, IGoal, Plan } from '../plan';
 
-type WoodcutterState = {
-  hasAxe: boolean,
-  hasLog: boolean,
-  canGetAxe: boolean,
-};
+interface IWoodcutterState {
+  hasAxe: boolean;
+  hasLog: boolean;
+  canGetAxe: boolean;
+}
 
-type MinerState = {
-  numIron: number,
-};
-
+interface IMinerState {
+  numIron: number;
+}
 
 // actions
-class ChopLog implements Action<WoodcutterState> {
-  cost(): number {
+class ChopLog implements IAction<IWoodcutterState> {
+  public cost(): number {
     return 4;
   }
 
-  precondition(state: WoodcutterState): boolean {
+  public precondition(state: IWoodcutterState): boolean {
     return !state.hasLog && state.hasAxe;
   }
 
-  effect(state: WoodcutterState): WoodcutterState {
+  public effect(state: IWoodcutterState): IWoodcutterState {
     state.hasLog = true;
     return state;
   }
 }
 
-class GetAxe implements Action<WoodcutterState> {
-  cost(): number {
+class GetAxe implements IAction<IWoodcutterState> {
+  public cost(): number {
     return 2;
   }
 
-  precondition(state: WoodcutterState): boolean {
+  public precondition(state: IWoodcutterState): boolean {
     return !state.hasAxe && state.canGetAxe;
   }
 
-  effect(state: WoodcutterState): WoodcutterState {
+  public effect(state: IWoodcutterState): IWoodcutterState {
     state.hasAxe = true;
     return state;
   }
 }
 
-class CollectBranches implements Action<WoodcutterState> {
-  cost(): number {
+class CollectBranches implements IAction<IWoodcutterState> {
+  public cost(): number {
     return 8;
   }
 
-  precondition(state: WoodcutterState): boolean {
+  public precondition(state: IWoodcutterState): boolean {
     return !state.hasLog;
   }
 
-  effect(state: WoodcutterState): any {
+  public effect(state: IWoodcutterState): any {
     state.hasLog = true;
     return state;
   }
 }
 
-class MakeFirewoodGoal implements Goal<WoodcutterState> {
-  condition(state: WoodcutterState) {
-    return state.hasLog == true;
+class MakeFirewoodGoal implements IGoal<IWoodcutterState> {
+  public condition(state: IWoodcutterState) {
+    return state.hasLog === true;
   }
 }
 
-class Woodcutter extends Agent<WoodcutterState> {
-  constructor(state: WoodcutterState) {
+class Woodcutter extends Agent<IWoodcutterState> {
+  constructor(state: IWoodcutterState) {
     super();
     this.state = state;
 
@@ -73,53 +72,53 @@ class Woodcutter extends Agent<WoodcutterState> {
     this.addAction(new CollectBranches());
   }
 
-  plan(): Plan<WoodcutterState> | null {
-    return Plan.formulate<WoodcutterState>(this, new MakeFirewoodGoal());
+  public plan(): Plan<IWoodcutterState> | null {
+    return Plan.formulate<IWoodcutterState>(this, new MakeFirewoodGoal());
   }
 }
 
-class GetIronGoal implements Goal<MinerState> {
-  condition(state: MinerState) {
+class GetIronGoal implements IGoal<IMinerState> {
+  public condition(state: IMinerState) {
     return state.numIron >= 10;
   }
 
-  comparator(oldState: MinerState, newState: MinerState) {
+  public comparator(oldState: IMinerState, newState: IMinerState) {
     return newState.numIron - oldState.numIron;
   }
 }
 
-class BadIronGoal implements Goal<MinerState> {
-  condition(state: MinerState) {
+class BadIronGoal implements IGoal<IMinerState> {
+  public condition(state: IMinerState) {
     return state.numIron === -10;
   }
 }
 
-class MineIron implements Action<MinerState> {
-  cost(): number { return 4 };
+class MineIron implements IAction<IMinerState> {
+  public cost(): number { return 4; }
 
   // can always do
-  precondition(state: MinerState): boolean { return true }
+  public precondition(state: IMinerState): boolean { return true; }
 
-  effect(state: MinerState): any {
+  public effect(state: IMinerState): any {
     state.numIron += 2;
     return state;
   }
 }
 
-class RecycleIron implements Action<MinerState> {
-  cost(): number { return 10 };
+class RecycleIron implements IAction<IMinerState> {
+  public cost(): number { return 10; }
 
   // can always do
-  precondition(state: MinerState): boolean { return true }
+  public precondition(state: IMinerState): boolean { return true; }
 
-  effect(state: MinerState): any {
+  public effect(state: IMinerState): any {
     state.numIron += 5;
     return state;
   }
 }
 
-class Miner extends Agent<MinerState> {
-  constructor(state: MinerState) {
+class Miner extends Agent<IMinerState> {
+  constructor(state: IMinerState) {
     super();
     this.state = state;
 
@@ -127,19 +126,19 @@ class Miner extends Agent<MinerState> {
     this.addAction(new RecycleIron());
   }
 
-  plan(): Plan<MinerState> | null {
-    return Plan.formulate<MinerState>(this, new GetIronGoal());
+  public plan(): Plan<IMinerState> | null {
+    return Plan.formulate<IMinerState>(this, new GetIronGoal());
   }
 
-  badPlan(): Plan<MinerState> | null {
-    return Plan.formulate<MinerState>(this, new BadIronGoal());
+  public badPlan(): Plan<IMinerState> | null {
+    return Plan.formulate<IMinerState>(this, new BadIronGoal());
   }
 }
 
 describe('Goal planner', () => {
   describe('with boolean state', () => {
     it('best way to get logs without an axe', () => {
-      let woodcutter = new Woodcutter({
+      const woodcutter = new Woodcutter({
         hasAxe: false,
         hasLog: false,
         canGetAxe: false,
@@ -155,7 +154,7 @@ describe('Goal planner', () => {
     });
 
     it('best way to get logs with an axe', () => {
-      let woodcutter = new Woodcutter({
+      const woodcutter = new Woodcutter({
         hasAxe: false,
         hasLog: false,
         canGetAxe: true,
@@ -171,7 +170,7 @@ describe('Goal planner', () => {
     });
 
     it('already reached goal', () => {
-      let woodcutter = new Woodcutter({
+      const woodcutter = new Woodcutter({
         hasAxe: false,
         hasLog: true,
         canGetAxe: false,
@@ -188,12 +187,12 @@ describe('Goal planner', () => {
    * Goal: get 10 iron
    * mineIron(4 cost for 2 iron) = 5 times for 20 cost
    * recycleIron(10 cost for 5 iron) = 2 times for 20 cost
-   * 
+   *
    * Plan: mineIron 5 times
    */
   describe('with numeric state', () => {
     it('fastest way to get iron', () => {
-      let miner = new Miner({ numIron: 0 });
+      const miner = new Miner({ numIron: 0 });
 
       const plan = miner.plan();
 
@@ -206,7 +205,7 @@ describe('Goal planner', () => {
     });
 
     it('impossible goal', () => {
-      let miner = new Miner({ numIron: 0 });
+      const miner = new Miner({ numIron: 0 });
 
       const plan = miner.badPlan();
 

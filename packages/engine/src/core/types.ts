@@ -1,9 +1,9 @@
-export interface Constructable<T> {
+export interface IConstructable<T> {
+  prototype: T;
   new(...args): T;
-  prototype: T
 }
 
-export type Coordinate = { x: number, y: number };
-export type Size = { width: number, height: number };
-export type Rectangle = Coordinate & Size;
-export type InstanceMap<T> = Map<Constructable<T>, T>;
+export interface ICoordinate { x: number; y: number; }
+export interface ISize { width: number; height: number; }
+export type Rectangle = ICoordinate & ISize;
+export type InstanceMap<T> = Map<IConstructable<T>, T>;

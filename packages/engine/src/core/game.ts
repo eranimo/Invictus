@@ -1,12 +1,10 @@
-import EntityManager from './entityManager';
-import Scene from './scene';
-import { Constructable } from './types';
-import MainLoop from './mainLoop';
-import TileRenderer from './tileRenderer';
-import InputManager from './inputManager';
-import { TimeManager } from './time';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
-
+import InputManager from './inputManager';
+import MainLoop from './mainLoop';
+import Scene from './scene';
+import TileRenderer from './tileRenderer';
+import { TimeManager } from './time';
+import { IConstructable } from './types';
 
 export enum UIEvents {
   CELL_CHANGED,
@@ -16,13 +14,13 @@ export enum UIEvents {
 }
 
 export default class Game extends MainLoop {
-  scenes: Map<string, Scene>;
-  activeScene: Scene;
-  tileRenderer: TileRenderer;
-  input: InputManager;
-  ticks: number;
-  time: TimeManager;
-  ui: EventEmitter<UIEvents>;
+  public scenes: Map<string, Scene>;
+  public activeScene: Scene;
+  public tileRenderer: TileRenderer;
+  public input: InputManager;
+  public ticks: number;
+  public time: TimeManager;
+  public ui: EventEmitter<UIEvents>;
 
   constructor() {
     super();
@@ -35,12 +33,12 @@ export default class Game extends MainLoop {
     this.ui = new EventEmitter();
   }
 
-  loadScene(sceneClass: Constructable<Scene>, name: string) {
+  public loadScene(sceneClass: IConstructable<Scene>, name: string) {
     const scene: Scene = new sceneClass(this, name);
     this.scenes.set(name, scene);
   }
 
-  startScene(name: string) {
+  public startScene(name: string) {
     const scene = this.scenes.get(name);
     if (!scene) {
       throw new Error(`Scene '${name}' not found`);
@@ -53,11 +51,11 @@ export default class Game extends MainLoop {
     this.input.reset(name);
   }
 
-  stopScene() {
+  public stopScene() {
     this.activeScene.setInactive();
   }
 
-  process(elapsedTime: number) {
+  public process(elapsedTime: number) {
     this.ticks++;
     this.time.process();
   }

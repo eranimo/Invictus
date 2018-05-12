@@ -1,16 +1,16 @@
-import EntityManager from '../entityManager';
 import Component from '../component';
 import EntityGroup from '../entityGroup';
+import EntityManager from '../entityManager';
 
 
 interface IFoobar {
-  bar: string
-};
+  bar: string;
+}
 class Foobar extends Component<IFoobar> { }
 
 interface IBarbaz {
-  num: number
-};
+  num: number;
+}
 class Barbaz extends Component<IBarbaz> { }
 
 describe('EntityGroup', () => {

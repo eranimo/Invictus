@@ -1,6 +1,5 @@
 import { Graphics, Texture } from 'pixi.js';
 
-
 export function makeSelectedCellTexture(width: number, height: number, gap: number = 1): Texture {
   const g = new Graphics();
   g.lineColor = 0xFFFFFF;
@@ -17,7 +16,7 @@ export function makeGridTexture(
   height: number,
   cellWidth: number,
   cellHeight: number,
-  color = 0xFFFFFF
+  color = 0xFFFFFF,
 ) {
   const g = new Graphics();
   g.lineColor = color;

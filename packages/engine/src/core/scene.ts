@@ -1,13 +1,13 @@
+import { loaders } from 'pixi.js';
+import * as COMPONENTS from '../components';
 import EntityManager from './entityManager';
 import Game from './game';
-import { loaders } from 'pixi.js';
-import createPrefabs, { Prefabs } from './prefabs';
+import { GridUI } from './gridUI';
+import createPrefabs, { IPrefabs } from './prefabs';
 import { System } from './system';
-import * as COMPONENTS from '../components';
-import { Constructable } from './types';
 import { GameGridSystem } from './systems/gameGrid';
 import TilemapSystem from './systems/tilemap';
-import { GridUI } from './gridUI';
+import { IConstructable } from './types';
 
 
 export enum SceneState {
@@ -17,46 +17,37 @@ export enum SceneState {
   ACTIVE, // being ran
 }
 
-interface EntityData {
-  type: string;
-  props: { [propName: string]: any };
-}
-
-interface SceneData {
-  entities: EntityData[];
-}
-
-interface ResourceItem {
+interface IResourceItem {
   name: string;
   url: string;
   data?: loaders.Resource;
-};
+}
 
-interface GameMap {
+interface IGameMap {
   width: 30;
   height: 30;
 }
 
 export default abstract class Scene {
-  game: Game;
-  name: string;
-  state: SceneState;
-  entityManager: EntityManager;
-  loader: loaders.Loader;
-  resources: Map<string, ResourceItem>;
-  loadPromise: Promise<void>;
-  prefabs: Prefabs;
-  systems: System[];
-  systemMap: { [systemName: string]: any };
-  gameMap: GameMap;
-  gridUI: GridUI;
+  public game: Game;
+  public name: string;
+  public state: SceneState;
+  public entityManager: EntityManager;
+  public loader: loaders.Loader;
+  public resources: Map<string, IResourceItem>;
+  public loadPromise: Promise<void>;
+  public prefabs: IPrefabs;
+  public systems: System[];
+  public systemMap: { [systemName: string]: any };
+  public gameMap: IGameMap;
+  public gridUI: GridUI;
 
   constructor(game: Game, name: string) {
     this.game = game;
     this.name = name;
     this.entityManager = new EntityManager();
-    for (const [name, component] of Object.entries(COMPONENTS)) {
-      this.entityManager.registerComponent<any>(name, component);
+    for (const [cname, component] of Object.entries(COMPONENTS)) {
+      this.entityManager.registerComponent<any>(cname, component);
     }
     this.loader = new loaders.Loader();
     this.resources = new Map();
@@ -69,7 +60,7 @@ export default abstract class Scene {
     this.gameMap = {
       width: 30,
       height: 30,
-    }
+    };
 
     // default stuff
     this.addSystem<GameGridSystem>(GameGridSystem, {
@@ -92,7 +83,39 @@ export default abstract class Scene {
     });
   }
 
-  async init() {}
+  public async init() {}
+
+  public addResource(name: string, url: string): IResourceItem {
+    const item: IResourceItem = { name, url };
+    this.resources.set(name, item);
+    return item;
+  }
+
+  public setActive() {
+    this.state = SceneState.ACTIVE;
+    this.onStart();
+  }
+
+  public setInactive() {
+    this.state = SceneState.INACTIVE;
+    this.onStop();
+  }
+
+  public setReady() {
+    this.state = SceneState.READY;
+    this.onReady();
+  }
+
+  public addSystem<T extends System>(systemClass: IConstructable<T>, options: any) {
+    const system = new systemClass(this, this.entityManager);
+    this.systems.push(system);
+    this.systemMap[(systemClass as any).systemName] = system;
+    system.init(options);
+  }
+
+  public onReady() {}
+  public onStart() {}
+  public onStop() {}
 
   private onResourcesLoaded() {
     for (const item of this.resources.values()) {
@@ -110,36 +133,4 @@ export default abstract class Scene {
       this.loader.onError.add(reject);
     });
   }
-
-  addResource(name: string, url: string): ResourceItem {
-    const item: ResourceItem = { name, url };
-    this.resources.set(name, item);
-    return item;
-  }
-
-  setActive() {
-    this.state = SceneState.ACTIVE;
-    this.onStart();
-  }
-
-  setInactive() {
-    this.state = SceneState.INACTIVE;
-    this.onStop();
-  }
-
-  setReady() {
-    this.state = SceneState.READY;
-    this.onReady();
-  }
-
-  addSystem<T extends System>(systemClass: Constructable<T>, options: any) {
-    const system = new systemClass(this, this.entityManager);
-    this.systems.push(system);
-    this.systemMap[(systemClass as any).systemName] = system;
-    system.init(options);
-  }
-
-  public onReady () {}
-  public onStart() {}
-  public onStop() {}
 }
