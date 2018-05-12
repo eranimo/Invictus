@@ -4,12 +4,11 @@ import fill from 'ndarray-fill';
 import { ColorReplaceFilter } from 'pixi-filters';
 
 import Tileset from './tileset';
-import Entity from './entity';
-import GameGrid, { GameGridEvents } from './gameGrid';
-import { TileAttribute } from '@invictus/engine/components/tile';
+import System from './system';
+// import Group from './group';
+// import GameGrid, { GameGridEvents } from './gameGrid';
 import TileRenderer from '@invictus/engine/core/tileRenderer';
-import { GridPositionAttribute } from '@invictus/engine/components/grid';
-import { GRID_INPUT_EVENTS } from '@invictus/engine/components/grid';
+// import { GRID_INPUT_EVENTS } from '@invictus/engine/components/grid';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
 import { makeSelectedCellTexture } from '@invictus/engine/utils/textures';
 
@@ -63,11 +62,11 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     this.tileContainer.on('mousemove', (event: PIXI.interaction.InteractionEvent) => {
       const coord: Point = this.tileRenderer.viewport.toWorld(event.data.global.x, event.data.global.y);
       const { x, y } = this.worldCoordToCell(coord);
-      if (this.tileRenderer.game.gameGrid.isValid(x, y)) {
-        this.tileRenderer.game.gameGrid.setHoverCell(new Point(x, y));
-      } else {
-        this.tileRenderer.game.gameGrid.setHoverCell(null);
-      }
+      // if (this.tileRenderer.game.gameGrid.isValid(x, y)) {
+      //   this.tileRenderer.game.gameGrid.setHoverCell(new Point(x, y));
+      // } else {
+      //   this.tileRenderer.game.gameGrid.setHoverCell(null);
+      // }
     });
     tileRenderer.viewport.addChild(this.tileContainer);
     tileRenderer.viewport.x = 0;
@@ -118,7 +117,7 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
     });
 
     // react to game grid events
-    this.tileRenderer.game.gameGrid.on(GameGridEvents.CELL_CHANGED, this.updateTile.bind(this))
+    // this.tileRenderer.game.gameGrid.on(GameGridEvents.CELL_CHANGED, this.updateTile.bind(this))
 
     // handle incomming tilemap events
     this.on(TilemapEvents.CELL_HOVER, this.handleCellHover.bind(this));
@@ -127,11 +126,12 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
   }
 
   public handleTileEvent(eventName: string, coordinate: Point) {
-    const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
-    if (entities) entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
+    // const entities: Set<Entity> = this.getEntitiesAtPoint(coordinate);
+    // if (entities) entities.forEach(entity => entity.emit(GRID_INPUT_EVENTS.CELL_EVENT, eventName));
+    // TODO: update
   }
 
-  public getEntitiesAtPoint(coord: Point): Set<Entity> {
+  public getEntitiesAtPoint(coord: Point): Set<number> {
     const { x, y } = this.worldCoordToCell(coord);
     return this.tileRenderer.game.gameGrid.getCell(x, y);
   }
@@ -191,20 +191,20 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
   }
 
   private updateTile(event) {
-    const { x, y } = event;
-    console.log(`Updating tile ${x}, ${y}`);
-    const entities: Set<Entity> = this.tileRenderer.game.gameGrid.getCell(x, y);
-    this.clearTile(x, y);
-    entities.forEach((entity: Entity) => {
-      const tile: TileAttribute = entity.getAttribute<TileAttribute>(TileAttribute);
-      const layers = this.layerMap.get(x, y);
-      const sprite = layers[tile.value.layer];
-      const tileset = this.tileRenderer.getTileset(tile.value.tileset);
-      const tileTexture: Texture = tileset.getTile(tile.value.tileName);
-      sprite.texture = tileTexture;
-      sprite.filters = (tile as any).filters;
-      sprite.rotation = tile.value.rotation * (Math.PI / 180)
-    });
+    // const { x, y } = event;
+    // console.log(`Updating tile ${x}, ${y}`);
+    // const entities: Set<Entity> = this.tileRenderer.game.gameGrid.getCell(x, y);
+    // this.clearTile(x, y);
+    // entities.forEach((entity: Entity) => {
+    //   const tile: TileAttribute = entity.getAttribute<TileAttribute>(TileAttribute);
+    //   const layers = this.layerMap.get(x, y);
+    //   const sprite = layers[tile.value.layer];
+    //   const tileset = this.tileRenderer.getTileset(tile.value.tileset);
+    //   const tileTexture: Texture = tileset.getTile(tile.value.tileName);
+    //   sprite.texture = tileTexture;
+    //   sprite.filters = (tile as any).filters;
+    //   sprite.rotation = tile.value.rotation * (Math.PI / 180)
+    // });
   }
 
   private clearTile(x: number, y: number) {

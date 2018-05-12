@@ -3,7 +3,6 @@ import Viewport from 'pixi-viewport';
 import Game from './game';
 import Tilemap from './tilemap';
 import Tileset from './tileset';
-import Entity from './entity';
 import { makeGridTexture } from '@invictus/engine/utils/textures';
 import KeyboardJS from 'keyboardjs';
 

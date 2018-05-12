@@ -1,58 +1,78 @@
-import EntityAttribute from './entityAttribute';
-import EntityBehavior from './entityBehavior';
-import EventEmitter from '@invictus/engine/utils/eventEmitter';
-import Entity from './entity';
 import { Constructable, InstanceMap } from './types';
+import Component from './component';
+import { ObservableMap, ObservableSet } from 'observable-collection';
 
+
+export type ComponentMap = ObservableMap<string, Component<any>>;
+export type EntityMap = ObservableMap<number, ComponentMap>;
+export type ComponentClassMap = ObservableMap<string, Constructable<Component<any>>>;
 
 export default class EntityManager {
-  entities: Set<Entity>;
-  entityMap: { [entityID: number]: Entity };
-  onEntityAdded: Function;
-  onEntityRemoved: Function;
+  entityMap: EntityMap;
+  private knownComponents: ComponentClassMap;
 
-  constructor(
-    onEntityAdded?: (entity: Entity) => void,
-    onEntityRemoved?: (entity: Entity) => void
-  ) {
-    this.entities = new Set();
-    this.entityMap = {};
-    this.onEntityAdded = onEntityAdded;
-    this.onEntityRemoved = onEntityRemoved;
+  constructor() {
+    this.entityMap = new ObservableMap();
+    this.knownComponents = new ObservableMap();
   }
 
   get entityCount(): number {
-    return this.entities.size;
+    return this.entityMap.size;
   }
 
-  addEntity(entity: Entity) {
+  registerComponent<T>(name: string, componentClass: Constructable<Component<T>>) {
+    this.knownComponents.set(name, componentClass);
+  }
+
+  isComponent(component: string): boolean {
+    return this.knownComponents.has(component);
+  }
+
+  createEntity(): number {
     const id = this.entityCount + 1;
-    this.entities[id] = entity;
-    entity.id = id;
-    this.entities.add(entity);
-    if (this.onEntityAdded) this.onEntityAdded(entity);
+    const entity: ComponentMap = new ObservableMap<string, Component<any>>([]);
+    this.entityMap.set(id, entity);
+    return id;
   }
 
-  removeEntity(entity: Entity) {
-    this.entities.delete(entity);
-    delete this.entities[entity.id];
-    if (this.onEntityRemoved) this.onEntityRemoved(entity);
+  hasEntity(entityID: number): boolean {
+    return this.entityMap.has(entityID);
   }
 
-  createEntity(
-    attributes: [Constructable<EntityAttribute>, any][] = [],
-    behaviors: Constructable<EntityBehavior>[] = [],
-  ): Entity {
-    console.log('CREATE ENTITY');
-    const entity = new Entity();
-    for (const item of attributes) {
-      entity.addAttribute(item[0], item[1]);
+  getEntity(entityID: number): ComponentMap {
+    if (!this.hasEntity(entityID)) {
+      throw new Error(`Entity ${entityID} not found`);
     }
+    return this.entityMap.get(entityID);
+  }
 
-    for (const behavior of behaviors) {
-      entity.addBehavior(behavior);
+  removeEntity(entityID): boolean {
+    return this.entityMap.delete(entityID);
+  }
+
+  addComponent<T>(entityID: number, component: string, data: T): Component<T> {
+    const entity = this.getEntity(entityID);
+    if (!this.isComponent(component)) {
+      throw new Error(`Component ${component} not found`);
     }
-    this.addEntity(entity);
-    return entity;
+    const compClass = this.knownComponents.get(component);
+    const componentInstance = new compClass(data);
+    entity.set(component, componentInstance);
+    return componentInstance as Component<T>;
+  }
+
+  getComponent<T extends Component<any>>(entityID: number, component: string): T {
+    const entity = this.getEntity(entityID);
+    return entity.get(component) as T;
+  }
+
+  removeComponent(entityID: number, component: string) {
+    const entity = this.getEntity(entityID);
+    entity.delete(component);
+  }
+
+  hasComponent(entityID: number, component: string): boolean {
+    const entity = this.getEntity(entityID);
+    return entity.has(component);
   }
 }

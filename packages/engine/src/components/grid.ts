@@ -1,3 +1,8 @@
+import Component from '@invictus/engine/core/component';
+import { Point } from 'pixi.js';
+
+
+/*
 import EntityAttribute from '@invictus/engine/core/entityAttribute';
 import EntityBehavior from '@invictus/engine/core/entityBehavior';
 import GameGrid from '@invictus/engine/core/gameGrid';
@@ -61,5 +66,24 @@ export class GridInputBehavior extends EntityBehavior {
 
   handleClick() {
     console.log('clicked!');
+  }
+}
+*/
+
+export interface IGridPosition {
+  x: number;
+  y: number;
+}
+export class GridPositionComponent extends Component<IGridPosition> {
+  point: Point;
+
+  static defaultValue = {
+    x: null,
+    y: null,
+  };
+
+  onChange() {
+    this.point = new Point(this.get('x'), this.get('y'));
+    Object.freeze(this.point);
   }
 }

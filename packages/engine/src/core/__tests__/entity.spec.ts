@@ -1,108 +1,89 @@
-import Entity from '../entity';
-import EntityAttribute from '../entityAttribute';
-import EntityBehavior from '../entityBehavior';
+import EntityManager from '../entityManager';
+import Component from '../component';
 
 
-class HealthAttribute extends EntityAttribute<number> {
-  onChange(newValue: number): number | null {
-    return Math.max(newValue, 0);
-  }
-}
+interface IFoobar {
+  bar: string
+};
+class Foobar extends Component<IFoobar> { }
 
-class FooAttribute extends EntityAttribute<number> {
-  onChange(newValue: number): number | null {
-    return Math.max(newValue, 0);
-  }
-}
-
-class DamageBehavior extends EntityBehavior {
-  static requirements = [HealthAttribute];
-
-  onAdd() {
-    this.onEntityEvent('damage', this.onDamage.bind(this));
-  }
-
-  onDamage(event) {
-    const health = this.entity.attributes.get(HealthAttribute);
-    health.value -= event.amount;
-  }
-}
+interface IBarbaz {
+  num: number
+};
+class Barbaz extends Component<IBarbaz> { }
 
 describe('Entity', () => {
-  let wall: Entity;
+  let manager: EntityManager;
 
   beforeEach(() => {
-    wall = new Entity();
+    manager = new EntityManager();
   });
 
-  it('should initialize', () => {
-    expect(wall.attributes.size).toBe(0);
-    expect(wall.behaviors.size).toBe(0);
+  it('creation', () => {
+    expect(manager.entityCount).toBe(0);
+    const entity1 = manager.createEntity();
+    expect(manager.entityCount).toBe(1);
+    expect(entity1).toBe(1);
   });
 
-  describe('attributes', () => {
-    let health: HealthAttribute;
-    beforeEach(() => {
-      health = wall.addAttribute(HealthAttribute, 1);
-    });
-
-    afterAll(() => {
-      wall.removeAttribute(HealthAttribute);
-    });
-
-    it('initial value', () => {
-      expect(health.value).toBe(1);
-    });
-
-    it('addAttribute', () => {
-      expect(wall.attributes.has(HealthAttribute)).toBeTruthy();
-    });
-
-    it('hasAttributes', () => {
-      let foo = new Entity();
-      foo.addAttribute(HealthAttribute, 1);
-      foo.addAttribute(FooAttribute, 1);
-      expect(foo.hasAttributes(HealthAttribute)).toBeTruthy();
-      expect(foo.hasAttributes(FooAttribute)).toBeTruthy();
-    });
-
-    it('removeAttribute', () => {
-      wall.removeAttribute(HealthAttribute);
-      expect(wall.attributes.has(HealthAttribute)).not.toBeTruthy();
-    });
-
-    it('onChange method', () => {
-      expect(health.value).toBe(1);
-      health.value = -100;
-      expect(health.value).toBe(0);
-    });
-
-    it('subscribe to changes', () => {
-      const onChangeCB = jest.fn();
-      health.subscribe(onChangeCB);
-      health.value = 10;
-      expect(onChangeCB).toBeCalled();
-      expect(onChangeCB).toBeCalledWith({ newValue: 10, oldValue: 1 });
-    })
+  it('hasEntity & getEntity', () => {
+    const entity1 = manager.createEntity();
+    expect(manager.hasEntity(entity1)).toBe(true);
+    expect(manager.getEntity(entity1).size).toBe(0);
   });
 
-  describe('behaviors', () => {
-    it('attribute validation', () => {
-      expect(() => wall.addBehavior(DamageBehavior)).toThrow();
+  it('removeEntity', () => {
+    const entity1 = manager.createEntity();
+    expect(manager.hasEntity(entity1)).toBe(true);
+    expect(manager.entityCount).toBe(1);
+    manager.removeEntity(entity1);
+    expect(manager.hasEntity(entity1)).toBe(false);
+    expect(manager.entityCount).toBe(0);
+  });
+
+  it('registerComponent', () => {
+    expect(manager.isComponent('foobar')).toBe(false);
+    manager.registerComponent('foobar', Foobar);
+    expect(manager.isComponent('foobar')).toBe(true);
+  });
+
+  it('addComponent', () => {
+    manager.registerComponent('foobar', Foobar);
+    const entity1 = manager.createEntity();
+    expect(manager.getEntity(entity1).size).toBe(0);
+    manager.addComponent<IFoobar>(entity1, 'foobar', { bar: 'baz' });
+    expect(manager.getEntity(entity1).size).toBe(1);
+  });
+
+  it('removeComponent', () => {
+    manager.registerComponent('foobar', Foobar);
+    const entity1 = manager.createEntity();
+    manager.addComponent<IFoobar>(entity1, 'foobar', { bar: 'baz' });
+    expect(manager.getEntity(entity1).size).toBe(1);
+    manager.removeComponent(entity1, 'foobar');
+    expect(manager.getEntity(entity1).size).toBe(0);
+  });
+
+  describe('reactive', () => {
+    it('subsctibe to all entities', () => {
+      manager.registerComponent('foobar', Foobar);
+      manager.registerComponent('barbaz', Barbaz);
+      const mock = jest.fn();
+      manager.entityMap.subscribe(mock);
+      const entityID = manager.createEntity();
+      manager.addComponent(entityID, 'foobar', { bar: 'asd' });
+      expect(mock).toBeCalled();
     });
 
-    it('addBehavior', () => {
-      wall.addAttribute(HealthAttribute, 1);
-      const damage = wall.addBehavior(DamageBehavior);
-      expect(wall.behaviors.has(DamageBehavior)).toBeTruthy();
-    });
-
-    it('removeBehavior', () => {
-      wall.addAttribute(HealthAttribute, 1);
-      const damage = wall.addBehavior(DamageBehavior);
-      wall.removeBehavior(DamageBehavior);
-
-      expect(wall.behaviors.has(DamageBehavior)).not.toBeTruthy();
+    it('subscribe to single entity', () => {
+      manager.registerComponent('foobar', Foobar);
+      manager.registerComponent('barbaz', Barbaz);
+      const entityID = manager.createEntity();
+      const entity = manager.getEntity(entityID);
+      manager.addComponent(entityID, 'foobar', { bar: 'asd' });
+      const mock = jest.fn();
+      entity.subscribe(mock);
+      expect(mock).toBeCalled();
     });
   });
 });

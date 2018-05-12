@@ -1,9 +1,8 @@
 import createTerrain from '@invictus/engine/prefabs/terrain';
 import EntityManager from './entityManager';
-import Entity from './entity';
 
 
-export type Prefab = (options: any) => Entity;
+export type Prefab = (options: any) => number;
 export interface Prefabs {
   [prefabName: string]: Prefab
 }

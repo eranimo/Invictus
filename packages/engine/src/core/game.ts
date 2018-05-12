@@ -3,12 +3,9 @@ import Scene from './scene';
 import { Constructable } from './types';
 import MainLoop from './mainLoop';
 import TileRenderer from './tileRenderer';
-import GameGrid from './gameGrid';
+import GameGrid from './systems/gameGrid';
 import InputManager from './inputManager';
 import System from './system';
-import Entity from './entity';
-import EntityAttribute from './entityAttribute';
-import EntityBehavior from './entityBehavior';
 import { TimeManager } from './time';
 import EventEmitter from '@invictus/engine/utils/eventEmitter';
 
@@ -37,38 +34,10 @@ export default class Game extends MainLoop {
     this.scenes = new Map();
     this.systems = new Map();
     this.activeScene = null;
-    this.gameGrid = new GameGrid({
-      width: 30,
-      height: 30,
-    }, this);
     this.ticks = 0;
     this.tileRenderer = new TileRenderer(this);
     this.time = new TimeManager(this);
     this.ui = new EventEmitter();
-  }
-
-  createSystem(
-    name: string,
-    requiredAttributes: Constructable<EntityAttribute>[] = [],
-    requiredBehaviors: Constructable<EntityBehavior>[] = [],
-  ) {
-    const system = new System(requiredAttributes, requiredBehaviors)
-    this.systems.set(name, system);
-    return system;
-  }
-
-  onEntityAdded = (entity: Entity) => {
-    for (const system of this.systems.values()) {
-      if (system.isValid(entity)) {
-        system.addEntity(entity);
-      }
-    }
-  }
-
-  onEntityRemoved = (entity: Entity) => {
-    for (const system of this.systems.values()) {
-      system.removeEntity(entity);
-    }
   }
 
   loadScene(sceneClass: Constructable<Scene>, name: string) {
@@ -86,9 +55,6 @@ export default class Game extends MainLoop {
     if (this.activeScene) {
       this.activeScene.setInactive();
     }
-    for (const system of this.systems.values()) {
-      system.clear();
-    }
     this.input.reset(name);
   }
 
@@ -100,17 +66,7 @@ export default class Game extends MainLoop {
     this.ticks++;
     this.time.process();
     for (const scene of this.scenes.values()) {
-      scene.entityManager.entities.forEach(entity => {
-        entity.behaviors.forEach(behavior => behavior.onUpdate(elapsedTime));
-      });
-    }
-  }
-
-  render(elapsedTime: number) {
-    for (const scene of this.scenes.values()) {
-      scene.entityManager.entities.forEach(entity => {
-        entity.behaviors.forEach(behavior => behavior.onDraw(elapsedTime));
-      });
+      scene.systems.forEach((system: System) => system.process(elapsedTime));
     }
   }
 }

@@ -3,14 +3,9 @@ import {
   Game,
   Scene,
   Tileset,
-  Entity,
-  EntityAttribute,
-  EntityBehavior,
   Tilemap,
-  GameGrid
 } from '@invictus/engine';
-import { GridPositionAttribute, GridInputBehavior } from '@invictus/engine/components/grid';
-import { TileAttribute } from '@invictus/engine/components/tile';
+import { GridPositionComponent } from '@invictus/engine/components';
 import _ from 'lodash';
 import colonistFactory from './entities/colonist';
 import { renderUI } from '@invictus/renderer';
@@ -47,7 +42,7 @@ class MainScene extends Scene {
       }
     }));
 
-    const colonist: Entity = colonistFactory({
+    const colonist: number = colonistFactory({
       name: 'Jane'
     }, this.entityManager);
 
@@ -65,13 +60,10 @@ class MainScene extends Scene {
     });
 
 
-    // setInterval(() => {
-    //   const pos = colonist.getAttribute(GridPositionAttribute);
-    //   pos.value = {
-    //     x: _.clamp(pos.value.x + _.random(-1, 1), 0, 30),
-    //     y: _.clamp(pos.value.y + _.random(-1, 1), 0, 30),
-    //   };
-    // }, 4000);
+    setInterval(() => {
+      const pos = this.entityManager.getComponent<GridPositionComponent>(colonist, 'GridPositionComponent');
+      pos.set('x', pos.get('x') + 1);
+    }, 1000);
   }
 }
 

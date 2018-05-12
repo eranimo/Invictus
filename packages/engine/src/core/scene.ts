@@ -1,8 +1,11 @@
 import EntityManager from './entityManager';
-import Entity from './entity';
 import Game from './game';
 import { loaders } from 'pixi.js';
 import createPrefabs, { Prefabs } from './prefabs';
+import System from './system';
+import * as COMPONENTS from '../components';
+import { Constructable } from './types';
+import GameGridSystem from './systems/gameGrid';
 
 
 export enum SceneState {
@@ -35,17 +38,31 @@ export default abstract class Scene {
   loader: loaders.Loader;
   resources: Map<string, ResourceItem>;
   loadPromise: Promise<void>;
-  prefabs;
+  prefabs: Prefabs;
+  systems: System[];
+  systemMap: { [systemName: string]: System };
 
   constructor(game: Game, name: string) {
     this.game = game;
     this.name = name;
-    this.entityManager = new EntityManager(this.game.onEntityAdded, this.game.onEntityRemoved);
+    this.entityManager = new EntityManager();
+    for (const [name, component] of Object.entries(COMPONENTS)) {
+      this.entityManager.registerComponent<any>(name, component);
+    }
     this.loader = new loaders.Loader();
     this.resources = new Map();
     this.state = SceneState.LOADING;
     this.init().then(this.onResourcesLoaded.bind(this));
     this.prefabs = createPrefabs(this.entityManager);
+    this.systems = [];
+    this.systemMap = {};
+
+
+    // default stuff
+    this.addSystem(GameGridSystem, {
+      width: 30,
+      height: 30,
+    });
   }
 
   async init() {}
@@ -86,6 +103,13 @@ export default abstract class Scene {
   setReady() {
     this.state = SceneState.READY;
     this.onReady();
+  }
+
+  addSystem(systemClass: Constructable<System>, options: any) {
+    const system = new systemClass(this, this.entityManager);
+    this.systems.push(system);
+    this.systemMap[(systemClass as any).systemName] = system;
+    system.init(options);
   }
 
   public onReady () {}

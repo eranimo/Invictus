@@ -52,3 +52,37 @@ Behaviors do not use or know about other behaviors. They only know about some of
   - HealthAttribute
   - GridInputBehavior
   - GridSelectableBehavior
+
+
+
+# New Design
+
+## Classes
+- World: contains Scenes
+- Scene: handles entities, assets
+- Entity: mapping of ID number to list of components
+- Component: dumb components containing a specific interface, observable
+- Group: Groups of Entities containing specific components, observable
+- System: iterates over groups, source of all game logic
+- Prefab:
+
+
+## Components
+- Resource
+  - type: enum
+  - url: string
+  - name: string
+- Motion
+  - where: vector
+  - speed: number
+- Position
+  - x: number
+  - y: number
+  - z: number
+- Tile
+  - tileID: string
+  - tilesetID:
+
+## Systems
+- TilemapSystem: Tile
+- MotionSystem:
