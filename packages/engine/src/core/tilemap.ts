@@ -4,7 +4,7 @@ import fill from 'ndarray-fill';
 import { ColorReplaceFilter } from 'pixi-filters';
 
 import Tileset from './tileset';
-import System from './system';
+import { System } from './system';
 // import Group from './group';
 // import GameGrid, { GameGridEvents } from './gameGrid';
 import TileRenderer from '@invictus/engine/core/tileRenderer';
@@ -132,8 +132,9 @@ export default class Tilemap extends EventEmitter<TilemapEvents> {
   }
 
   public getEntitiesAtPoint(coord: Point): Set<number> {
-    const { x, y } = this.worldCoordToCell(coord);
-    return this.tileRenderer.game.gameGrid.getCell(x, y);
+    // const { x, y } = this.worldCoordToCell(coord);
+    // return this.tileRenderer.game.gameGrid.getCell(x, y);
+    return new Set();
   }
 
   public worldCoordToCell(coord: Point) {

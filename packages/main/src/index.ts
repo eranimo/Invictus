@@ -62,7 +62,9 @@ class MainScene extends Scene {
 
     setInterval(() => {
       const pos = this.entityManager.getComponent<GridPositionComponent>(colonist, 'GridPositionComponent');
-      pos.set('x', pos.get('x') + 1);
+      if (pos.get('x') < 20) {
+        pos.set('x', pos.get('x') + 1);
+      }
     }, 1000);
   }
 }

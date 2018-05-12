@@ -2,10 +2,12 @@ import EntityManager from './entityManager';
 import Game from './game';
 import { loaders } from 'pixi.js';
 import createPrefabs, { Prefabs } from './prefabs';
-import System from './system';
+import { System } from './system';
 import * as COMPONENTS from '../components';
 import { Constructable } from './types';
-import GameGridSystem from './systems/gameGrid';
+import { GameGridSystem } from './systems/gameGrid';
+import TilemapSystem from './systems/tilemap';
+import { GridUI } from './gridUI';
 
 
 export enum SceneState {
@@ -30,6 +32,11 @@ interface ResourceItem {
   data?: loaders.Resource;
 };
 
+interface GameMap {
+  width: 30;
+  height: 30;
+}
+
 export default abstract class Scene {
   game: Game;
   name: string;
@@ -40,7 +47,9 @@ export default abstract class Scene {
   loadPromise: Promise<void>;
   prefabs: Prefabs;
   systems: System[];
-  systemMap: { [systemName: string]: System };
+  systemMap: { [systemName: string]: any };
+  gameMap: GameMap;
+  gridUI: GridUI;
 
   constructor(game: Game, name: string) {
     this.game = game;
@@ -57,11 +66,29 @@ export default abstract class Scene {
     this.systems = [];
     this.systemMap = {};
 
-
-    // default stuff
-    this.addSystem(GameGridSystem, {
+    this.gameMap = {
       width: 30,
       height: 30,
+    }
+
+    // default stuff
+    this.addSystem<GameGridSystem>(GameGridSystem, {
+      width: this.gameMap.width,
+      height: this.gameMap.height,
+    });
+    this.addSystem<TilemapSystem>(TilemapSystem, {
+      width: this.gameMap.width,
+      height: this.gameMap.height,
+      tileWidth: 16,
+      tileHeight: 16,
+      layers: 2,
+    });
+
+    this.gridUI = new GridUI(this, {
+      width: this.gameMap.width,
+      height: this.gameMap.height,
+      tileWidth: 16,
+      tileHeight: 16,
     });
   }
 
@@ -105,7 +132,7 @@ export default abstract class Scene {
     this.onReady();
   }
 
-  addSystem(systemClass: Constructable<System>, options: any) {
+  addSystem<T extends System>(systemClass: Constructable<T>, options: any) {
     const system = new systemClass(this, this.entityManager);
     this.systems.push(system);
     this.systemMap[(systemClass as any).systemName] = system;

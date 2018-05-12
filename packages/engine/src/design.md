@@ -59,12 +59,14 @@ Behaviors do not use or know about other behaviors. They only know about some of
 
 ## Classes
 - World: contains Scenes
-- Scene: handles entities, assets
-- Entity: mapping of ID number to list of components
+- Scene: handles entities, assets, systems
 - Component: dumb components containing a specific interface, observable
 - Group: Groups of Entities containing specific components, observable
-- System: iterates over groups, source of all game logic
-- Prefab:
+- System: iterates over a group, runs a function on each entity every tick
+- ReactiveSystem: listens for changes to a Group, reacts to changes to specific components
+- Prefab: creates entities of a certain configuration
+- Renderer: contains viewport, handles viewport events
+- GridUI: handles selected cells, hover cell
 
 
 ## Components
@@ -75,7 +77,7 @@ Behaviors do not use or know about other behaviors. They only know about some of
 - Motion
   - where: vector
   - speed: number
-- Position
+- GridPosition
   - x: number
   - y: number
   - z: number
@@ -83,6 +85,6 @@ Behaviors do not use or know about other behaviors. They only know about some of
   - tileID: string
   - tilesetID:
 
-## Systems
-- TilemapSystem: Tile
-- MotionSystem:
+## Reactive Systems
+- TileMap: Renders a grid of tile sprites
+- GameGrid: logic grid of components, listens for GridPosition changes

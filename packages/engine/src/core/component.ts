@@ -2,7 +2,7 @@ import { BehaviorSubject, Subscription } from 'rxjs';
 
 
 export default class Component<T> {
-  private value: T | null;
+  public value: T | null;
   public value$: BehaviorSubject<T>;
 
   static defaultValue = {};

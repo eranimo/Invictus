@@ -1,10 +1,8 @@
-import { Application, Container, settings, Sprite } from 'pixi.js';
+import { Application, Container, settings, Sprite, Point, Texture } from 'pixi.js';
 import Viewport from 'pixi-viewport';
 import Game from './game';
 import Tilemap from './tilemap';
 import Tileset from './tileset';
-import { makeGridTexture } from '@invictus/engine/utils/textures';
-import KeyboardJS from 'keyboardjs';
 
 
 /**
@@ -18,8 +16,6 @@ export default class TileRenderer {
   game: Game;
   tilesets: Map<string, Tileset>;
   tilemap: Tilemap;
-  grid: Sprite;
-  gridEnabled: boolean;
 
   constructor(game: Game) {
     this.game = game;
@@ -40,7 +36,7 @@ export default class TileRenderer {
     });
     this.viewport
       .drag()
-      .on('clicked', this.handleClick.bind(this))
+      // .on('clicked', this.handleClick.bind(this))
       .on('drag-end', () => {
         // snap to rounded pixels after panning
         this.viewport.moveCorner(
@@ -51,42 +47,6 @@ export default class TileRenderer {
     this.app.stage.addChild(this.viewport);
     document.body.appendChild(this.app.view);
     this.tilesets = new Map();
-
-    this.tilemap = new Tilemap({
-      width: 30,
-      height: 30,
-      tileWidth: 16,
-      tileHeight: 16,
-      layers: 2,
-    }, this);
-
-    this.gridEnabled = true;
-    this.grid = new Sprite(makeGridTexture(
-      30 * 16,
-      30 * 16,
-      16,
-      16,
-      0xFFFFFF
-    ));
-    this.grid.alpha = this.gridEnabled ? 0.1 : 0;
-    this.viewport.addChild(this.grid);
-
-    KeyboardJS.bind('g', event => {
-      console.log('toggle grid visibility');
-      if (this.gridEnabled) {
-        this.grid.alpha = 0;
-        this.gridEnabled = false;
-      } else {
-        this.grid.alpha = 0.1;
-        this.gridEnabled = true;
-      }
-    });
-  }
-
-  handleClick(data) {
-    this.tilemap.handleTileEvent('click', data.world);
-    const cell = this.tilemap.worldCoordToCell(data.world);
-    this.game.gameGrid.handleCellSelection(cell);
   }
 
   addTileset(name: string, tileset: Tileset) {

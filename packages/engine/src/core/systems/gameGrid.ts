@@ -1,7 +1,7 @@
 import ndarray from 'ndarray';
 import { Point } from 'pixi.js';
 
-import System from '../system';
+import { System, ReactiveSystem } from '../system';
 import Scene from '../scene';
 import fill from 'ndarray-fill';
 import { Coordinate } from '../types';
@@ -23,7 +23,11 @@ export enum GameGridEvents {
 };
 
 
-export default class GameGridSystem extends System {
+/**
+ * Listens for entities with GridPositionComponent and creates a 2D map
+ * of all entities in the grid at each position
+ */
+export class GameGridSystem extends ReactiveSystem {
   static systemName = 'GameGrid';
   static requiredComponents = ['GridPositionComponent'];
 
@@ -63,39 +67,36 @@ export default class GameGridSystem extends System {
     })
   }
 
-  onEntityAdded(entityID: number) {
+  protected onEntityAdded(entityID: number) {
     console.log(`[GameGridSystem] Entity added: ${entityID}`);
 
     const pos = this.manager.getComponent<GridPositionComponent>(entityID, 'GridPositionComponent');
     const entities = this.positionToEntitySet.get(pos.get('x'), pos.get('y'));
     entities.add(entityID);
     this.entityToPositionMap.set(entityID, [pos.get('x'), pos.get('y')])
-    const subscription: Subscription = pos.subscribe(this.handleEntityChange(entityID));
-    this.entitySubscriptions.set(entityID, subscription);
+    super.onEntityAdded(entityID);
   }
 
-  onEntityRemoved(entityID: number) {
+  protected onEntityRemoved(entityID: number) {
     console.log(`[GameGridSystem] Entity removed: ${entityID}`);
     const [x, y] = this.entityToPositionMap.get(entityID);
     const entities = this.positionToEntitySet.get(x, y);
     entities.delete(entityID);
     this.entityToPositionMap.delete(entityID);
-    this.entitySubscriptions.get(entityID).unsubscribe();
+    super.onEntityRemoved(entityID);
   }
 
-  handleEntityChange(entityID: number) {
-    return (newPosition: IGridPosition) => {
-      console.log(`[GameGridSystem] Entity changed: ${entityID}`, newPosition);
-      const oldPosition = this.entityToPositionMap.get(entityID);
-      let set = this.positionToEntitySet.get(oldPosition[0], oldPosition[1]);
-      set.delete(entityID);
-      set = this.positionToEntitySet.get(newPosition.x, newPosition.y);
-      if (set === undefined) {
-        throw new Error(`Entity '${entityID}' position is out of grid`);
-      }
-      set.add(entityID);
-      this.entityToPositionMap.set(entityID, [newPosition.x, newPosition.y]);
-    };
+  protected handleChanges(entityID: number, component: string, oldValue: any, newValue: any) {
+    console.log(`[GameGridSystem] Entity changed: ${entityID}`, newValue);
+    const oldPosition = this.entityToPositionMap.get(entityID);
+    let set = this.positionToEntitySet.get(oldPosition[0], oldPosition[1]);
+    set.delete(entityID);
+    set = this.positionToEntitySet.get(newValue.x, newValue.y);
+    if (set === undefined) {
+      throw new Error(`Entity '${entityID}' position is out of grid`);
+    }
+    set.add(entityID);
+    this.entityToPositionMap.set(entityID, [newValue.x, newValue.y]);
   }
 
   public getCell(x: number, y: number): Set<number> {
@@ -174,14 +175,6 @@ export default class GameGridSystem extends System {
         }
       }
     }
-  }
-
-  public setHoverCell(coord: Point | null) {
-    this.game.tileRenderer.tilemap.emit(TilemapEvents.CELL_HOVER, coord, this.hoverCell);
-    if (coord && (!this.hoverCell || !this.hoverCell.equals(coord))) {
-      this.game.ui.emit(UIEvents.CELL_HOVERED, coord);
-    }
-    this.hoverCell = coord;
   }
 }
 /*
