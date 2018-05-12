@@ -3,7 +3,6 @@ import {
   Game,
   Scene,
   Tileset,
-  Tilemap,
 } from '@invictus/engine';
 import { GridPositionComponent } from '@invictus/engine/components';
 import _ from 'lodash';

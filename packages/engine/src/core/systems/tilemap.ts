@@ -60,7 +60,6 @@ export default class TilemapSystem extends ReactiveSystem {
   }
 
   protected handleChanges(entityID: number, component: string, oldValue: any, newValue: any) {
-    console.log('Tilemap', entityID, component, oldValue, newValue);
     if (component === 'GridPositionComponent') {
       if (oldValue) {
         this.updateTile(oldValue.x, oldValue.y);
@@ -74,7 +73,6 @@ export default class TilemapSystem extends ReactiveSystem {
   }
 
   private updateTile(x: number, y: number) {
-    console.log(`Updating tile ${x}, ${y}`);
     const entities = this.systems.GameGrid.getCell(x, y);
     if (!entities) {
       return;

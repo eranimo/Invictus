@@ -69,6 +69,11 @@ Behaviors do not use or know about other behaviors. They only know about some of
 - GridUI: handles selected cells, hover cell
 
 
+## Maxims
+- Components only hold serializable data
+- Systems do not reference each other
+
+
 ## Components
 - Resource
   - type: enum

@@ -1,7 +1,6 @@
 import { Application, Container, settings, Sprite, Point, Texture } from 'pixi.js';
 import Viewport from 'pixi-viewport';
 import Game from './game';
-import Tilemap from './tilemap';
 import Tileset from './tileset';
 
 
@@ -15,7 +14,7 @@ export default class TileRenderer {
   viewport: Viewport;
   game: Game;
   tilesets: Map<string, Tileset>;
-  tilemap: Tilemap;
+  isDragging: boolean;
 
   constructor(game: Game) {
     this.game = game;
@@ -34,10 +33,13 @@ export default class TileRenderer {
       worldHeight: 16 * 30,
       worldWidth: 16 * 30,
     });
+    this.isDragging = false;
     this.viewport
       .drag()
       // .on('clicked', this.handleClick.bind(this))
+      .on('drag-start', () => this.isDragging = true)
       .on('drag-end', () => {
+        this.isDragging = false;
         // snap to rounded pixels after panning
         this.viewport.moveCorner(
           Math.round(this.viewport.left),
