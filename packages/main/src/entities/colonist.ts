@@ -14,7 +14,12 @@ export default function colonistFactory(
   entityManager: EntityManager,
 ): number {
   const entityID = entityManager.createEntity();
-  entityManager.addComponent<IUIComponent>(entityID, 'UIComponent', { name, isVisible: true, isSelectable: true });
+  entityManager.addComponent<IUIComponent>(entityID, 'UIComponent', {
+    name,
+    isVisible: true,
+    isSelectable: true,
+    isSelected: false,
+  });
   entityManager.addComponent<ITileComponent>(entityID, 'TileComponent', {
     tileset: 'tileset',
     tileName: 'smile',

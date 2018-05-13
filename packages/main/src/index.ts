@@ -44,18 +44,22 @@ class MainScene extends Scene {
       name: 'Jane',
     }, this.entityManager);
 
-    this.prefabs.terrain({
-      tile: {
-        tileset: 'tileset',
-        tileName: 'dots',
-        layer: 0,
-        colorReplacements: [
-          [[255, 255, 255], [100, 100, 100]],
-        ],
-        rotation: 0,
-      },
-      position: { x: 1, y: 1 },
-    });
+    for (let x = 0; x < 30; x++) {
+      for (let y = 0; y < 30; y++) {
+        this.prefabs.terrain({
+          tile: {
+            tileset: 'tileset',
+            tileName: 'dots',
+            layer: 0,
+            colorReplacements: [
+              [[255, 255, 255], [100, 100, 100]],
+            ],
+            rotation: 0,
+          },
+          position: { x, y },
+        });
+      }
+    }
 
     setInterval(() => {
       const pos = this.entityManager.getComponent<GridPositionComponent>(colonist, 'GridPositionComponent');

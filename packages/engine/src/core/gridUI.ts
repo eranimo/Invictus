@@ -70,7 +70,6 @@ export class GridUI {
     viewport.addChild(this.gridLines);
 
     KeyboardJS.bind('g', (event) => {
-      console.log('toggle grid visibility');
       if (this.gridLinesEnabled) {
         this.gridLines.alpha = 0;
         this.gridLinesEnabled = false;
@@ -101,7 +100,6 @@ export class GridUI {
     this.selectedCellCount = 0;
 
     this.scene.game.input.on('esc', () => {
-      console.log('unselect all cells');
       this.unselectAll();
     });
 
@@ -182,7 +180,6 @@ export class GridUI {
   }
 
   public handleCellSelection(cell: Point) {
-    console.log('selection:', cell);
     if (this.selectedCellCount === 0) {
       this.selectCell(cell);
     } else {
@@ -228,7 +225,6 @@ export class GridUI {
   private getCellEventData(coord: Point) {
     const gameGrid = this.scene.systemMap.GameGrid;
     const manager = this.scene.entityManager;
-    console.log(gameGrid.getCell(coord.x, coord.y));
     const entities = Array.from(gameGrid.getCell(coord.x, coord.y))
       .filter((entityID: number) => manager.hasComponent(entityID, 'UIComponent'))
       .filter((entityID: number) => (
@@ -238,7 +234,6 @@ export class GridUI {
         id: entityID,
         name: manager.getComponent(entityID, 'UIComponent').get('name'),
       }));
-    console.log('entities', entities);
     return {
       coord,
       entities,

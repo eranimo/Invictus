@@ -30,7 +30,6 @@ export class GameGridSystem extends ReactiveSystem {
   private entityToPositionMap: Map<number, [number, number]>;
 
   public init(settings: IGameGridSettings) {
-    console.log(`[GameGridSystem] Init`);
     this.size = { width: settings.width, height: settings.height };
     this.positionToEntitySet = ndarray([], [settings.width, settings.height]);
     fill(this.positionToEntitySet, () => new Set());
@@ -47,7 +46,6 @@ export class GameGridSystem extends ReactiveSystem {
   }
 
   protected onEntityAdded(entityID: number) {
-    console.log(`[GameGridSystem] Entity added: ${entityID}`);
 
     const pos = this.manager.getComponent<GridPositionComponent>(entityID, 'GridPositionComponent');
     const entities = this.positionToEntitySet.get(pos.get('x'), pos.get('y'));
@@ -57,7 +55,6 @@ export class GameGridSystem extends ReactiveSystem {
   }
 
   protected onEntityRemoved(entityID: number) {
-    console.log(`[GameGridSystem] Entity removed: ${entityID}`);
     const [x, y] = this.entityToPositionMap.get(entityID);
     const entities = this.positionToEntitySet.get(x, y);
     entities.delete(entityID);
@@ -66,7 +63,6 @@ export class GameGridSystem extends ReactiveSystem {
   }
 
   protected handleChanges(entityID: number, component: string, oldValue: any, newValue: any) {
-    console.log(`[GameGridSystem] Entity changed: ${entityID}`, newValue);
     const oldPosition = this.entityToPositionMap.get(entityID);
     let set = this.positionToEntitySet.get(oldPosition[0], oldPosition[1]);
     set.delete(entityID);

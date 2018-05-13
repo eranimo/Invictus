@@ -1,9 +1,9 @@
-import ndarray from 'ndarray';
-import fill from 'ndarray-fill';
+import { GridPositionComponent, TileComponent } from '@invictus/engine/components';
 import { Container, Sprite, Texture } from 'pixi.js';
-
-import { TileComponent } from '@invictus/engine/components';
 import { ReactiveSystem } from '../system';
+// import ndarray from 'ndarray';
+// import fill from 'ndarray-fill';
+
 
 
 export interface ITilemapSettings {
@@ -19,17 +19,18 @@ export default class TilemapSystem extends ReactiveSystem {
   public static requiredComponents = ['GridPositionComponent', 'TileComponent'];
 
   public settings: ITilemapSettings;
-  private layerMap: ndarray<{
-    [layerID: number]: Sprite,
-  }>;
+  private layers: Container[];
   private tileContainer: Container;
+  private entitySpriteMap: Map<number, Sprite>;
 
   public init(settings: ITilemapSettings) {
     this.settings = settings;
     const tileRenderer = this.game.tileRenderer;
 
+    this.entitySpriteMap = new Map();
+
     // create sprite 2D arrays
-    this.layerMap = ndarray([], [settings.width, settings.height]);
+    this.layers = [];
 
     // create tile container and listen to events
     this.tileContainer = new Container();
@@ -38,72 +39,97 @@ export default class TilemapSystem extends ReactiveSystem {
     tileRenderer.viewport.y = 0;
 
     // create layers and sprites
-    fill(this.layerMap, (x: number, y: number) => {
-      const sprites = {};
-      for (let i = 0; i < settings.layers; i++) {
-        const sprite = this.createSprite(i, x, y);
-        sprites[i] = sprite;
-      }
-      return sprites;
-    });
-    for (let x = 0; x < this.layerMap.shape[0]; x++) {
-      for (let y = 0; y < this.layerMap.shape[1]; y++) {
-        const layers = this.layerMap.get(x, y);
-        Object.values(layers).forEach((sprite) => {
-          this.tileContainer.addChild(sprite);
-        });
-      }
+    for (let i = 0; i < settings.layers; i++) {
+      this.layers[i] = new Container();
+      this.tileContainer.addChild(this.layers[i]);
     }
   }
 
   protected handleChanges(entityID: number, component: string, oldValue: any, newValue: any) {
     if (component === 'GridPositionComponent') {
-      if (oldValue) {
-        this.updateTile(oldValue.x, oldValue.y);
-      }
+      let sprite;
       if (newValue) {
-        this.updateTile(newValue.x, newValue.y);
+        sprite = this.entitySpriteMap.get(entityID);
+        if (!sprite) {}
+        sprite.x = this.settings.tileWidth * newValue.x;
+        sprite.y = this.settings.tileHeight * newValue.y;
       }
     } else if (component === 'TileComponent') {
-      // TODO: handle tile changes
+      this.updateTile(entityID);
     }
   }
 
-  private updateTile(x: number, y: number) {
-    const entities = this.systems.GameGrid.getCell(x, y);
-    if (!entities) {
-      return;
-    }
-    this.clearTile(x, y);
-    for (const entityID of entities) {
-      const tile = this.manager.getComponent<TileComponent>(entityID, 'TileComponent');
-      const layers = this.layerMap.get(x, y);
-      const sprite = layers[tile.value.layer];
-      const tileset = this.game.tileRenderer.getTileset(tile.value.tileset);
-      const tileTexture: Texture = tileset.getTile(tile.value.tileName);
-      sprite.texture = tileTexture;
-      sprite.filters = (tile as any).filters;
-      sprite.rotation = tile.value.rotation * (Math.PI / 180);
-    }
+  protected onEntityAdded(entityID) {
+    this.createTile(entityID);
+    super.onEntityAdded(entityID);
   }
 
-  private clearTile(x: number, y: number) {
-    const layers = this.layerMap.get(x, y);
-    for (let i = 0; i < this.settings.layers; i++) {
-      const sprite = layers[i];
-      sprite.texture = PIXI.Texture.EMPTY;
-      sprite.filters = [];
-      sprite.rotation = 0;
-    }
-  }
-
-  private createSprite(layer: number, x: number, y: number): Sprite {
+  private createTile(entityID) {
+    const pos = this.manager.getComponent<GridPositionComponent>(entityID, 'GridPositionComponent');
+    const tile = this.manager.getComponent<TileComponent>(entityID, 'TileComponent');
+    const tileset = this.game.tileRenderer.getTileset(tile.value.tileset);
+    const tileTexture: Texture = tileset.getTile(tile.value.tileName);
     const sprite = new Sprite();
-    sprite.interactive = true;
-    // sprite.on('mouseover', this.handleSpriteEvent('mouseover'));
-    // sprite.on('mouseout', this.handleSpriteEvent('mouseout'));
-    sprite.x = this.settings.tileWidth * x;
-    sprite.y = this.settings.tileHeight * y;
-    return sprite;
+    sprite.texture = tileTexture;
+    sprite.filters = (tile as any).filters;
+    sprite.rotation = tile.value.rotation * (Math.PI / 180);
+    sprite.cacheAsBitmap = true;
+    sprite.x = this.settings.tileWidth * pos.get('x');
+    sprite.y = this.settings.tileHeight * pos.get('y');
+    this.entitySpriteMap.set(entityID, sprite);
+    this.layers[tile.get('layer')].addChild(sprite);
   }
+
+  private updateTile(entityID) {
+    const pos = this.manager.getComponent<GridPositionComponent>(entityID, 'GridPositionComponent');
+    const tile = this.manager.getComponent<TileComponent>(entityID, 'TileComponent');
+    const tileset = this.game.tileRenderer.getTileset(tile.value.tileset);
+    const tileTexture: Texture = tileset.getTile(tile.value.tileName);
+    const sprite = this.entitySpriteMap.get(entityID);
+    sprite.texture = tileTexture;
+    sprite.filters = (tile as any).filters;
+    sprite.rotation = tile.value.rotation * (Math.PI / 180);
+    sprite.cacheAsBitmap = true;
+    sprite.x = this.settings.tileWidth * pos.get('x');
+    sprite.y = this.settings.tileHeight * pos.get('y');
+    this.entitySpriteMap.set(entityID, sprite);
+  }
+
+  // private updateTile(x: number, y: number) {
+  //   const entities = this.systems.GameGrid.getCell(x, y);
+  //   if (!entities) {
+  //     return;
+  //   }
+  //   this.clearTile(x, y);
+  //   for (const entityID of entities) {
+  //     const tile = this.manager.getComponent<TileComponent>(entityID, 'TileComponent');
+  //     const layers = this.layerMap.get(x, y);
+  //     const sprite = layers[tile.value.layer];
+  //     const tileset = this.game.tileRenderer.getTileset(tile.value.tileset);
+  //     const tileTexture: Texture = tileset.getTile(tile.value.tileName);
+  //     sprite.texture = tileTexture;
+  //     sprite.filters = (tile as any).filters;
+  //     sprite.rotation = tile.value.rotation * (Math.PI / 180);
+  //   }
+  // }
+
+  // private clearTile(x: number, y: number) {
+  //   const layers = this.layerMap.get(x, y);
+  //   for (let i = 0; i < this.settings.layers; i++) {
+  //     const sprite = layers[i];
+  //     sprite.texture = PIXI.Texture.EMPTY;
+  //     sprite.filters = [];
+  //     sprite.rotation = 0;
+  //   }
+  // }
+
+  // private createSprite(layer: number, x: number, y: number): Sprite {
+  //   const sprite = new Sprite();
+  //   // sprite.interactive = true;
+  //   // sprite.on('mouseover', this.handleSpriteEvent('mouseover'));
+  //   // sprite.on('mouseout', this.handleSpriteEvent('mouseout'));
+  //   sprite.x = this.settings.tileWidth * x;
+  //   sprite.y = this.settings.tileHeight * y;
+  //   return sprite;
+  // }
 }

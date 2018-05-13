@@ -9,11 +9,15 @@ export type ComponentClassMap = ObservableMap<string, IConstructable<Component<a
 
 export default class EntityManager {
   public entityMap: EntityMap;
+  public addComponentWatchers: Array<(entityID: number, component: string) => void>;
+  public removeEntityWatchers: Array<(entityID: number) => void>;
   private knownComponents: ComponentClassMap;
 
   constructor() {
     this.entityMap = new ObservableMap();
     this.knownComponents = new ObservableMap();
+    this.addComponentWatchers = [];
+    this.removeEntityWatchers = [];
   }
 
   get entityCount(): number {
@@ -47,6 +51,9 @@ export default class EntityManager {
   }
 
   public removeEntity(entityID): boolean {
+    for (const func of this.removeEntityWatchers) {
+      func(entityID);
+    }
     return this.entityMap.delete(entityID);
   }
 
@@ -58,6 +65,9 @@ export default class EntityManager {
     const compClass = this.knownComponents.get(component);
     const componentInstance = new compClass(data);
     entity.set(component, componentInstance);
+    for (const func of this.addComponentWatchers) {
+      func(entityID, component);
+    }
     return componentInstance as Component<T>;
   }
 

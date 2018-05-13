@@ -37,6 +37,7 @@ export default abstract class Scene {
   public resources: Map<string, IResourceItem>;
   public loadPromise: Promise<void>;
   public prefabs: IPrefabs;
+
   public systems: System[];
   public systemMap: { [systemName: string]: any };
   public gameMap: IGameMap;

@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 import Component from './component';
-import EntityGroup from './entityGroup';
+import EntityGroup, { EntityGroupEvents } from './entityGroup';
 import EntityManager, { ComponentMap } from './entityManager';
 import Scene from './scene';
 
@@ -17,14 +17,12 @@ export abstract class System {
     this.manager = manager;
     const requiredComponents = new.target.requiredComponents || [];
     this.group = new EntityGroup(this.manager, requiredComponents);
-    console.log(this.group);
-    this.group.addedEntities$.subscribe((entityIDs) =>
-      entityIDs.forEach(this.onEntityAdded.bind(this)),
-    );
-    this.group.removedEntities$.subscribe((entityIDs) =>
-      entityIDs.forEach(this.onEntityRemoved.bind(this)),
-    );
-    this.group.watch();
+    this.group.on(EntityGroupEvents.ADD, (entityID) => {
+      this.onEntityAdded(entityID);
+    });
+    this.group.on(EntityGroupEvents.REMOVE, (entityID) => {
+      this.onEntityRemoved(entityID);
+    });
   }
 
   public init(options: any) {}
